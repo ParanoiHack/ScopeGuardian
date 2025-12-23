@@ -1,0 +1,107 @@
+package kics
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
+	"scope-guardian/domains/interfaces"
+	"scope-guardian/domains/models"
+	environment_variable "scope-guardian/environnement_variable"
+	"scope-guardian/exec"
+	"scope-guardian/loader"
+	"scope-guardian/logger"
+	"strings"
+)
+
+type KicsServiceImpl struct {
+	path     string
+	platform string
+	output   string
+}
+
+func newKicsService(config loader.Kics) interfaces.ScanServiceImpl {
+	return &KicsServiceImpl{
+		path:     fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], config.Path),
+		output:   fmt.Sprintf("%s/%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], outputFolder, outputNameParameter),
+		platform: config.Platform,
+	}
+}
+
+func verifyConfig(path string) (bool, error) {
+	if _, err := os.Stat(path); err != nil {
+		logger.Error(fmt.Sprintf(logErrorDirectorNotFound, path))
+		return false, errors.New(errDirectoryNotFound)
+	}
+
+	return true, nil
+}
+
+func (s *KicsServiceImpl) Start() (bool, error) {
+	if ok, err := verifyConfig(s.path); !ok && err != nil {
+		return ok, err
+	}
+
+	args := []string{scanArgument}
+
+	args = append(args, []string{
+		pathArgument,
+		s.path,
+		ciArgument,
+		librariesPathArgument,
+		librariesPathParameter,
+		queriesPathArgument,
+		queriesPathParameter,
+		outputPathArgument,
+		fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], outputFolder),
+		outputNameArgument,
+		outputNameParameter,
+		ignoreOnExitArgument,
+		ignoreOnExitParameter,
+	}...)
+
+	if s.platform != "" {
+		args = append(args, []string{typeArgument, s.platform}...)
+	}
+
+	logger.Info(fmt.Sprintf(logInfoCommandLine, strings.Join(args, " ")))
+
+	return exec.Wrap(binaryPath, dirPath, args)
+}
+
+func (s *KicsServiceImpl) LoadFindings() ([]models.Finding, error) {
+	buffer, err := os.ReadFile(s.output)
+	if err != nil {
+		logger.Error(fmt.Sprintf(logErrorFileNotFound, s.output))
+		return nil, err
+	}
+
+	var results KicsResults
+	if json.Unmarshal(buffer, &results); err != nil {
+		logger.Error(logErrorParseResults)
+		return nil, err
+	}
+
+	var findings []models.Finding
+	for _, item := range results.Queries {
+		for _, sink := range item.Files {
+			findings = append(findings, models.Finding{
+				Engine:         "IACST",
+				Severity:       item.Severity,
+				Name:           item.QueryName,
+				Cwe:            item.Cwe,
+				Description:    item.Description,
+				SinkFile:       sink.FileName,
+				SinkLine:       sink.Line,
+				Recommendation: sink.Recommendation,
+			})
+		}
+
+	}
+
+	return findings, nil
+}
+
+func (s *KicsServiceImpl) Sync() error {
+	return nil
+}
