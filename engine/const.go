@@ -9,8 +9,9 @@ const (
 )
 
 const (
-	logErrorScannerFailed = "%s scanner failed"
-	logErrorLoadFinding   = "Cannot load finding for %s scanner"
+	logErrorScannerFailed   = "%s scanner failed"
+	logErrorLoadFinding     = "Cannot load finding for %s scanner"
+	logErrorRegisterScanner = "Cannot register scanner %s"
 )
 
 const (

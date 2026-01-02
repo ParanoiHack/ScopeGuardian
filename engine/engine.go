@@ -77,8 +77,15 @@ func (e *Engine) SyncResults() {
 	}
 }
 
-func (e *Engine) registerScanner(name string, service interfaces.ScanServiceImpl) {
+func (e *Engine) registerScanner(name string, service interfaces.ScanServiceImpl) bool {
+	if _, ok := e.scanners[name]; ok || name == "" {
+		logger.Error(fmt.Sprintf(logErrorRegisterScanner, name))
+		return false
+	}
+
 	e.scanners[name] = Scanner{
 		Service: service,
 	}
+
+	return true
 }
