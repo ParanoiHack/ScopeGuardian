@@ -1,0 +1,196 @@
+{
+	"kics_version": "snapshot-398abcfc",
+	"files_scanned": 2,
+	"lines_scanned": 104,
+	"files_parsed": 2,
+	"lines_parsed": 97,
+	"lines_ignored": 7,
+	"files_failed_to_scan": 0,
+	"queries_total": 48,
+	"queries_failed_to_execute": 0,
+	"queries_failed_to_compute_similarity_id": 0,
+	"scan_id": "console",
+	"severity_counters": {
+		"CRITICAL": 0,
+		"HIGH": 1,
+		"INFO": 0,
+		"LOW": 2,
+		"MEDIUM": 5,
+		"TRACE": 0
+	},
+	"total_counter": 8,
+	"total_bom_resources": 0,
+	"start": "2025-12-22T08:50:36.483098378Z",
+	"end": "2025-12-22T08:50:37.021561962Z",
+	"paths": [
+		"/tmp/data/./WebGoat",
+		"/opt/kics/assets/queries",
+		"/opt/kics/assets/libraries"
+	],
+	"queries": [
+		{
+			"query_name": "Missing User Instruction",
+			"query_id": "fd54f200-402c-4333-a5a4-36ef6709af2f",
+			"query_url": "https://docs.docker.com/engine/reference/builder/#user",
+			"severity": "HIGH",
+			"platform": "Dockerfile",
+			"cwe": "250",
+			"risk_score": "7.7",
+			"cloud_provider": "COMMON",
+			"category": "Build Process",
+			"experimental": false,
+			"description": "Always set a user in the runtime stage of your Dockerfile. Without it, the container defaults to root, even if earlier build stages define a user.",
+			"description_id": "eb49caf6",
+			"files": [
+				{
+					"file_name": "../../tmp/data/WebGoat/Dockerfile_desktop",
+					"similarity_id": "8d9ac226c66431ce77dce9b33182b5a8e4f4621b125e89c02d7e45353349e6cc",
+					"line": 31,
+					"issue_type": "MissingAttribute",
+					"search_key": "FROM={{lscr.io/linuxserver/webtop:ubuntu-xfce}}",
+					"search_line": -1,
+					"search_value": "",
+					"expected_value": "The 'Dockerfile' should contain the 'USER' instruction",
+					"actual_value": "The 'Dockerfile' does not contain any 'USER' instruction"
+				}
+			]
+		},
+		{
+			"query_name": "Apt Get Install Pin Version Not Defined",
+			"query_id": "965a08d7-ef86-4f14-8792-4a3b2098937e",
+			"query_url": "https://docs.docker.com/develop/develop-images/dockerfile_best-practices/",
+			"severity": "MEDIUM",
+			"platform": "Dockerfile",
+			"cwe": "1357",
+			"risk_score": "5.7",
+			"category": "Supply-Chain",
+			"experimental": false,
+			"description": "When installing a package, its pin version should be defined",
+			"description_id": "e0e1edad",
+			"files": [
+				{
+					"file_name": "../../tmp/data/WebGoat/Dockerfile_desktop",
+					"similarity_id": "9bfcb37e91f581c28447c3beb53c1413abe7e1a47300df8a63cb3124c332c03f",
+					"line": 46,
+					"issue_type": "MissingAttribute",
+					"search_key": "FROM={{lscr.io/linuxserver/webtop:ubuntu-xfce}}.RUN={{apt-get update   \u0026\u0026 apt-get --yes install --no-install-recommends vim nano gzip   \u0026\u0026 rm -rf /var/lib/apt/lists/*}}",
+					"search_line": -1,
+					"search_value": "nano",
+					"expected_value": "Package 'nano' has version defined",
+					"actual_value": "Package 'nano' does not have version defined"
+				},
+				{
+					"file_name": "../../tmp/data/WebGoat/Dockerfile_desktop",
+					"similarity_id": "9da542ce5318a322df8faa81e5a8bf9c0988a4c285419486e452e7ed08eec9a2",
+					"line": 46,
+					"issue_type": "MissingAttribute",
+					"search_key": "FROM={{lscr.io/linuxserver/webtop:ubuntu-xfce}}.RUN={{apt-get update   \u0026\u0026 apt-get --yes install --no-install-recommends vim nano gzip   \u0026\u0026 rm -rf /var/lib/apt/lists/*}}",
+					"search_line": -1,
+					"search_value": "vim",
+					"expected_value": "Package 'vim' has version defined",
+					"actual_value": "Package 'vim' does not have version defined"
+				},
+				{
+					"file_name": "../../tmp/data/WebGoat/Dockerfile_desktop",
+					"similarity_id": "060e3ffb6153586fef6efa6804b062f66155f0c24997be9fdfdf5054a4bf1aa9",
+					"line": 46,
+					"issue_type": "MissingAttribute",
+					"search_key": "FROM={{lscr.io/linuxserver/webtop:ubuntu-xfce}}.RUN={{apt-get update   \u0026\u0026 apt-get --yes install --no-install-recommends vim nano gzip   \u0026\u0026 rm -rf /var/lib/apt/lists/*}}",
+					"search_line": -1,
+					"search_value": "gzip",
+					"expected_value": "Package 'gzip' has version defined",
+					"actual_value": "Package 'gzip' does not have version defined"
+				}
+			]
+		},
+		{
+			"query_name": "Unpinned Package Version in Apk Add",
+			"query_id": "d3499f6d-1651-41bb-a9a7-de925fea487b",
+			"query_url": "https://docs.docker.com/develop/develop-images/dockerfile_best-practices/",
+			"severity": "MEDIUM",
+			"platform": "Dockerfile",
+			"cwe": "1357",
+			"risk_score": "5.7",
+			"category": "Supply-Chain",
+			"experimental": false,
+			"description": "Package version pinning reduces the range of versions that can be installed, reducing the chances of failure due to unanticipated changes",
+			"description_id": "adb9d5d5",
+			"files": [
+				{
+					"file_name": "../../tmp/data/WebGoat/Dockerfile_desktop",
+					"similarity_id": "fe39af6fae01a1f637a47d010ac659cf38f980eabe6ad0338f830820d41ffcba",
+					"line": 16,
+					"issue_type": "IncorrectValue",
+					"search_key": "FROM={{alpine:3.22 AS jre}}.{{RUN apk add --no-cache curl tar   \u0026\u0026 set -eux;      case \"${TARGETARCH}\" in        amd64) ARCH=x64 ;;        arm64) ARCH=aarch64 ;;        *) echo \"Unsupported architecture: ${TARGETARCH}\" \u003e\u00262; exit 1 ;;      esac;      JAVA_ENC=\"${JAVA_FULL//+/%2B}\";      JAVA_FILE=\"${JAVA_FULL//+/_}\";      curl -sSL \"https://github.com/adoptium/temurin${JAVA_MAJOR}-binaries/releases/download/jdk-${JAVA_ENC}/OpenJDK${JAVA_MAJOR}U-jre_${ARCH}_linux_hotspot_${JAVA_FILE}.tar.gz\" -o /tmp/java.tgz;      mkdir -p /jre;      tar -xzf /tmp/java.tgz -C /jre --strip-components=1;      rm -f /tmp/java.tgz}}",
+					"search_line": -1,
+					"search_value": "",
+					"expected_value": "RUN instruction with 'apk add \u003cpackage\u003e' should use package pinning form 'apk add \u003cpackage\u003e=\u003cversion\u003e'",
+					"actual_value": "RUN instruction apk add --no-cache curl tar   \u0026\u0026 set -eux;      case \"${TARGETARCH}\" in        amd64) ARCH=x64 ;;        arm64) ARCH=aarch64 ;;        *) echo \"Unsupported architecture: ${TARGETARCH}\" \u003e\u00262; exit 1 ;;      esac;      JAVA_ENC=\"${JAVA_FULL//+/%2B}\";      JAVA_FILE=\"${JAVA_FULL//+/_}\";      curl -sSL \"https://github.com/adoptium/temurin23-binaries/releases/download/jdk-${JAVA_ENC}/OpenJDK${JAVA_MAJOR}U-jre_${ARCH}_linux_hotspot_${JAVA_FILE}.tar.gz\" -o /tmp/java.tgz;      mkdir -p /jre;      tar -xzf /tmp/java.tgz -C /jre --strip-components=1;      rm -f /tmp/java.tgz does not use package pinning form"
+				},
+				{
+					"file_name": "../../tmp/data/WebGoat/Dockerfile_desktop",
+					"similarity_id": "b7bd4ad109574cbd5097f468662c7ec3dbeae5eaf83fd5e1b116824b77ed0af4",
+					"line": 4,
+					"issue_type": "IncorrectValue",
+					"search_key": "FROM={{alpine:3.22 AS zap}}.{{RUN apk add --no-cache curl tar   \u0026\u0026 set -eux;      curl -sSL \"https://github.com/zaproxy/zaproxy/releases/download/v${ZAP_VERSION}/ZAP_${ZAP_VERSION}_Linux.tar.gz\" -o /tmp/zap.tgz;      mkdir -p /zap;      tar -xzf /tmp/zap.tgz -C /zap --strip-components=1;      rm -f /tmp/zap.tgz}}",
+					"search_line": -1,
+					"search_value": "",
+					"expected_value": "RUN instruction with 'apk add \u003cpackage\u003e' should use package pinning form 'apk add \u003cpackage\u003e=\u003cversion\u003e'",
+					"actual_value": "RUN instruction apk add --no-cache curl tar   \u0026\u0026 set -eux;      curl -sSL \"https://github.com/zaproxy/zaproxy/releases/download/v2.16.1/ZAP_${ZAP_VERSION}_Linux.tar.gz\" -o /tmp/zap.tgz;      mkdir -p /zap;      tar -xzf /tmp/zap.tgz -C /zap --strip-components=1;      rm -f /tmp/zap.tgz does not use package pinning form"
+				}
+			]
+		},
+		{
+			"query_name": "Chown Flag Exists",
+			"query_id": "aa93e17f-b6db-4162-9334-c70334e7ac28",
+			"query_url": "https://docs.docker.com/develop/develop-images/dockerfile_best-practices/",
+			"severity": "LOW",
+			"platform": "Dockerfile",
+			"cwe": "282",
+			"risk_score": "4.6",
+			"category": "Best Practices",
+			"experimental": false,
+			"description": "It is considered a best practice for every executable in a container to be owned by the root user even if it is executed by a non-root user, only execution permissions are required on the file, not ownership",
+			"description_id": "ba0a34dc",
+			"files": [
+				{
+					"file_name": "../../tmp/data/WebGoat/Dockerfile",
+					"similarity_id": "c151398b1b6a2925d002bf1f23d676d21923106bc57c5ad7e8380a07870e90ab",
+					"line": 14,
+					"issue_type": "IncorrectValue",
+					"search_key": "FROM={{docker.io/eclipse-temurin:25-jdk-noble}}.{{COPY --chown=webgoat target/webgoat-*.jar /home/webgoat/webgoat.jar}}",
+					"search_line": -1,
+					"search_value": "",
+					"expected_value": "The 'Dockerfile' shouldn´t contain the 'chown' flag",
+					"actual_value": "The 'Dockerfile' contains the 'chown' flag"
+				}
+			]
+		},
+		{
+			"query_name": "Healthcheck Instruction Missing",
+			"query_id": "b03a748a-542d-44f4-bb86-9199ab4fd2d5",
+			"query_url": "https://docs.docker.com/engine/reference/builder/#healthcheck",
+			"severity": "LOW",
+			"platform": "Dockerfile",
+			"cwe": "710",
+			"risk_score": "3.6",
+			"category": "Insecure Configurations",
+			"experimental": false,
+			"description": "Ensure that HEALTHCHECK is being used. The HEALTHCHECK instruction tells Docker how to test a container to check that it is still working",
+			"description_id": "426121ee",
+			"files": [
+				{
+					"file_name": "../../tmp/data/WebGoat/Dockerfile_desktop",
+					"similarity_id": "103d786e1ac81984602375c349b851759c8e840623e52b49b6f49e71a9794bc6",
+					"line": 31,
+					"issue_type": "MissingAttribute",
+					"search_key": "FROM={{lscr.io/linuxserver/webtop:ubuntu-xfce}}",
+					"search_line": -1,
+					"search_value": "",
+					"expected_value": "Dockerfile should contain instruction 'HEALTHCHECK'",
+					"actual_value": "Dockerfile doesn't contain instruction 'HEALTHCHECK'
+				}
+			]
+		}
+	]
+}

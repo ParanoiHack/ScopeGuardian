@@ -77,7 +77,7 @@ func (s *KicsServiceImpl) LoadFindings() ([]models.Finding, error) {
 	}
 
 	var results KicsResults
-	if json.Unmarshal(buffer, &results); err != nil {
+	if err := json.Unmarshal(buffer, &results); err != nil {
 		logger.Error(logErrorParseResults)
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (s *KicsServiceImpl) LoadFindings() ([]models.Finding, error) {
 	for _, item := range results.Queries {
 		for _, sink := range item.Files {
 			findings = append(findings, models.Finding{
-				Engine:         "IACST",
+				Engine:         scannerType,
 				Severity:       item.Severity,
 				Name:           item.QueryName,
 				Cwe:            item.Cwe,

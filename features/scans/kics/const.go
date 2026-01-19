@@ -4,6 +4,7 @@ const (
 	binaryPath   = "/opt/kics/bin/kics"
 	dirPath      = "/opt/kics"
 	outputFolder = "results"
+	scannerType  = "IACST"
 )
 
 const (
