@@ -11,6 +11,7 @@ import (
 type Client interface {
 	Do(req *http.Request) (*http.Response, error)
 	Post(url string, body []byte, headers http.Header) ([]byte, int)
+	Put(url string, body []byte, headers http.Header) ([]byte, int)
 	Get(url string, headers http.Header) ([]byte, int)
 	GetHeaders(accessToken string) http.Header
 }
@@ -31,6 +32,34 @@ func (c *clientImpl) Do(req *http.Request) (*http.Response, error) {
 
 func (c *clientImpl) Post(url string, body []byte, headers http.Header) ([]byte, int) {
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(body))
+	if err != nil {
+		logger.Error(err.Error())
+		return nil, -1
+	}
+
+	for key, value := range headers {
+		req.Header[key] = value
+	}
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		logger.Error(err.Error())
+		return nil, -1
+	}
+
+	defer resp.Body.Close()
+
+	body, err = io.ReadAll(resp.Body)
+	if err != nil {
+		logger.Error(err.Error())
+		return nil, -1
+	}
+
+	return body, resp.StatusCode
+}
+
+func (c *clientImpl) Put(url string, body []byte, headers http.Header) ([]byte, int) {
+	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(body))
 	if err != nil {
 		logger.Error(err.Error())
 		return nil, -1
@@ -88,6 +117,7 @@ func (c *clientImpl) Get(url string, headers http.Header) ([]byte, int) {
 func (c *clientImpl) GetHeaders(accessToken string) http.Header {
 	return http.Header{
 		AcceptKey:        {AcceptValue},
+		ContentTypeKey:   {ContentTypeValue},
 		AuthorizationKey: {fmt.Sprintf("Token %s", accessToken)},
 	}
 }

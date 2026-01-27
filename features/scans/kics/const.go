@@ -8,6 +8,16 @@ const (
 )
 
 const (
+	severityThreshold    = "Info"
+	groupByProperty      = "finding_title"
+	findingGroupProperty = true
+	findingTagProperty   = true
+	IACSTEngineTag       = "IACST"
+	scanType             = "KICS Scan"
+	closeOldFinding      = true
+)
+
+const (
 	scanArgument          = "scan"
 	ciArgument            = "--ci"
 	librariesPathArgument = "--libraries-path"
@@ -30,6 +40,7 @@ const (
 	logErrorDirectorNotFound = "Cannot find directory [%s]"
 	logErrorFileNotFound     = "Cannot find file [%s]"
 	logErrorParseResults     = "Cannot parse kics results"
+	logErrorImportScan       = "Cannot import scan into engagment [%d]"
 )
 
 const (
