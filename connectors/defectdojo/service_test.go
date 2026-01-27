@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	URL          = "http://172.19.0.7:8080"
-	TOKEN        = "9218806a28dd10aa8a3cb6641e2e9f079d3f464e"
-	PROJECT_NAME = "WebGoat"
+	URL          = "http://localhost:8080"
+	TOKEN        = "9218806a28dd10ad8a3cb6641e2e9f079d3f464e"
+	PROJECT_NAME = "Test"
 )
 
 func TestGetProductByName(t *testing.T) {
