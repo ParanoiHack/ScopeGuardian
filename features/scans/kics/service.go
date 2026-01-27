@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"scope-guardian/connectors/defectdojo"
 	"scope-guardian/domains/interfaces"
 	"scope-guardian/domains/models"
 	environment_variable "scope-guardian/environnement_variable"
@@ -12,19 +13,22 @@ import (
 	"scope-guardian/loader"
 	"scope-guardian/logger"
 	"strings"
+	"time"
 )
 
 type KicsServiceImpl struct {
-	path     string
-	platform string
-	output   string
+	path      string
+	platform  string
+	output    string
+	ddService defectdojo.DefectDojoService
 }
 
-func newKicsService(config loader.Kics) interfaces.ScanServiceImpl {
+func newKicsService(config loader.Kics, defectDojo defectdojo.DefectDojoService) interfaces.ScanServiceImpl {
 	return &KicsServiceImpl{
-		path:     fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], config.Path),
-		output:   fmt.Sprintf("%s/%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], outputFolder, outputNameParameter),
-		platform: config.Platform,
+		path:      fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], config.Path),
+		output:    fmt.Sprintf("%s/%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], outputFolder, outputNameParameter),
+		platform:  config.Platform,
+		ddService: defectDojo,
 	}
 }
 
@@ -102,6 +106,25 @@ func (s *KicsServiceImpl) LoadFindings() ([]models.Finding, error) {
 	return findings, nil
 }
 
-func (s *KicsServiceImpl) Sync() error {
+func (s *KicsServiceImpl) Sync(engagementId int, branch string) error {
+	var payload defectdojo.ScanPayload
+
+	payload.Timestamp = time.Now().Format("2006-01-02")
+	payload.SeverityThreshold = severityThreshold
+	payload.Branch = branch
+	payload.Tags = []string{IACSTEngineTag}
+	payload.GroupBy = groupByProperty
+	payload.FindingGroup = findingGroupProperty
+	payload.FindingTag = findingTagProperty
+	payload.ScanType = scanType
+	payload.EngagementId = engagementId
+	payload.CloseOldFinding = closeOldFinding
+	payload.File, _ = os.ReadFile(s.output)
+
+	if ok, err := s.ddService.ImportScan(payload, s.output); !ok || err != nil {
+		logger.Error(fmt.Sprintf(logErrorImportScan, engagementId))
+		return err
+	}
+
 	return nil
 }
