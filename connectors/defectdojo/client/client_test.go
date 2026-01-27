@@ -214,3 +214,85 @@ func (e *errorReader) Read(p []byte) (n int, err error) {
 func (e *errorReader) Close() error {
 	return nil
 }
+
+func TestClient_Put(t *testing.T) {
+	mockClient := newMockHTTPClient(func(req *http.Request) (*http.Response, error) {
+		body := io.NopCloser(bytes.NewReader([]byte(`{"key": "value"}`)))
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       body,
+		}, nil
+	})
+
+	client := NewClient(mockClient)
+
+	body, statusCode := client.Put("https://example.com", []byte(`{"data":"test"}`), http.Header{
+		"Content-Type": {"application/json"},
+	})
+
+	assert.Equal(t, http.StatusOK, statusCode)
+	assert.Equal(t, `{"key": "value"}`, string(body))
+}
+
+func TestClient_Put_Error(t *testing.T) {
+	mockClient := newMockHTTPClient(func(req *http.Request) (*http.Response, error) {
+		return nil, errors.New("network error")
+	})
+
+	client := NewClient(mockClient)
+
+	body, statusCode := client.Put("https://example.com", []byte(`{"data":"test"}`), http.Header{
+		"Content-Type": {"application/json"},
+	})
+
+	assert.Equal(t, -1, statusCode)
+	assert.Nil(t, body)
+}
+
+func TestClient_Put_RequestError(t *testing.T) {
+	mockClient := newMockHTTPClient(func(req *http.Request) (*http.Response, error) {
+		return nil, errors.New("request creation error")
+	})
+
+	client := NewClient(mockClient)
+
+	body, statusCode := client.Put("://invalid-url", []byte(`{"data":"test"}`), http.Header{
+		"Content-Type": {"application/json"},
+	})
+
+	assert.Equal(t, -1, statusCode)
+	assert.Nil(t, body)
+}
+
+func TestClient_Put_NetworkError(t *testing.T) {
+	mockClient := newMockHTTPClient(func(req *http.Request) (*http.Response, error) {
+		return nil, errors.New("network error")
+	})
+
+	client := NewClient(mockClient)
+
+	body, statusCode := client.Put("https://example.com", []byte(`{"data":"test"}`), http.Header{
+		"Content-Type": {"application/json"},
+	})
+
+	assert.Equal(t, -1, statusCode)
+	assert.Nil(t, body)
+}
+
+func TestClient_Put_ReadBodyError(t *testing.T) {
+	mockClient := newMockHTTPClient(func(req *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(&errorReader{}), // Simule une erreur de lecture du corps
+		}, nil
+	})
+
+	client := NewClient(mockClient)
+
+	body, statusCode := client.Put("https://example.com", []byte(`{"data":"test"}`), http.Header{
+		"Content-Type": {"application/json"},
+	})
+
+	assert.Equal(t, -1, statusCode)
+	assert.Nil(t, body)
+}

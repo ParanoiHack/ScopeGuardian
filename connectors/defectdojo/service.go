@@ -179,12 +179,8 @@ func (s *DefectDojoServiceImpl) ImportScan(payload ScanPayload, filename string)
 	headers := s.client.GetHeaders(s.accessToken)
 	headers.Set(client.ContentTypeKey, boundary)
 
-	fmt.Println(string(body))
-	tmp, code := s.client.Post(fmt.Sprintf(
+	_, code := s.client.Post(fmt.Sprintf(
 		"%s%s%s", s.url, APIPrefix, ImportScanPath), body, headers)
-
-	fmt.Println(code)
-	fmt.Println(string(tmp))
 
 	if code != http.StatusCreated {
 		logger.Error(logErrorImportScan)

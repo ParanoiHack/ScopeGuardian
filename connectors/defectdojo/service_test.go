@@ -149,133 +149,318 @@ func TestGetProductByName(t *testing.T) {
 	})
 }
 
-// func TestGetEngagements(t *testing.T) {
-// 	// gomockController := gomock.NewController(t)
+func TestGetEngagements(t *testing.T) {
+	gomockController := gomock.NewController(t)
 
-// 	t.Run("Should retrieve product engagements", func(t *testing.T) {
-// 		// clientMock := client.NewMockClient(gomockController)
+	t.Run("Should retrieve product engagements in a recursive fashion", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
 
-// 		// responseReturnMock := []byte(`
-// 		// 	{
-// 		// 		"count": 1,
-// 		// 		"results": [
-// 		// 			{
-// 		// 				"id": 1
-// 		// 			}
-// 		// 		]
-// 		// 	}
-// 		// `)
+		responseReturnMock := []byte(`
+			{
+				"count": 1,
+				"results": [
+					{
+						"id": 1
+					}
+				]
+			}
+		`)
 
-// 		// clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseReturnMock, 200).AnyTimes()
-// 		// clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+		responseEndMock := []byte(`
+			{
+				"count": 1,
+				"results": []		
+			}
+		`)
 
-// 		service := newDefectDojoService(client.NewClient(&http.Client{}), URL, TOKEN)
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+		gomock.InOrder(
+			clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseReturnMock, 200),
+			clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseEndMock, 200),
+		)
 
-// 		engagements, err := service.GetEngagements(1, 0, 1, []Engagement{})
+		service := newDefectDojoService(clientMock, URL, TOKEN)
 
-// 		assert.Nil(t, err)
-// 		assert.EqualValues(t, len(engagements), 2)
-// 	})
-// }
+		engagements, err := service.GetEngagements(1, 0, 1, []Engagement{})
 
-// func TestCreateEngagement(t *testing.T) {
-// 	// gomockController := gomock.NewController(t)
+		assert.Nil(t, err)
+		assert.EqualValues(t, 1, len(engagements))
+	})
 
-// 	t.Run("Should create an engagement", func(t *testing.T) {
-// 		// clientMock := client.NewMockClient(gomockController)
+	t.Run("Should not retrieve engagement due to wrong HTTP status code", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
 
-// 		// responseReturnMock := []byte(`
-// 		// 	{
-// 		// 		"count": 1,
-// 		// 		"results": [
-// 		// 			{
-// 		// 				"id": 1
-// 		// 			}
-// 		// 		]
-// 		// 	}
-// 		// `)
+		responseReturnMock := []byte(`
+			{
+				"count": 1,
+				"results": [
+					{
+						"id": 1
+					}
+				]
+			}
+		`)
 
-// 		// clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseReturnMock, 200).AnyTimes()
-// 		// clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+		clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseReturnMock, 403)
 
-// 		service := newDefectDojoService(client.NewClient(&http.Client{}), URL, TOKEN)
+		service := newDefectDojoService(clientMock, URL, TOKEN)
 
-// 		id, err := service.CreateEngagement("master", 4)
+		engagements, err := service.GetEngagements(1, 0, 1, []Engagement{})
 
-// 		fmt.Println(id)
-// 		assert.Nil(t, err)
-// 	})
-// }
+		assert.NotNil(t, err)
+		assert.Equal(t, errRetrieveEngagements, err.Error())
+		assert.EqualValues(t, 0, len(engagements))
+	})
 
-// func TestUpdateEngagementEndDate(t *testing.T) {
-// 	// gomockController := gomock.NewController(t)
+	t.Run("Should not retrieve engagement due to wrong JSON object", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
 
-// 	t.Run("Should update engagement end date", func(t *testing.T) {
-// 		// clientMock := client.NewMockClient(gomockController)
+		responseReturnMock := []byte(`
+			{
+				"count": 1,
+				"results": [
+					{
+						"id": 1
+					}
+				]
+		`)
 
-// 		// responseReturnMock := []byte(`
-// 		// 	{
-// 		// 		"count": 1,
-// 		// 		"results": [
-// 		// 			{
-// 		// 				"id": 1
-// 		// 			}
-// 		// 		]
-// 		// 	}
-// 		// `)
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+		clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseReturnMock, 200)
 
-// 		// clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseReturnMock, 200).AnyTimes()
-// 		// clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+		service := newDefectDojoService(clientMock, URL, TOKEN)
 
-// 		service := newDefectDojoService(client.NewClient(&http.Client{}), URL, TOKEN)
+		engagements, err := service.GetEngagements(1, 0, 1, []Engagement{})
 
-// 		ok, err := service.UpdateEngagementEndDate(13, 4)
+		assert.NotNil(t, err)
+		assert.Equal(t, errUnmarshal, err.Error())
+		assert.EqualValues(t, 0, len(engagements))
+	})
 
-// 		assert.Nil(t, err)
-// 		assert.True(t, ok)
-// 	})
-// }
+	t.Run("Should retrieve product engagements in a recursive fashion bis", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
 
-func TestImportScan(t *testing.T) {
-	// gomockController := gomock.NewController(t)
+		responseReturnMock_1 := []byte(`
+			{
+				"count": 2,
+				"results": [
+					{
+						"id": 1
+					}
+				]
+			}
+		`)
 
-	t.Run("Should import scan", func(t *testing.T) {
-		// clientMock := client.NewMockClient(gomockController)
+		responseReturnMock_2 := []byte(`
+			{
+				"count": 2,
+				"results": [
+					{
+						"id": 1
+					}
+				]
+			}
+		`)
 
-		// responseReturnMock := []byte(`
-		// 	{
-		// 		"count": 1,
-		// 		"results": [
-		// 			{
-		// 				"id": 1
-		// 			}
-		// 		]
-		// 	}
-		// `)
+		responseEndMock := []byte(`
+			{
+				"count": 2,
+				"results": []		
+			}
+		`)
 
-		// clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseReturnMock, 200).AnyTimes()
-		// clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+		gomock.InOrder(
+			clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseReturnMock_1, 200),
+			clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseReturnMock_2, 200),
+			clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseEndMock, 200),
+		)
 
-		service := newDefectDojoService(client.NewClient(&http.Client{}), URL, TOKEN)
+		service := newDefectDojoService(clientMock, URL, TOKEN)
 
-		var payload ScanPayload
+		engagements, err := service.GetEngagements(1, 0, 1, []Engagement{})
 
-		// payload.SeverityThreshold = "Info"
-		// payload.Branch = "test"
-		// payload.Tags = []string{"TEST"}
-		// payload.GroupBy = "finding_title"
-		// payload.FindingGroup = true
-		// payload.FindingTag = true
-		// payload.CloseOldFinding = true
-		payload.EngagementId = 13
-		// payload.Timestamp = time.Now().Format("2006-01-02")
-		payload.ScanType = "KICS Scan"
+		assert.Nil(t, err)
+		assert.EqualValues(t, 2, len(engagements))
+	})
 
-		payload.File, _ = os.ReadFile("../../features/scans/kics/mocks/working_results/results/kics-results.json")
+	t.Run("Should not retrieve product engagements cause not existing", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
 
-		ok, err := service.ImportScan(payload, "../../features/scans/kics/mocks/working_results/results/kics-results.json")
+		responseReturnMock := []byte(`
+			{
+				"count": 0,
+				"results": [
+				]
+			}
+		`)
+
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+		gomock.InOrder(
+			clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseReturnMock, 200),
+		)
+
+		service := newDefectDojoService(clientMock, URL, TOKEN)
+
+		engagements, err := service.GetEngagements(1, 0, 1, []Engagement{})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, 0, len(engagements))
+	})
+}
+
+func TestCreateEngagement(t *testing.T) {
+	gomockController := gomock.NewController(t)
+
+	t.Run("Should create an engagement", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
+
+		responseReturnMock := []byte(`
+			{
+				"id": 1
+			}
+		`)
+
+		clientMock.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any()).Return(responseReturnMock, 201).AnyTimes()
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+
+		service := newDefectDojoService(clientMock, URL, TOKEN)
+
+		id, err := service.CreateEngagement("master", 4)
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, 1, id)
+	})
+
+	t.Run("Should not create an engagement due to Unmarshalling error", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
+
+		responseReturnMock := []byte(`
+			{
+				"id": 1
+		`)
+
+		clientMock.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any()).Return(responseReturnMock, 201).AnyTimes()
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+
+		service := newDefectDojoService(clientMock, URL, TOKEN)
+
+		id, err := service.CreateEngagement("master", 1)
+
+		assert.NotNil(t, err)
+		assert.EqualValues(t, errUnmarshal, err.Error())
+		assert.EqualValues(t, 0, id)
+	})
+
+	t.Run("Should not create an engagement due to wrong HTTP status code", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
+
+		responseReturnMock := []byte(`
+			{
+				"id": 1
+		`)
+
+		clientMock.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any()).Return(responseReturnMock, 403).AnyTimes()
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+
+		service := newDefectDojoService(clientMock, URL, TOKEN)
+
+		id, err := service.CreateEngagement("master", 1)
+
+		assert.NotNil(t, err)
+		assert.EqualValues(t, errCreateEngagement, err.Error())
+		assert.EqualValues(t, 0, id)
+	})
+}
+
+func TestUpdateEngagementEndDate(t *testing.T) {
+	gomockController := gomock.NewController(t)
+
+	t.Run("Should update engagement end date", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
+
+		responseReturnMock := []byte(`{}`)
+
+		clientMock.EXPECT().Put(gomock.Any(), gomock.Any(), gomock.Any()).Return(responseReturnMock, 200).AnyTimes()
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+
+		service := newDefectDojoService(clientMock, URL, TOKEN)
+
+		ok, err := service.UpdateEngagementEndDate(13, 4)
 
 		assert.Nil(t, err)
 		assert.True(t, ok)
+	})
+
+	t.Run("Should not update engagement due to wrong HTTP status code", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
+
+		responseReturnMock := []byte(`{}`)
+
+		clientMock.EXPECT().Put(gomock.Any(), gomock.Any(), gomock.Any()).Return(responseReturnMock, 403).AnyTimes()
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+
+		service := newDefectDojoService(clientMock, URL, TOKEN)
+
+		ok, err := service.UpdateEngagementEndDate(13, 4)
+
+		assert.NotNil(t, err)
+		assert.EqualValues(t, errUpdateEngagementEndDate, err.Error())
+		assert.False(t, ok)
+	})
+}
+
+func TestImportScan(t *testing.T) {
+	gomockController := gomock.NewController(t)
+
+	t.Run("Should import scan", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
+
+		clientMock.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(""), 201).AnyTimes()
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+
+		service := newDefectDojoService(clientMock, URL, TOKEN)
+
+		ok, err := service.ImportScan(ScanPayload{}, "../../features/scans/kics/mocks/working_results/results/kics-results.json")
+
+		assert.Nil(t, err)
+		assert.True(t, ok)
+	})
+
+	t.Run("Should not import scan", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
+
+		clientMock.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(""), 403).AnyTimes()
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+
+		service := newDefectDojoService(clientMock, URL, TOKEN)
+
+		ok, err := service.ImportScan(ScanPayload{}, "../../features/scans/kics/mocks/working_results/results/kics-results.json")
+
+		assert.NotNil(t, err)
+		assert.EqualValues(t, errImportScan, err.Error())
+		assert.False(t, ok)
+	})
+}
+
+func TestCreateMultipartFromScanPayload(t *testing.T) {
+	t.Run("Should generate expected multipart body", func(t *testing.T) {
+		var payload ScanPayload
+
+		payload.SeverityThreshold = "severityThreshold"
+		payload.Branch = "branch"
+		payload.Tags = []string{"IACSTEngineTag"}
+		payload.GroupBy = "groupByProperty"
+		payload.FindingGroup = true
+		payload.FindingTag = true
+		payload.ScanType = "scanType"
+		payload.EngagementId = 12
+		payload.CloseOldFinding = true
+		payload.File, _ = os.ReadFile("../../features/scans/kics/mocks/working_results/results/kics-results.json")
+
+		_, _, err := createMultipartFromScanPayload(payload, "test.json")
+
+		assert.Nil(t, err)
 	})
 }
