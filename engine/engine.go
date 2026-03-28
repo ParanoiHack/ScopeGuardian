@@ -119,19 +119,13 @@ func (e *Engine) GetDefectDojoFindings(projectName string, branch string, protec
 		environment_variable.EnvironmentVariable["DD_URL"],
 		environment_variable.EnvironmentVariable["DD_ACCESS_TOKEN"])
 
-	product, err := ddService.GetProductByName(projectName)
-	if err != nil {
-		logger.Error(fmt.Sprintf(logErrorRetrieveProduct, projectName))
-		return nil, err
-	}
-
 	engagementId, err := featuresync.GetEngagementId(ddService, projectName, branch, protectedBranches)
 	if err != nil {
 		logger.Error(fmt.Sprintf(logErrorRetrieveEngagementId, projectName, branch))
 		return nil, err
 	}
 
-	ddFindings, err := ddService.GetFindings(engagementId, product.Id, 0, 100, []defectdojo.Finding{})
+	ddFindings, err := ddService.GetFindings(engagementId, 0, 100, []defectdojo.Finding{})
 	if err != nil {
 		logger.Error(logErrorRetrieveDefectDojoFindings)
 		return nil, err

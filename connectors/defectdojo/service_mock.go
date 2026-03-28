@@ -49,18 +49,18 @@ func (mr *MockDefectDojoServiceMockRecorder) CreateEngagement(projectName, branc
 }
 
 // GetFindings mocks base method.
-func (m *MockDefectDojoService) GetFindings(engagementId int, productId int, offset int, limit int, findings []Finding) ([]Finding, error) {
+func (m *MockDefectDojoService) GetFindings(engagementId int, offset int, limit int, findings []Finding) ([]Finding, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFindings", engagementId, productId, offset, limit, findings)
+	ret := m.ctrl.Call(m, "GetFindings", engagementId, offset, limit, findings)
 	ret0, _ := ret[0].([]Finding)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetFindings indicates an expected call of GetFindings.
-func (mr *MockDefectDojoServiceMockRecorder) GetFindings(engagementId, productId, offset, limit, findings interface{}) *gomock.Call {
+func (mr *MockDefectDojoServiceMockRecorder) GetFindings(engagementId, offset, limit, findings interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFindings", reflect.TypeOf((*MockDefectDojoService)(nil).GetFindings), engagementId, productId, offset, limit, findings)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFindings", reflect.TypeOf((*MockDefectDojoService)(nil).GetFindings), engagementId, offset, limit, findings)
 }
 
 // GetEngagements mocks base method.

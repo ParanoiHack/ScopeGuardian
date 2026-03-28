@@ -515,7 +515,7 @@ func TestGetFindings(t *testing.T) {
 
 		service := newDefectDojoService(clientMock, URL, TOKEN)
 
-		findings, err := service.GetFindings(42, 5, 0, 1, []Finding{})
+		findings, err := service.GetFindings(42, 0, 1, []Finding{})
 
 		assert.Nil(t, err)
 		assert.EqualValues(t, 1, len(findings))
@@ -532,7 +532,7 @@ func TestGetFindings(t *testing.T) {
 
 		service := newDefectDojoService(clientMock, URL, TOKEN)
 
-		findings, err := service.GetFindings(42, 5, 0, 100, []Finding{})
+		findings, err := service.GetFindings(42, 0, 100, []Finding{})
 
 		assert.NotNil(t, err)
 		assert.Equal(t, errRetrieveFindings, err.Error())
@@ -556,7 +556,7 @@ func TestGetFindings(t *testing.T) {
 
 		service := newDefectDojoService(clientMock, URL, TOKEN)
 
-		findings, err := service.GetFindings(42, 5, 0, 100, []Finding{})
+		findings, err := service.GetFindings(42, 0, 100, []Finding{})
 
 		assert.NotNil(t, err)
 		assert.Equal(t, errUnmarshal, err.Error())
@@ -578,7 +578,7 @@ func TestGetFindings(t *testing.T) {
 
 		service := newDefectDojoService(clientMock, URL, TOKEN)
 
-		findings, err := service.GetFindings(42, 5, 0, 100, []Finding{})
+		findings, err := service.GetFindings(42, 0, 100, []Finding{})
 
 		assert.Nil(t, err)
 		assert.EqualValues(t, 0, len(findings))

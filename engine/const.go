@@ -13,7 +13,6 @@ const (
 	logErrorLoadFinding                = "Cannot load finding for %s scanner"
 	logErrorRegisterScanner            = "Cannot register scanner %s"
 	logErrorRetrieveEngagementId       = "Cannot retrieve engagement ID for project [%s] branch [%s]"
-	logErrorRetrieveProduct            = "Cannot retrieve product for project [%s]"
 	logErrorRetrieveDefectDojoFindings = "Cannot retrieve findings from DefectDojo"
 )
 

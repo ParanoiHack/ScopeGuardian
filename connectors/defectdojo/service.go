@@ -21,7 +21,7 @@ type DefectDojoService interface {
 	GetEngagements(productId uint, offset int, limit int, engagements []Engagement) ([]Engagement, error)
 	UpdateEngagementEndDate(engagementId, productId int, protected bool) (bool, error)
 	ImportScan(payload ScanPayload, filename string) (bool, error)
-	GetFindings(engagementId int, productId int, offset int, limit int, findings []Finding) ([]Finding, error)
+	GetFindings(engagementId int, offset int, limit int, findings []Finding) ([]Finding, error)
 	SetAccessToken(token string)
 	SetURL(url string)
 }
@@ -287,11 +287,11 @@ func createMultipartFromScanPayload(payload ScanPayload, filename string) ([]byt
 // GetFindings retrieves all findings for the given engagement and product using
 // cursor-based pagination (offset/limit). It accumulates results recursively until
 // all pages have been fetched and returns the complete slice.
-func (s *DefectDojoServiceImpl) GetFindings(engagementId int, productId int, offset int, limit int, findings []Finding) ([]Finding, error) {
+func (s *DefectDojoServiceImpl) GetFindings(engagementId int, offset int, limit int, findings []Finding) ([]Finding, error) {
 	var res GetFindingsResponse
 
 	body, code := s.client.Get(fmt.Sprintf(
-		"%s%s%s", s.url, APIPrefix, fmt.Sprintf(GetFindingsPath, engagementId, productId, offset, limit)), s.client.GetHeaders(s.accessToken))
+		"%s%s%s", s.url, APIPrefix, fmt.Sprintf(GetFindingsPath, engagementId, offset, limit)), s.client.GetHeaders(s.accessToken))
 	if code != http.StatusOK {
 		logger.Error(fmt.Sprintf(logErrorRetrieveFindings, engagementId))
 		return []Finding{}, errors.New(errRetrieveFindings)
@@ -305,7 +305,7 @@ func (s *DefectDojoServiceImpl) GetFindings(engagementId int, productId int, off
 
 	findings = append(findings, res.Results...)
 	if res.Count-(offset+limit) >= 0 {
-		return s.GetFindings(engagementId, productId, offset+limit, limit, findings)
+		return s.GetFindings(engagementId, offset+limit, limit, findings)
 	}
 
 	return findings, nil

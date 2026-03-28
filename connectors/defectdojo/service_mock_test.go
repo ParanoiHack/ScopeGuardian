@@ -142,9 +142,9 @@ func TestMockDefectDojoService_GetFindings_Succeeds(t *testing.T) {
 	mock := NewMockDefectDojoService(ctrl)
 
 	expected := []Finding{{Id: 1, Title: "SQL Injection", Severity: "High"}}
-	mock.EXPECT().GetFindings(42, 5, 0, 100, gomock.Any()).Return(expected, nil)
+	mock.EXPECT().GetFindings(42, 0, 100, gomock.Any()).Return(expected, nil)
 
-	findings, err := mock.GetFindings(42, 5, 0, 100, []Finding{})
+	findings, err := mock.GetFindings(42, 0, 100, []Finding{})
 	assert.Nil(t, err)
 	assert.Len(t, findings, 1)
 	assert.Equal(t, 1, findings[0].Id)
@@ -155,9 +155,9 @@ func TestMockDefectDojoService_GetFindings_ReturnsError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mock := NewMockDefectDojoService(ctrl)
 
-	mock.EXPECT().GetFindings(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]Finding{}, errors.New(errRetrieveFindings))
+	mock.EXPECT().GetFindings(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]Finding{}, errors.New(errRetrieveFindings))
 
-	findings, err := mock.GetFindings(42, 5, 0, 100, []Finding{})
+	findings, err := mock.GetFindings(42, 0, 100, []Finding{})
 	assert.NotNil(t, err)
 	assert.Empty(t, findings)
 }
