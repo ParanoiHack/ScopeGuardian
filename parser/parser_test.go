@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -140,4 +141,17 @@ func TestParse(t *testing.T) {
 		assert.NotNil(t, err)
 		assert.EqualValues(t, Args{}, args)
 	})
+}
+
+func TestPrintUsage(t *testing.T) {
+	var buf bytes.Buffer
+	PrintUsage(&buf)
+
+	output := buf.String()
+	assert.Contains(t, output, "scope-guardian")
+	assert.Contains(t, output, "--projectName")
+	assert.Contains(t, output, "--branch")
+	assert.Contains(t, output, "--sync")
+	assert.Contains(t, output, "--threshold")
+	assert.Contains(t, output, "<config-file>")
 }

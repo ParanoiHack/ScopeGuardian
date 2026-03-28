@@ -28,6 +28,7 @@ func main() {
 	args, err := parser.Parse(os.Args[1:])
 	if err != nil {
 		logger.Error(err.Error())
+		parser.PrintUsage(os.Stdout)
 		os.Exit(1)
 	}
 

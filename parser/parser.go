@@ -4,11 +4,31 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 )
 
 var validSeverities = []string{severityCritical, severityHigh, severityMedium, severityLow, severityInfo}
+
+// PrintUsage writes the CLI usage help to w.
+func PrintUsage(w io.Writer) {
+	fmt.Fprintln(w, "Usage: scope-guardian [flags] <config-file>")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Arguments:")
+	fmt.Fprintln(w, "  <config-file>  Path to the TOML configuration file (required)")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Flags:")
+	fmt.Fprintln(w, "  --projectName string   Name of the project to scan (required)")
+	fmt.Fprintln(w, "  --branch string        Project branch to scan (required)")
+	fmt.Fprintln(w, "  --sync                 Enable sync result with DefectDojo (default: false)")
+	fmt.Fprintln(w, "  --threshold string     Enable security gate, e.g. critical=1 (optional)")
+	fmt.Fprintln(w, "                         Supported severities: critical, high, medium, low, info")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Example:")
+	fmt.Fprintln(w, "  scope-guardian --projectName my-service --branch main ./config.toml")
+	fmt.Fprintln(w, "  scope-guardian --projectName my-service --branch main --threshold critical=1 --sync ./config.toml")
+}
 
 func Parse(args []string) (Args, error) {
 	fs := flag.NewFlagSet("scope-guardian", flag.ContinueOnError)
