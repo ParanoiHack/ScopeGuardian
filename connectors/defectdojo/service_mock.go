@@ -34,18 +34,18 @@ func (m *MockDefectDojoService) EXPECT() *MockDefectDojoServiceMockRecorder {
 }
 
 // CreateEngagement mocks base method.
-func (m *MockDefectDojoService) CreateEngagement(projectName string, branch string, productId int) (int, error) {
+func (m *MockDefectDojoService) CreateEngagement(projectName string, branch string, productId int, protected bool) (int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateEngagement", projectName, branch, productId)
+	ret := m.ctrl.Call(m, "CreateEngagement", projectName, branch, productId, protected)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateEngagement indicates an expected call of CreateEngagement.
-func (mr *MockDefectDojoServiceMockRecorder) CreateEngagement(projectName, branch, productId interface{}) *gomock.Call {
+func (mr *MockDefectDojoServiceMockRecorder) CreateEngagement(projectName, branch, productId, protected interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEngagement", reflect.TypeOf((*MockDefectDojoService)(nil).CreateEngagement), projectName, branch, productId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEngagement", reflect.TypeOf((*MockDefectDojoService)(nil).CreateEngagement), projectName, branch, productId, protected)
 }
 
 // GetEngagements mocks base method.
@@ -118,16 +118,16 @@ func (mr *MockDefectDojoServiceMockRecorder) SetURL(url interface{}) *gomock.Cal
 }
 
 // UpdateEngagementEndDate mocks base method.
-func (m *MockDefectDojoService) UpdateEngagementEndDate(engagementId, productId int) (bool, error) {
+func (m *MockDefectDojoService) UpdateEngagementEndDate(engagementId, productId int, protected bool) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateEngagementEndDate", engagementId, productId)
+	ret := m.ctrl.Call(m, "UpdateEngagementEndDate", engagementId, productId, protected)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateEngagementEndDate indicates an expected call of UpdateEngagementEndDate.
-func (mr *MockDefectDojoServiceMockRecorder) UpdateEngagementEndDate(engagementId, productId interface{}) *gomock.Call {
+func (mr *MockDefectDojoServiceMockRecorder) UpdateEngagementEndDate(engagementId, productId, protected interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEngagementEndDate", reflect.TypeOf((*MockDefectDojoService)(nil).UpdateEngagementEndDate), engagementId, productId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEngagementEndDate", reflect.TypeOf((*MockDefectDojoService)(nil).UpdateEngagementEndDate), engagementId, productId, protected)
 }

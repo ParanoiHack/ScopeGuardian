@@ -21,7 +21,7 @@ func (m *mockDefectDojoService) GetProductByName(_ string) (defectdojo.Product, 
 	return defectdojo.Product{}, nil
 }
 
-func (m *mockDefectDojoService) CreateEngagement(_ string, _ string, _ int) (int, error) {
+func (m *mockDefectDojoService) CreateEngagement(_ string, _ string, _ int, _ bool) (int, error) {
 	return 0, nil
 }
 
@@ -29,7 +29,7 @@ func (m *mockDefectDojoService) GetEngagements(_ uint, _ int, _ int, _ []defectd
 	return []defectdojo.Engagement{}, nil
 }
 
-func (m *mockDefectDojoService) UpdateEngagementEndDate(_, _ int) (bool, error) {
+func (m *mockDefectDojoService) UpdateEngagementEndDate(_, _ int, _ bool) (bool, error) {
 	return true, nil
 }
 

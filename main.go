@@ -47,7 +47,7 @@ func main() {
 	findings := engine.LoadFindings()
 
 	if args.Sync {
-		engine.SyncResults(args.ProjectName, args.Branch)
+		engine.SyncResults(args.ProjectName, args.Branch, config.ProtectedBranches)
 	}
 
 	display.DisplayFindings(findings)

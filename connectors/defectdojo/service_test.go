@@ -327,7 +327,7 @@ func TestCreateEngagement(t *testing.T) {
 
 		service := newDefectDojoService(clientMock, URL, TOKEN)
 
-		id, err := service.CreateEngagement("my-project", "master", 4)
+		id, err := service.CreateEngagement("my-project", "master", 4, false)
 
 		assert.Nil(t, err)
 		assert.EqualValues(t, 1, id)
@@ -346,7 +346,7 @@ func TestCreateEngagement(t *testing.T) {
 
 		service := newDefectDojoService(clientMock, URL, TOKEN)
 
-		id, err := service.CreateEngagement("my-project", "master", 1)
+		id, err := service.CreateEngagement("my-project", "master", 1, false)
 
 		assert.NotNil(t, err)
 		assert.EqualValues(t, errUnmarshal, err.Error())
@@ -366,7 +366,7 @@ func TestCreateEngagement(t *testing.T) {
 
 		service := newDefectDojoService(clientMock, URL, TOKEN)
 
-		id, err := service.CreateEngagement("my-project", "master", 1)
+		id, err := service.CreateEngagement("my-project", "master", 1, false)
 
 		assert.NotNil(t, err)
 		assert.EqualValues(t, errCreateEngagement, err.Error())
@@ -387,7 +387,7 @@ func TestUpdateEngagementEndDate(t *testing.T) {
 
 		service := newDefectDojoService(clientMock, URL, TOKEN)
 
-		ok, err := service.UpdateEngagementEndDate(13, 4)
+		ok, err := service.UpdateEngagementEndDate(13, 4, false)
 
 		assert.Nil(t, err)
 		assert.True(t, ok)
@@ -403,7 +403,7 @@ func TestUpdateEngagementEndDate(t *testing.T) {
 
 		service := newDefectDojoService(clientMock, URL, TOKEN)
 
-		ok, err := service.UpdateEngagementEndDate(13, 4)
+		ok, err := service.UpdateEngagementEndDate(13, 4, false)
 
 		assert.NotNil(t, err)
 		assert.EqualValues(t, errUpdateEngagementEndDate, err.Error())

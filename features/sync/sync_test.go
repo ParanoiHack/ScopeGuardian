@@ -13,11 +13,14 @@ import (
 )
 
 const (
-	testProjectName = "my-project"
-	testBranch      = "main"
-	testProductId   = 5
+	testProjectName  = "my-project"
+	testBranch       = "main"
+	testProductId    = 5
 	testEngagementId = 42
 )
+
+var noProtectedBranches = []string{}
+var protectedBranchList = []string{"main", "master"}
 
 func futureDate() string {
 	return time.Now().AddDate(1, 0, 0).Format(defectdojo.DateFormat)
@@ -38,9 +41,23 @@ func TestGetEngagementId(t *testing.T) {
 
 		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
 		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{}, nil)
-		mockService.EXPECT().CreateEngagement(testProjectName, testBranch, testProductId).Return(testEngagementId, nil)
+		mockService.EXPECT().CreateEngagement(testProjectName, testBranch, testProductId, false).Return(testEngagementId, nil)
 
-		id, err := GetEngagementId(mockService, testProjectName, testBranch)
+		id, err := GetEngagementId(mockService, testProjectName, testBranch, noProtectedBranches)
+
+		assert.Nil(t, err)
+		assert.Equal(t, testEngagementId, id)
+	})
+
+	t.Run("Should create engagement with protected=true when branch is in protected list", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockService := defectdojo.NewMockDefectDojoService(ctrl)
+
+		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
+		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{}, nil)
+		mockService.EXPECT().CreateEngagement(testProjectName, testBranch, testProductId, true).Return(testEngagementId, nil)
+
+		id, err := GetEngagementId(mockService, testProjectName, testBranch, protectedBranchList)
 
 		assert.Nil(t, err)
 		assert.Equal(t, testEngagementId, id)
@@ -59,7 +76,7 @@ func TestGetEngagementId(t *testing.T) {
 		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
 		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{existingEngagement}, nil)
 
-		id, err := GetEngagementId(mockService, testProjectName, testBranch)
+		id, err := GetEngagementId(mockService, testProjectName, testBranch, noProtectedBranches)
 
 		assert.Nil(t, err)
 		assert.Equal(t, testEngagementId, id)
@@ -77,9 +94,29 @@ func TestGetEngagementId(t *testing.T) {
 
 		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
 		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{existingEngagement}, nil)
-		mockService.EXPECT().UpdateEngagementEndDate(testEngagementId, testProductId).Return(true, nil)
+		mockService.EXPECT().UpdateEngagementEndDate(testEngagementId, testProductId, false).Return(true, nil)
 
-		id, err := GetEngagementId(mockService, testProjectName, testBranch)
+		id, err := GetEngagementId(mockService, testProjectName, testBranch, noProtectedBranches)
+
+		assert.Nil(t, err)
+		assert.Equal(t, testEngagementId, id)
+	})
+
+	t.Run("Should update end date with protected=true when branch is protected and end date is past", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockService := defectdojo.NewMockDefectDojoService(ctrl)
+
+		existingEngagement := defectdojo.Engagement{
+			Id:        testEngagementId,
+			Name:      expectedEngagementName(),
+			TargetEnd: pastDate(),
+		}
+
+		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
+		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{existingEngagement}, nil)
+		mockService.EXPECT().UpdateEngagementEndDate(testEngagementId, testProductId, true).Return(true, nil)
+
+		id, err := GetEngagementId(mockService, testProjectName, testBranch, protectedBranchList)
 
 		assert.Nil(t, err)
 		assert.Equal(t, testEngagementId, id)
@@ -91,7 +128,7 @@ func TestGetEngagementId(t *testing.T) {
 
 		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{}, errors.New("product not found"))
 
-		id, err := GetEngagementId(mockService, testProjectName, testBranch)
+		id, err := GetEngagementId(mockService, testProjectName, testBranch, noProtectedBranches)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, errGetProduct, err.Error())
@@ -105,7 +142,7 @@ func TestGetEngagementId(t *testing.T) {
 		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
 		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{}, errors.New("api error"))
 
-		id, err := GetEngagementId(mockService, testProjectName, testBranch)
+		id, err := GetEngagementId(mockService, testProjectName, testBranch, noProtectedBranches)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, errGetEngagements, err.Error())
@@ -124,9 +161,9 @@ func TestGetEngagementId(t *testing.T) {
 
 		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
 		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{existingEngagement}, nil)
-		mockService.EXPECT().UpdateEngagementEndDate(testEngagementId, testProductId).Return(false, errors.New("update failed"))
+		mockService.EXPECT().UpdateEngagementEndDate(testEngagementId, testProductId, false).Return(false, errors.New("update failed"))
 
-		id, err := GetEngagementId(mockService, testProjectName, testBranch)
+		id, err := GetEngagementId(mockService, testProjectName, testBranch, noProtectedBranches)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, errUpdateEndDate, err.Error())
@@ -139,9 +176,9 @@ func TestGetEngagementId(t *testing.T) {
 
 		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
 		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{}, nil)
-		mockService.EXPECT().CreateEngagement(testProjectName, testBranch, testProductId).Return(0, errors.New("create failed"))
+		mockService.EXPECT().CreateEngagement(testProjectName, testBranch, testProductId, false).Return(0, errors.New("create failed"))
 
-		id, err := GetEngagementId(mockService, testProjectName, testBranch)
+		id, err := GetEngagementId(mockService, testProjectName, testBranch, noProtectedBranches)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, errCreateEngagement, err.Error())
@@ -160,9 +197,9 @@ func TestGetEngagementId(t *testing.T) {
 
 		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
 		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{otherEngagement}, nil)
-		mockService.EXPECT().CreateEngagement(testProjectName, testBranch, testProductId).Return(testEngagementId, nil)
+		mockService.EXPECT().CreateEngagement(testProjectName, testBranch, testProductId, false).Return(testEngagementId, nil)
 
-		id, err := GetEngagementId(mockService, testProjectName, testBranch)
+		id, err := GetEngagementId(mockService, testProjectName, testBranch, noProtectedBranches)
 
 		assert.Nil(t, err)
 		assert.Equal(t, testEngagementId, id)
