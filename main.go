@@ -53,7 +53,16 @@ func main() {
 	display.DisplayFindings(findings)
 
 	if len(args.Thresholds) > 0 {
-		if !securitygate.Evaluate(findings, args.Thresholds) {
+		findingsToEvaluate := findings
+		if args.Sync {
+			remoteFindings, err := engine.GetDefectDojoFindings(args.ProjectName, args.Branch, config.ProtectedBranches)
+			if err != nil {
+				logger.Error(err.Error())
+			} else {
+				findingsToEvaluate = remoteFindings
+			}
+		}
+		if !securitygate.Evaluate(findingsToEvaluate, args.Thresholds) {
 			os.Exit(-1)
 		}
 	}

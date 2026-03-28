@@ -41,6 +41,10 @@ func (m *mockDefectDojoService) SetAccessToken(_ string) {}
 
 func (m *mockDefectDojoService) SetURL(_ string) {}
 
+func (m *mockDefectDojoService) GetFindings(_ int, _ int, _ int, _ int, _ []defectdojo.Finding) ([]defectdojo.Finding, error) {
+	return []defectdojo.Finding{}, nil
+}
+
 var _ defectdojo.DefectDojoService = &mockDefectDojoService{}
 
 func TestNewKicsService(t *testing.T) {
