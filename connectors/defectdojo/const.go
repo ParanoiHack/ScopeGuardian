@@ -17,7 +17,6 @@ const (
 
 const (
 	ScopeGuardianTag      = "SCOPE-GUARDIAN"
-	EngagementPrefix      = "scope-guardian"
 	EngagementDescription = "Engagement used for security scans' findings storage affecting the %s branch"
 	EngagementStatus      = "In Progress"
 	EngagementDefaultLead = 1

@@ -59,9 +59,9 @@ func TestMockDefectDojoService_CreateEngagement_Succeeds(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mock := NewMockDefectDojoService(ctrl)
 
-	mock.EXPECT().CreateEngagement("main", 1).Return(10, nil)
+	mock.EXPECT().CreateEngagement("my-project", "main", 1, false).Return(10, nil)
 
-	id, err := mock.CreateEngagement("main", 1)
+	id, err := mock.CreateEngagement("my-project", "main", 1, false)
 	assert.Nil(t, err)
 	assert.Equal(t, 10, id)
 }
@@ -70,9 +70,9 @@ func TestMockDefectDojoService_CreateEngagement_ReturnsError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mock := NewMockDefectDojoService(ctrl)
 
-	mock.EXPECT().CreateEngagement(gomock.Any(), gomock.Any()).Return(0, errors.New(errCreateEngagement))
+	mock.EXPECT().CreateEngagement(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(0, errors.New(errCreateEngagement))
 
-	id, err := mock.CreateEngagement("feature-branch", 1)
+	id, err := mock.CreateEngagement("my-project", "feature-branch", 1, false)
 	assert.NotNil(t, err)
 	assert.Equal(t, 0, id)
 }
@@ -81,9 +81,9 @@ func TestMockDefectDojoService_UpdateEngagementEndDate_Succeeds(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mock := NewMockDefectDojoService(ctrl)
 
-	mock.EXPECT().UpdateEngagementEndDate(5, 1).Return(true, nil)
+	mock.EXPECT().UpdateEngagementEndDate(5, 1, false).Return(true, nil)
 
-	ok, err := mock.UpdateEngagementEndDate(5, 1)
+	ok, err := mock.UpdateEngagementEndDate(5, 1, false)
 	assert.Nil(t, err)
 	assert.True(t, ok)
 }
@@ -92,9 +92,9 @@ func TestMockDefectDojoService_UpdateEngagementEndDate_ReturnsError(t *testing.T
 	ctrl := gomock.NewController(t)
 	mock := NewMockDefectDojoService(ctrl)
 
-	mock.EXPECT().UpdateEngagementEndDate(gomock.Any(), gomock.Any()).Return(false, errors.New(errUpdateEngagementEndDate))
+	mock.EXPECT().UpdateEngagementEndDate(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, errors.New(errUpdateEngagementEndDate))
 
-	ok, err := mock.UpdateEngagementEndDate(5, 1)
+	ok, err := mock.UpdateEngagementEndDate(5, 1, false)
 	assert.NotNil(t, err)
 	assert.False(t, ok)
 }

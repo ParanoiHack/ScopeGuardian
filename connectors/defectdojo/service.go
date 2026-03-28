@@ -17,9 +17,9 @@ import (
 // DefectDojoService defines the operations available against the DefectDojo API.
 type DefectDojoService interface {
 	GetProductByName(productName string) (Product, error)
-	CreateEngagement(branch string, productId int) (int, error)
+	CreateEngagement(projectName string, branch string, productId int, protected bool) (int, error)
 	GetEngagements(productId uint, offset int, limit int, engagements []Engagement) ([]Engagement, error)
-	UpdateEngagementEndDate(engagementId, productId int) (bool, error)
+	UpdateEngagementEndDate(engagementId, productId int, protected bool) (bool, error)
 	ImportScan(payload ScanPayload, filename string) (bool, error)
 	SetAccessToken(token string)
 	SetURL(url string)
@@ -116,16 +116,17 @@ func (s *DefectDojoServiceImpl) GetEngagements(productId uint, offset int, limit
 	return engagements, nil
 }
 
-// CreateEngagement creates a new CI engagement in DefectDojo for the given branch
-// and product. It returns the ID of the newly created engagement.
-func (s *DefectDojoServiceImpl) CreateEngagement(branch string, productId int) (int, error) {
+// CreateEngagement creates a new CI engagement in DefectDojo for the given project and branch.
+// If protected is true the engagement end date is set to one year from today; otherwise it is
+// set to one week from today. It returns the ID of the newly created engagement.
+func (s *DefectDojoServiceImpl) CreateEngagement(projectName string, branch string, productId int, protected bool) (int, error) {
 	var payload EngagementPayload
 
 	t := time.Now()
 
 	payload.EngagementType = EngagementType
 	payload.Tags = append(payload.Tags, []string{ScopeGuardianTag, branch}...)
-	payload.Name = fmt.Sprintf("%s-%s", EngagementPrefix, branch)
+	payload.Name = fmt.Sprintf("%s-%s", projectName, branch)
 	payload.Description = fmt.Sprintf(EngagementDescription, branch)
 	payload.Status = EngagementStatus
 	payload.Branch = branch
@@ -133,7 +134,11 @@ func (s *DefectDojoServiceImpl) CreateEngagement(branch string, productId int) (
 	payload.Lead = EngagementDefaultLead
 	payload.Product = productId
 	payload.TargetStart = t.Format(DateFormat)
-	payload.TargetEnd = t.AddDate(1, 0, 0).Format(DateFormat)
+	if protected {
+		payload.TargetEnd = t.AddDate(1, 0, 0).Format(DateFormat)
+	} else {
+		payload.TargetEnd = t.AddDate(0, 0, 7).Format(DateFormat)
+	}
 
 	data, err := json.Marshal(payload)
 	if err != nil {
@@ -159,15 +164,20 @@ func (s *DefectDojoServiceImpl) CreateEngagement(branch string, productId int) (
 	return res.Id, nil
 }
 
-// UpdateEngagementEndDate updates the target end date of the given engagement to one
-// year from today. It returns true on success or an error if the update fails.
-func (s *DefectDojoServiceImpl) UpdateEngagementEndDate(engagementId, productId int) (bool, error) {
+// UpdateEngagementEndDate updates the target end date of the given engagement.
+// If protected is true the new end date is one year from today; otherwise it is one week from today.
+// It returns true on success or an error if the update fails.
+func (s *DefectDojoServiceImpl) UpdateEngagementEndDate(engagementId, productId int, protected bool) (bool, error) {
 	var payload EngagementPayload
 
 	t := time.Now()
 
 	payload.TargetStart = t.Format(DateFormat)
-	payload.TargetEnd = t.AddDate(1, 0, 0).Format(DateFormat)
+	if protected {
+		payload.TargetEnd = t.AddDate(1, 0, 0).Format(DateFormat)
+	} else {
+		payload.TargetEnd = t.AddDate(0, 0, 7).Format(DateFormat)
+	}
 	payload.Status = EngagementStatus
 	payload.Product = productId
 

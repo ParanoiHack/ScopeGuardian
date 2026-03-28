@@ -16,7 +16,7 @@ func TestParse(t *testing.T) {
 		assert.EqualValues(t, "my-project", args.ProjectName)
 		assert.EqualValues(t, "main", args.Branch)
 		assert.EqualValues(t, false, args.Sync)
-		assert.Nil(t, args.Threshold)
+		assert.Nil(t, args.Thresholds)
 	})
 
 	t.Run("Should parse sync flag as true", func(t *testing.T) {
@@ -27,7 +27,7 @@ func TestParse(t *testing.T) {
 		assert.EqualValues(t, "my-project", args.ProjectName)
 		assert.EqualValues(t, "main", args.Branch)
 		assert.EqualValues(t, true, args.Sync)
-		assert.Nil(t, args.Threshold)
+		assert.Empty(t, args.Thresholds)
 	})
 
 	t.Run("Should parse threshold with critical severity", func(t *testing.T) {
@@ -35,45 +35,45 @@ func TestParse(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.EqualValues(t, "./config.toml", args.Config)
-		assert.NotNil(t, args.Threshold)
-		assert.EqualValues(t, severityCritical, args.Threshold.Severity)
-		assert.EqualValues(t, 1, args.Threshold.Value)
+		assert.Len(t, args.Thresholds, 1)
+		assert.EqualValues(t, severityCritical, args.Thresholds[0].Severity)
+		assert.EqualValues(t, 1, args.Thresholds[0].Value)
 	})
 
 	t.Run("Should parse threshold with high severity", func(t *testing.T) {
 		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "--threshold", "high=0", "./config.toml"})
 
 		assert.Nil(t, err)
-		assert.NotNil(t, args.Threshold)
-		assert.EqualValues(t, severityHigh, args.Threshold.Severity)
-		assert.EqualValues(t, 0, args.Threshold.Value)
+		assert.Len(t, args.Thresholds, 1)
+		assert.EqualValues(t, severityHigh, args.Thresholds[0].Severity)
+		assert.EqualValues(t, 0, args.Thresholds[0].Value)
 	})
 
 	t.Run("Should parse threshold with medium severity", func(t *testing.T) {
 		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "--threshold", "medium=3", "./config.toml"})
 
 		assert.Nil(t, err)
-		assert.NotNil(t, args.Threshold)
-		assert.EqualValues(t, severityMedium, args.Threshold.Severity)
-		assert.EqualValues(t, 3, args.Threshold.Value)
+		assert.Len(t, args.Thresholds, 1)
+		assert.EqualValues(t, severityMedium, args.Thresholds[0].Severity)
+		assert.EqualValues(t, 3, args.Thresholds[0].Value)
 	})
 
 	t.Run("Should parse threshold with low severity", func(t *testing.T) {
 		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "--threshold", "low=5", "./config.toml"})
 
 		assert.Nil(t, err)
-		assert.NotNil(t, args.Threshold)
-		assert.EqualValues(t, severityLow, args.Threshold.Severity)
-		assert.EqualValues(t, 5, args.Threshold.Value)
+		assert.Len(t, args.Thresholds, 1)
+		assert.EqualValues(t, severityLow, args.Thresholds[0].Severity)
+		assert.EqualValues(t, 5, args.Thresholds[0].Value)
 	})
 
 	t.Run("Should parse threshold with info severity", func(t *testing.T) {
 		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "--threshold", "info=2", "./config.toml"})
 
 		assert.Nil(t, err)
-		assert.NotNil(t, args.Threshold)
-		assert.EqualValues(t, severityInfo, args.Threshold.Severity)
-		assert.EqualValues(t, 2, args.Threshold.Value)
+		assert.Len(t, args.Thresholds, 1)
+		assert.EqualValues(t, severityInfo, args.Thresholds[0].Severity)
+		assert.EqualValues(t, 2, args.Thresholds[0].Value)
 	})
 
 	t.Run("Should parse all flags together", func(t *testing.T) {
@@ -84,9 +84,20 @@ func TestParse(t *testing.T) {
 		assert.EqualValues(t, "my-project", args.ProjectName)
 		assert.EqualValues(t, "main", args.Branch)
 		assert.EqualValues(t, true, args.Sync)
-		assert.NotNil(t, args.Threshold)
-		assert.EqualValues(t, severityCritical, args.Threshold.Severity)
-		assert.EqualValues(t, 1, args.Threshold.Value)
+		assert.Len(t, args.Thresholds, 1)
+		assert.EqualValues(t, severityCritical, args.Thresholds[0].Severity)
+		assert.EqualValues(t, 1, args.Thresholds[0].Value)
+	})
+
+	t.Run("Should parse multiple comma-separated thresholds", func(t *testing.T) {
+		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "--threshold", "critical=1,high=2", "./config.toml"})
+
+		assert.Nil(t, err)
+		assert.Len(t, args.Thresholds, 2)
+		assert.EqualValues(t, severityCritical, args.Thresholds[0].Severity)
+		assert.EqualValues(t, 1, args.Thresholds[0].Value)
+		assert.EqualValues(t, severityHigh, args.Thresholds[1].Severity)
+		assert.EqualValues(t, 2, args.Thresholds[1].Value)
 	})
 
 	t.Run("Should not parse when config filepath is missing", func(t *testing.T) {

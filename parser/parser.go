@@ -22,12 +22,13 @@ func PrintUsage(w io.Writer) {
 	fmt.Fprintln(w, "  --projectName string   Name of the project to scan (required)")
 	fmt.Fprintln(w, "  --branch string        Project branch to scan (required)")
 	fmt.Fprintln(w, "  --sync                 Enable sync result with DefectDojo (default: false)")
-	fmt.Fprintln(w, "  --threshold string     Enable security gate, e.g. critical=1 (optional)")
+	fmt.Fprintln(w, "  --threshold string     Enable security gate, e.g. critical=1 or critical=1,high=2 (optional)")
 	fmt.Fprintln(w, "                         Supported severities: critical, high, medium, low, info")
+	fmt.Fprintln(w, "                         Multiple thresholds can be comma-separated (e.g. critical=1,high=2)")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Example:")
 	fmt.Fprintln(w, "  scope-guardian --projectName my-service --branch main ./config.toml")
-	fmt.Fprintln(w, "  scope-guardian --projectName my-service --branch main --threshold critical=1 --sync ./config.toml")
+	fmt.Fprintln(w, "  scope-guardian --projectName my-service --branch main --threshold critical=1,high=2 --sync ./config.toml")
 }
 
 // Parse parses the CLI arguments in args and returns a validated Args struct.
@@ -37,7 +38,7 @@ func Parse(args []string) (Args, error) {
 	fs := flag.NewFlagSet("scope-guardian", flag.ContinueOnError)
 
 	sync        := fs.Bool("sync", false, "Enable sync result with DefectDojo")
-	threshold   := fs.String("threshold", "", "Enable security gate (e.g., critical=1)")
+	threshold   := fs.String("threshold", "", "Enable security gate (e.g., critical=1,high=2)")
 	projectName := fs.String("projectName", "", "Name of the project to scan")
 	branch      := fs.String("branch", "", "Project branch to scan")
 
@@ -60,13 +61,13 @@ func Parse(args []string) (Args, error) {
 		return Args{}, errors.New(errBranchRequired)
 	}
 
-	var parsedThreshold *Threshold
+	var parsedThresholds []Threshold
 	if *threshold != "" {
-		t, err := parseThreshold(*threshold)
+		ts, err := parseThresholds(*threshold)
 		if err != nil {
 			return Args{}, err
 		}
-		parsedThreshold = t
+		parsedThresholds = ts
 	}
 
 	return Args{
@@ -74,8 +75,24 @@ func Parse(args []string) (Args, error) {
 		ProjectName: *projectName,
 		Branch:      *branch,
 		Sync:        *sync,
-		Threshold:   parsedThreshold,
+		Thresholds:  parsedThresholds,
 	}, nil
+}
+
+// parseThresholds parses a comma-separated list of threshold strings, each of the
+// form "severity=value" (e.g. "critical=1,high=2"), and returns a slice of
+// Threshold values. Returns an error if any token is malformed.
+func parseThresholds(s string) ([]Threshold, error) {
+	tokens := strings.Split(s, ",")
+	thresholds := make([]Threshold, 0, len(tokens))
+	for _, token := range tokens {
+		t, err := parseThreshold(strings.TrimSpace(token))
+		if err != nil {
+			return nil, err
+		}
+		thresholds = append(thresholds, *t)
+	}
+	return thresholds, nil
 }
 
 // parseThreshold parses a threshold string of the form "severity=value"
