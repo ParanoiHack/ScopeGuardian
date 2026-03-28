@@ -19,6 +19,6 @@ var severityRank = map[string]int{
 }
 
 const (
-	logInfoGatePass   = "Security gate passed: %d finding(s) at or above %s (threshold: %d)"
-	logErrorGateFail  = "Security gate failed: %d finding(s) at or above %s (threshold: %d)"
+	logInfoGatePass  = "Security gate passed"
+	logErrorGateFail = "Security gate failed: %d finding(s) at or above %s (threshold: %d)"
 )

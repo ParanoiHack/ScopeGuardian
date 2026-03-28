@@ -15,20 +15,21 @@ import (
 // Evaluate checks every threshold against the findings.
 // For each threshold it counts findings whose severity is at or above the threshold
 // severity and fails the gate when that count reaches the threshold value.
-// It returns false (gate failed) as soon as any threshold is breached, or true
-// (gate passed) when all thresholds are satisfied.
+// It returns false (gate failed) as soon as any threshold is breached, logging only
+// the failure. When all thresholds pass a single summary pass log is emitted.
 func Evaluate(findings []models.Finding, thresholds []parser.Threshold) bool {
 	for _, threshold := range thresholds {
 		if !evaluateSingle(findings, threshold) {
 			return false
 		}
 	}
+	logger.Info(logInfoGatePass)
 	return true
 }
 
 // evaluateSingle evaluates a single threshold against the findings.
 // It returns true when the gate passes (count < threshold.Value) and false when
-// the gate fails (count >= threshold.Value).
+// the gate fails (count >= threshold.Value). It only logs on failure.
 func evaluateSingle(findings []models.Finding, threshold parser.Threshold) bool {
 	thresholdRank, ok := severityRank[strings.ToUpper(threshold.Severity)]
 	if !ok {
@@ -48,6 +49,5 @@ func evaluateSingle(findings []models.Finding, threshold parser.Threshold) bool 
 		return false
 	}
 
-	logger.Info(fmt.Sprintf(logInfoGatePass, count, strings.ToUpper(threshold.Severity), threshold.Value))
 	return true
 }
