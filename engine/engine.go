@@ -9,6 +9,7 @@ import (
 	"scope-guardian/domains/interfaces"
 	"scope-guardian/domains/models"
 	environment_variable "scope-guardian/environnement_variable"
+	featuresync "scope-guardian/features/sync"
 	"scope-guardian/features/scans/kics"
 	"scope-guardian/loader"
 	"scope-guardian/logger"
@@ -74,11 +75,17 @@ func (e *Engine) LoadFindings() []models.Finding {
 	return results
 }
 
-func (e *Engine) SyncResults(engagementId int, branch string) {
+func (e *Engine) SyncResults(projectName string, branch string) {
 	ddService := defectdojo.GetDefectDojoService(
 		client.NewClient(&http.Client{}),
 		environment_variable.EnvironmentVariable["DD_URL"],
 		environment_variable.EnvironmentVariable["DD_ACCESS_TOKEN"])
+
+	engagementId, err := featuresync.GetEngagementId(ddService, projectName, branch)
+	if err != nil {
+		logger.Error(fmt.Sprintf(logErrorRetrieveEngagementId, projectName, branch))
+		return
+	}
 
 	for k, scanner := range e.scanners {
 		scanner.Service.Sync(engagementId, branch, ddService) // check
