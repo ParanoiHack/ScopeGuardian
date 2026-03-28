@@ -2,9 +2,11 @@ package parser
 
 type (
 	Args struct {
-		Config    string
-		Sync      bool
-		Threshold *Threshold
+		Config      string
+		ProjectName string
+		Branch      string
+		Sync        bool
+		Threshold   *Threshold
 	}
 
 	Threshold struct {

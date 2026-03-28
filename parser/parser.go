@@ -13,9 +13,10 @@ var validSeverities = []string{severityCritical, severityHigh, severityMedium, s
 func Parse(args []string) (Args, error) {
 	fs := flag.NewFlagSet("scope-guardian", flag.ContinueOnError)
 
-	sync := fs.Bool("sync", false, "Enable sync result with DefectDojo")
-	threshold := fs.String("threshold", "", "Enable security gate (e.g., critical=1)")
-
+	sync        := fs.Bool("sync", false, "Enable sync result with DefectDojo")
+	threshold   := fs.String("threshold", "", "Enable security gate (e.g., critical=1)")
+	projectName := fs.String("projectName", "", "Name of the project to scan")
+	branch      := fs.String("branch", "", "Project branch to scan")
 
 	if err := fs.Parse(args); err != nil {
 		return Args{}, err
@@ -28,6 +29,14 @@ func Parse(args []string) (Args, error) {
 
 	config := remaining[0]
 
+	if *projectName == "" {
+		return Args{}, errors.New(errProjectNameRequired)
+	}
+
+	if *branch == "" {
+		return Args{}, errors.New(errBranchRequired)
+	}
+
 	var parsedThreshold *Threshold
 	if *threshold != "" {
 		t, err := parseThreshold(*threshold)
@@ -38,9 +47,11 @@ func Parse(args []string) (Args, error) {
 	}
 
 	return Args{
-		Config:    config,
-		Sync:      *sync,
-		Threshold: parsedThreshold,
+		Config:      config,
+		ProjectName: *projectName,
+		Branch:      *branch,
+		Sync:        *sync,
+		Threshold:   parsedThreshold,
 	}, nil
 }
 

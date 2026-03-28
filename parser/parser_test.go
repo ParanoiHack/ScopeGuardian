@@ -8,25 +8,29 @@ import (
 
 func TestParse(t *testing.T) {
 	t.Run("Should parse config filepath as positional argument", func(t *testing.T) {
-		args, err := Parse([]string{"./config.toml"})
+		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "./config.toml"})
 
 		assert.Nil(t, err)
 		assert.EqualValues(t, "./config.toml", args.Config)
+		assert.EqualValues(t, "my-project", args.ProjectName)
+		assert.EqualValues(t, "main", args.Branch)
 		assert.EqualValues(t, false, args.Sync)
 		assert.Nil(t, args.Threshold)
 	})
 
 	t.Run("Should parse sync flag as true", func(t *testing.T) {
-		args, err := Parse([]string{"--sync", "./config.toml"})
+		args, err := Parse([]string{"--sync", "--projectName", "my-project", "--branch", "main", "./config.toml"})
 
 		assert.Nil(t, err)
 		assert.EqualValues(t, "./config.toml", args.Config)
+		assert.EqualValues(t, "my-project", args.ProjectName)
+		assert.EqualValues(t, "main", args.Branch)
 		assert.EqualValues(t, true, args.Sync)
 		assert.Nil(t, args.Threshold)
 	})
 
 	t.Run("Should parse threshold with critical severity", func(t *testing.T) {
-		args, err := Parse([]string{"--threshold", "critical=1", "./config.toml"})
+		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "--threshold", "critical=1", "./config.toml"})
 
 		assert.Nil(t, err)
 		assert.EqualValues(t, "./config.toml", args.Config)
@@ -36,7 +40,7 @@ func TestParse(t *testing.T) {
 	})
 
 	t.Run("Should parse threshold with high severity", func(t *testing.T) {
-		args, err := Parse([]string{"--threshold", "high=0", "./config.toml"})
+		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "--threshold", "high=0", "./config.toml"})
 
 		assert.Nil(t, err)
 		assert.NotNil(t, args.Threshold)
@@ -45,7 +49,7 @@ func TestParse(t *testing.T) {
 	})
 
 	t.Run("Should parse threshold with medium severity", func(t *testing.T) {
-		args, err := Parse([]string{"--threshold", "medium=3", "./config.toml"})
+		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "--threshold", "medium=3", "./config.toml"})
 
 		assert.Nil(t, err)
 		assert.NotNil(t, args.Threshold)
@@ -54,7 +58,7 @@ func TestParse(t *testing.T) {
 	})
 
 	t.Run("Should parse threshold with low severity", func(t *testing.T) {
-		args, err := Parse([]string{"--threshold", "low=5", "./config.toml"})
+		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "--threshold", "low=5", "./config.toml"})
 
 		assert.Nil(t, err)
 		assert.NotNil(t, args.Threshold)
@@ -63,7 +67,7 @@ func TestParse(t *testing.T) {
 	})
 
 	t.Run("Should parse threshold with info severity", func(t *testing.T) {
-		args, err := Parse([]string{"--threshold", "info=2", "./config.toml"})
+		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "--threshold", "info=2", "./config.toml"})
 
 		assert.Nil(t, err)
 		assert.NotNil(t, args.Threshold)
@@ -72,10 +76,12 @@ func TestParse(t *testing.T) {
 	})
 
 	t.Run("Should parse all flags together", func(t *testing.T) {
-		args, err := Parse([]string{"--sync", "--threshold", "critical=1", "./config.toml"})
+		args, err := Parse([]string{"--sync", "--projectName", "my-project", "--branch", "main", "--threshold", "critical=1", "./config.toml"})
 
 		assert.Nil(t, err)
 		assert.EqualValues(t, "./config.toml", args.Config)
+		assert.EqualValues(t, "my-project", args.ProjectName)
+		assert.EqualValues(t, "main", args.Branch)
 		assert.EqualValues(t, true, args.Sync)
 		assert.NotNil(t, args.Threshold)
 		assert.EqualValues(t, severityCritical, args.Threshold.Severity)
@@ -90,8 +96,24 @@ func TestParse(t *testing.T) {
 		assert.EqualValues(t, errConfigRequired, err.Error())
 	})
 
+	t.Run("Should not parse when projectName is missing", func(t *testing.T) {
+		args, err := Parse([]string{"--branch", "main", "./config.toml"})
+
+		assert.NotNil(t, err)
+		assert.EqualValues(t, Args{}, args)
+		assert.EqualValues(t, errProjectNameRequired, err.Error())
+	})
+
+	t.Run("Should not parse when branch is missing", func(t *testing.T) {
+		args, err := Parse([]string{"--projectName", "my-project", "./config.toml"})
+
+		assert.NotNil(t, err)
+		assert.EqualValues(t, Args{}, args)
+		assert.EqualValues(t, errBranchRequired, err.Error())
+	})
+
 	t.Run("Should not parse when threshold format is invalid", func(t *testing.T) {
-		args, err := Parse([]string{"--threshold", "critical", "./config.toml"})
+		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "--threshold", "critical", "./config.toml"})
 
 		assert.NotNil(t, err)
 		assert.EqualValues(t, Args{}, args)
@@ -99,21 +121,21 @@ func TestParse(t *testing.T) {
 	})
 
 	t.Run("Should not parse when threshold severity is invalid", func(t *testing.T) {
-		args, err := Parse([]string{"--threshold", "unknown=1", "./config.toml"})
+		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "--threshold", "unknown=1", "./config.toml"})
 
 		assert.NotNil(t, err)
 		assert.EqualValues(t, Args{}, args)
 	})
 
 	t.Run("Should not parse when threshold value is not an integer", func(t *testing.T) {
-		args, err := Parse([]string{"--threshold", "critical=abc", "./config.toml"})
+		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "--threshold", "critical=abc", "./config.toml"})
 
 		assert.NotNil(t, err)
 		assert.EqualValues(t, Args{}, args)
 	})
 
 	t.Run("Should not parse when threshold value is negative", func(t *testing.T) {
-		args, err := Parse([]string{"--threshold", "critical=-1", "./config.toml"})
+		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "--threshold", "critical=-1", "./config.toml"})
 
 		assert.NotNil(t, err)
 		assert.EqualValues(t, Args{}, args)
