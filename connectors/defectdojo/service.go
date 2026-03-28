@@ -17,7 +17,7 @@ import (
 // DefectDojoService defines the operations available against the DefectDojo API.
 type DefectDojoService interface {
 	GetProductByName(productName string) (Product, error)
-	CreateEngagement(branch string, productId int) (int, error)
+	CreateEngagement(projectName string, branch string, productId int) (int, error)
 	GetEngagements(productId uint, offset int, limit int, engagements []Engagement) ([]Engagement, error)
 	UpdateEngagementEndDate(engagementId, productId int) (bool, error)
 	ImportScan(payload ScanPayload, filename string) (bool, error)
@@ -116,16 +116,16 @@ func (s *DefectDojoServiceImpl) GetEngagements(productId uint, offset int, limit
 	return engagements, nil
 }
 
-// CreateEngagement creates a new CI engagement in DefectDojo for the given branch
-// and product. It returns the ID of the newly created engagement.
-func (s *DefectDojoServiceImpl) CreateEngagement(branch string, productId int) (int, error) {
+// CreateEngagement creates a new CI engagement in DefectDojo for the given project and branch.
+// It returns the ID of the newly created engagement.
+func (s *DefectDojoServiceImpl) CreateEngagement(projectName string, branch string, productId int) (int, error) {
 	var payload EngagementPayload
 
 	t := time.Now()
 
 	payload.EngagementType = EngagementType
 	payload.Tags = append(payload.Tags, []string{ScopeGuardianTag, branch}...)
-	payload.Name = fmt.Sprintf("%s-%s", EngagementPrefix, branch)
+	payload.Name = fmt.Sprintf("%s-%s", projectName, branch)
 	payload.Description = fmt.Sprintf(EngagementDescription, branch)
 	payload.Status = EngagementStatus
 	payload.Branch = branch

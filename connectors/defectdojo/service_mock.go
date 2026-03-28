@@ -34,18 +34,18 @@ func (m *MockDefectDojoService) EXPECT() *MockDefectDojoServiceMockRecorder {
 }
 
 // CreateEngagement mocks base method.
-func (m *MockDefectDojoService) CreateEngagement(branch string, productId int) (int, error) {
+func (m *MockDefectDojoService) CreateEngagement(projectName string, branch string, productId int) (int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateEngagement", branch, productId)
+	ret := m.ctrl.Call(m, "CreateEngagement", projectName, branch, productId)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateEngagement indicates an expected call of CreateEngagement.
-func (mr *MockDefectDojoServiceMockRecorder) CreateEngagement(branch, productId interface{}) *gomock.Call {
+func (mr *MockDefectDojoServiceMockRecorder) CreateEngagement(projectName, branch, productId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEngagement", reflect.TypeOf((*MockDefectDojoService)(nil).CreateEngagement), branch, productId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEngagement", reflect.TypeOf((*MockDefectDojoService)(nil).CreateEngagement), projectName, branch, productId)
 }
 
 // GetEngagements mocks base method.

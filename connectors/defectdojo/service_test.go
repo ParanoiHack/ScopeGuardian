@@ -327,7 +327,7 @@ func TestCreateEngagement(t *testing.T) {
 
 		service := newDefectDojoService(clientMock, URL, TOKEN)
 
-		id, err := service.CreateEngagement("master", 4)
+		id, err := service.CreateEngagement("my-project", "master", 4)
 
 		assert.Nil(t, err)
 		assert.EqualValues(t, 1, id)
@@ -346,7 +346,7 @@ func TestCreateEngagement(t *testing.T) {
 
 		service := newDefectDojoService(clientMock, URL, TOKEN)
 
-		id, err := service.CreateEngagement("master", 1)
+		id, err := service.CreateEngagement("my-project", "master", 1)
 
 		assert.NotNil(t, err)
 		assert.EqualValues(t, errUnmarshal, err.Error())
@@ -366,7 +366,7 @@ func TestCreateEngagement(t *testing.T) {
 
 		service := newDefectDojoService(clientMock, URL, TOKEN)
 
-		id, err := service.CreateEngagement("master", 1)
+		id, err := service.CreateEngagement("my-project", "master", 1)
 
 		assert.NotNil(t, err)
 		assert.EqualValues(t, errCreateEngagement, err.Error())

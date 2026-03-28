@@ -42,7 +42,7 @@ func GetEngagementId(ddService defectdojo.DefectDojoService, projectName string,
 		return 0, errors.New(errGetEngagements)
 	}
 
-	expectedName := fmt.Sprintf("%s-%s", defectdojo.EngagementPrefix, branch)
+	expectedName := fmt.Sprintf("%s-%s", projectName, branch)
 
 	for _, engagement := range engagements {
 		if engagement.Name == expectedName {
@@ -64,7 +64,7 @@ func GetEngagementId(ddService defectdojo.DefectDojoService, projectName string,
 
 	logger.Info(fmt.Sprintf(logInfoEngagementNotFound, branch))
 
-	engagementId, err := ddService.CreateEngagement(branch, product.Id)
+	engagementId, err := ddService.CreateEngagement(projectName, branch, product.Id)
 	if err != nil {
 		logger.Error(fmt.Sprintf(logErrorCreateEngagement, branch))
 		return 0, errors.New(errCreateEngagement)

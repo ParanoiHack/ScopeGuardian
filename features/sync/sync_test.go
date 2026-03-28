@@ -28,7 +28,7 @@ func pastDate() string {
 }
 
 func expectedEngagementName() string {
-	return fmt.Sprintf("%s-%s", defectdojo.EngagementPrefix, testBranch)
+	return fmt.Sprintf("%s-%s", testProjectName, testBranch)
 }
 
 func TestGetEngagementId(t *testing.T) {
@@ -38,7 +38,7 @@ func TestGetEngagementId(t *testing.T) {
 
 		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
 		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{}, nil)
-		mockService.EXPECT().CreateEngagement(testBranch, testProductId).Return(testEngagementId, nil)
+		mockService.EXPECT().CreateEngagement(testProjectName, testBranch, testProductId).Return(testEngagementId, nil)
 
 		id, err := GetEngagementId(mockService, testProjectName, testBranch)
 
@@ -139,7 +139,7 @@ func TestGetEngagementId(t *testing.T) {
 
 		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
 		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{}, nil)
-		mockService.EXPECT().CreateEngagement(testBranch, testProductId).Return(0, errors.New("create failed"))
+		mockService.EXPECT().CreateEngagement(testProjectName, testBranch, testProductId).Return(0, errors.New("create failed"))
 
 		id, err := GetEngagementId(mockService, testProjectName, testBranch)
 
@@ -160,7 +160,7 @@ func TestGetEngagementId(t *testing.T) {
 
 		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
 		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{otherEngagement}, nil)
-		mockService.EXPECT().CreateEngagement(testBranch, testProductId).Return(testEngagementId, nil)
+		mockService.EXPECT().CreateEngagement(testProjectName, testBranch, testProductId).Return(testEngagementId, nil)
 
 		id, err := GetEngagementId(mockService, testProjectName, testBranch)
 

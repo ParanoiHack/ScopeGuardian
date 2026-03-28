@@ -21,7 +21,7 @@ func (m *mockDefectDojoService) GetProductByName(_ string) (defectdojo.Product, 
 	return defectdojo.Product{}, nil
 }
 
-func (m *mockDefectDojoService) CreateEngagement(_ string, _ int) (int, error) {
+func (m *mockDefectDojoService) CreateEngagement(_ string, _ string, _ int) (int, error) {
 	return 0, nil
 }
 
