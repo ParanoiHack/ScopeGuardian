@@ -33,7 +33,9 @@ services:
       timeout: 5s
       retries: 5
 
-  defectdojo:
+  # Service name must be "uwsgi" – the defectdojo-nginx image resolves
+  # its upstream as "uwsgi:3031" and the name is not configurable.
+  uwsgi:
     image: defectdojo/defectdojo-django:latest
     depends_on:
       postgres:
@@ -55,7 +57,7 @@ services:
     image: defectdojo/defectdojo-django:latest
     entrypoint: ["/entrypoint-celery-worker.sh"]
     depends_on:
-      - defectdojo
+      - uwsgi
     environment:
       <<: *defectdojo-env
     volumes:
@@ -66,7 +68,7 @@ services:
     image: defectdojo/defectdojo-django:latest
     entrypoint: ["/entrypoint-celery-beat.sh"]
     depends_on:
-      - defectdojo
+      - uwsgi
     environment:
       <<: *defectdojo-env
     volumes:
@@ -78,7 +80,7 @@ services:
     ports:
       - "${DD_PORT:-8080}:8080"
     depends_on:
-      - defectdojo
+      - uwsgi
     environment:
       NGINX_METRICS_ENABLED: "False"
     volumes:
