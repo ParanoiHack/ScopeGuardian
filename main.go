@@ -6,6 +6,7 @@ import (
 	"scope-guardian/engine"
 	"scope-guardian/loader"
 	"scope-guardian/logger"
+	"scope-guardian/parser"
 
 	"golang.org/x/exp/slog"
 )
@@ -24,9 +25,17 @@ func main() {
 
 	logger.Info(logInfoLoadConfigFile)
 
-	config, err := loader.Load("./config.toml")
+	args, err := parser.Parse(os.Args[1:])
 	if err != nil {
-		logger.Panic(err.Error())
+		logger.Error(err.Error())
+		parser.PrintUsage(os.Stdout)
+		os.Exit(1)
+	}
+
+	config, err := loader.Load(args.Config)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
 	}
 
 	engine := engine.NewEngine()
