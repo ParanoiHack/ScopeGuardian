@@ -33,10 +33,11 @@ services:
       timeout: 5s
       retries: 5
 
-  # Service name must be "uwsgi" – the defectdojo-nginx image resolves
-  # its upstream as "uwsgi:3031" and the name is not configurable.
-  uwsgi:
+  # Runs database migrations and seeds the admin user, then exits.
+  # All application services wait for this to complete successfully.
+  initializer:
     image: defectdojo/defectdojo-django:latest
+    entrypoint: ["/entrypoint-initializer.sh"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,7 +48,20 @@ services:
       DD_ADMIN_USER: ${DD_ADMIN_USER:-admin}
       DD_ADMIN_PASSWORD: ${DD_ADMIN_PASSWORD:-admin}
       DD_ADMIN_MAIL: ${DD_ADMIN_MAIL:-admin@example.com}
-      DD_TRACK_MIGRATIONS: "True"
+      DD_INITIALIZE: "True"
+    volumes:
+      - defectdojo_media:/app/media
+    restart: on-failure
+
+  # Service name must be "uwsgi" – the defectdojo-nginx image resolves
+  # its upstream as "uwsgi:3031" and the name is not configurable.
+  uwsgi:
+    image: defectdojo/defectdojo-django:latest
+    depends_on:
+      initializer:
+        condition: service_completed_successfully
+    environment:
+      <<: *defectdojo-env
       DD_DJANGO_METRICS_ENABLED: "False"
     volumes:
       - defectdojo_media:/app/media
@@ -57,7 +71,8 @@ services:
     image: defectdojo/defectdojo-django:latest
     entrypoint: ["/entrypoint-celery-worker.sh"]
     depends_on:
-      - uwsgi
+      initializer:
+        condition: service_completed_successfully
     environment:
       <<: *defectdojo-env
     volumes:
@@ -68,7 +83,8 @@ services:
     image: defectdojo/defectdojo-django:latest
     entrypoint: ["/entrypoint-celery-beat.sh"]
     depends_on:
-      - uwsgi
+      initializer:
+        condition: service_completed_successfully
     environment:
       <<: *defectdojo-env
     volumes:
@@ -80,7 +96,8 @@ services:
     ports:
       - "${DD_PORT:-8080}:8080"
     depends_on:
-      - uwsgi
+      uwsgi:
+        condition: service_started
     environment:
       NGINX_METRICS_ENABLED: "False"
     volumes:
