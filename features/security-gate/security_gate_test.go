@@ -13,7 +13,8 @@ func TestEvaluate_NoThresholdExceeded(t *testing.T) {
 		{Severity: "HIGH"},
 		{Severity: "MEDIUM"},
 	}
-	threshold := parser.Threshold{Severity: "critical", Value: 0}
+	// critical=1: no criticals found → count=0 < 1 → pass
+	threshold := parser.Threshold{Severity: "critical", Value: 1}
 
 	assert.True(t, Evaluate(findings, threshold))
 }
@@ -33,10 +34,22 @@ func TestEvaluate_ExactlyAtThreshold(t *testing.T) {
 		{Severity: "HIGH"},
 		{Severity: "HIGH"},
 	}
+	// high=2: exactly 2 HIGH findings → count >= threshold → gate fails
 	threshold := parser.Threshold{Severity: "high", Value: 2}
 
-	assert.True(t, Evaluate(findings, threshold))
+	assert.False(t, Evaluate(findings, threshold))
 }
+
+func TestEvaluate_OneHighWithThresholdHighOne_ShouldFail(t *testing.T) {
+	// Reproducer: 1 HIGH finding with threshold high=1 must fail.
+	findings := []models.Finding{
+		{Severity: "HIGH"},
+	}
+	threshold := parser.Threshold{Severity: "high", Value: 1}
+
+	assert.False(t, Evaluate(findings, threshold))
+}
+
 
 func TestEvaluate_AboveThreshold(t *testing.T) {
 	findings := []models.Finding{
@@ -56,7 +69,7 @@ func TestEvaluate_CountsAllSeveritiesAtOrAbove(t *testing.T) {
 		{Severity: "HIGH"},
 		{Severity: "CRITICAL"},
 	}
-	// medium=1 means threshold at MEDIUM; count of MEDIUM+HIGH+CRITICAL = 3 > 1 → fail
+	// medium=1 means threshold at MEDIUM; count of MEDIUM+HIGH+CRITICAL = 3 >= 1 → fail
 	threshold := parser.Threshold{Severity: "medium", Value: 1}
 
 	assert.False(t, Evaluate(findings, threshold))
@@ -67,14 +80,14 @@ func TestEvaluate_LowSeverityBelowThreshold(t *testing.T) {
 		{Severity: "LOW"},
 		{Severity: "LOW"},
 	}
-	// threshold high=0: LOW is below HIGH → not counted → count=0 <= 0 → pass
-	threshold := parser.Threshold{Severity: "high", Value: 0}
+	// threshold high=1: LOW is below HIGH → not counted → count=0 < 1 → pass
+	threshold := parser.Threshold{Severity: "high", Value: 1}
 
 	assert.True(t, Evaluate(findings, threshold))
 }
 
 func TestEvaluate_EmptyFindings(t *testing.T) {
-	threshold := parser.Threshold{Severity: "critical", Value: 0}
+	threshold := parser.Threshold{Severity: "critical", Value: 1}
 
 	assert.True(t, Evaluate([]models.Finding{}, threshold))
 }
@@ -104,7 +117,7 @@ func TestEvaluate_InfoThreshold(t *testing.T) {
 		{Severity: "LOW"},
 		{Severity: "MEDIUM"},
 	}
-	// info=2: count all findings at INFO or above = 3 > 2 → fail
+	// info=2: count all findings at INFO or above = 3 >= 2 → fail
 	threshold := parser.Threshold{Severity: "info", Value: 2}
 
 	assert.False(t, Evaluate(findings, threshold))

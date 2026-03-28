@@ -14,8 +14,8 @@ import (
 
 // Evaluate counts findings whose severity is at or above the threshold severity
 // and compares the count against the threshold value.
-// It returns true when the gate passes (count <= threshold.Value) and false when
-// the gate fails (count > threshold.Value).
+// It returns true when the gate passes (count < threshold.Value) and false when
+// the gate fails (count >= threshold.Value).
 func Evaluate(findings []models.Finding, threshold parser.Threshold) bool {
 	thresholdRank, ok := severityRank[strings.ToUpper(threshold.Severity)]
 	if !ok {
@@ -30,7 +30,7 @@ func Evaluate(findings []models.Finding, threshold parser.Threshold) bool {
 		}
 	}
 
-	if count > threshold.Value {
+	if count >= threshold.Value {
 		logger.Error(fmt.Sprintf(logErrorGateFail, count, strings.ToUpper(threshold.Severity), threshold.Value))
 		return false
 	}
