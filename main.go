@@ -52,8 +52,8 @@ func main() {
 
 	display.DisplayFindings(findings)
 
-	if args.Threshold != nil {
-		if !securitygate.Evaluate(findings, *args.Threshold) {
+	if len(args.Thresholds) > 0 {
+		if !securitygate.Evaluate(findings, args.Thresholds) {
 			os.Exit(-1)
 		}
 	}

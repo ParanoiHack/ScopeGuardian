@@ -12,11 +12,24 @@ import (
 	"strings"
 )
 
-// Evaluate counts findings whose severity is at or above the threshold severity
-// and compares the count against the threshold value.
+// Evaluate checks every threshold against the findings.
+// For each threshold it counts findings whose severity is at or above the threshold
+// severity and fails the gate when that count reaches the threshold value.
+// It returns false (gate failed) as soon as any threshold is breached, or true
+// (gate passed) when all thresholds are satisfied.
+func Evaluate(findings []models.Finding, thresholds []parser.Threshold) bool {
+	for _, threshold := range thresholds {
+		if !evaluateSingle(findings, threshold) {
+			return false
+		}
+	}
+	return true
+}
+
+// evaluateSingle evaluates a single threshold against the findings.
 // It returns true when the gate passes (count < threshold.Value) and false when
 // the gate fails (count >= threshold.Value).
-func Evaluate(findings []models.Finding, threshold parser.Threshold) bool {
+func evaluateSingle(findings []models.Finding, threshold parser.Threshold) bool {
 	thresholdRank, ok := severityRank[strings.ToUpper(threshold.Severity)]
 	if !ok {
 		return true

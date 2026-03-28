@@ -6,7 +6,7 @@ type (
 		ProjectName string
 		Branch      string
 		Sync        bool
-		Threshold   *Threshold
+		Thresholds  []Threshold
 	}
 
 	Threshold struct {
