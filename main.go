@@ -7,6 +7,7 @@ import (
 	"scope-guardian/loader"
 	"scope-guardian/logger"
 	"scope-guardian/parser"
+	securitygate "scope-guardian/features/security-gate"
 
 	"golang.org/x/exp/slog"
 )
@@ -50,4 +51,10 @@ func main() {
 	}
 
 	display.DisplayFindings(findings)
+
+	if args.Threshold != nil {
+		if !securitygate.Evaluate(findings, *args.Threshold) {
+			os.Exit(-1)
+		}
+	}
 }
