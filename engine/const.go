@@ -9,9 +9,10 @@ const (
 )
 
 const (
-	logErrorScannerFailed   = "%s scanner failed"
-	logErrorLoadFinding     = "Cannot load finding for %s scanner"
-	logErrorRegisterScanner = "Cannot register scanner %s"
+	logErrorScannerFailed        = "%s scanner failed"
+	logErrorLoadFinding          = "Cannot load finding for %s scanner"
+	logErrorRegisterScanner      = "Cannot register scanner %s"
+	logErrorRetrieveEngagementId = "Cannot retrieve engagement ID for project [%s] branch [%s]"
 )
 
 const (

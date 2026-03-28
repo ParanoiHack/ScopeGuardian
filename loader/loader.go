@@ -9,6 +9,8 @@ import (
 	"github.com/pelletier/go-toml/v2"
 )
 
+// Load reads and parses the TOML configuration file at filepath.
+// It returns the decoded Config or an error if the file is missing or malformed.
 func Load(filepath string) (Config, error) {
 	if _, err := os.Stat(filepath); err != nil {
 		logger.Error(fmt.Sprintf(logErrorFileNotFound, filepath))

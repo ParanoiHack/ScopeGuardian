@@ -30,6 +30,9 @@ func PrintUsage(w io.Writer) {
 	fmt.Fprintln(w, "  scope-guardian --projectName my-service --branch main --threshold critical=1 --sync ./config.toml")
 }
 
+// Parse parses the CLI arguments in args and returns a validated Args struct.
+// It returns an error if required flags (--projectName, --branch) are missing,
+// the config-file positional argument is absent, or the threshold flag is malformed.
 func Parse(args []string) (Args, error) {
 	fs := flag.NewFlagSet("scope-guardian", flag.ContinueOnError)
 
@@ -75,6 +78,9 @@ func Parse(args []string) (Args, error) {
 	}, nil
 }
 
+// parseThreshold parses a threshold string of the form "severity=value"
+// (e.g. "critical=1") and returns a Threshold. Returns an error if the
+// format is invalid, the severity is unrecognised, or the value is negative.
 func parseThreshold(s string) (*Threshold, error) {
 	parts := strings.SplitN(s, "=", 2)
 	if len(parts) != 2 {
@@ -96,6 +102,7 @@ func parseThreshold(s string) (*Threshold, error) {
 	return &Threshold{Severity: severity, Value: value}, nil
 }
 
+// isValidSeverity reports whether severity is one of the recognised severity levels.
 func isValidSeverity(severity string) bool {
 	for _, s := range validSeverities {
 		if s == severity {

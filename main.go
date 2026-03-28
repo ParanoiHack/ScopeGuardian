@@ -45,7 +45,9 @@ func main() {
 
 	findings := engine.LoadFindings()
 
-	engine.SyncResults(13, "final-test")
+	if args.Sync {
+		engine.SyncResults(args.ProjectName, args.Branch)
+	}
 
 	display.DisplayFindings(findings)
 }

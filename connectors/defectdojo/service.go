@@ -14,6 +14,7 @@ import (
 	"time"
 )
 
+// DefectDojoService defines the operations available against the DefectDojo API.
 type DefectDojoService interface {
 	GetProductByName(productName string) (Product, error)
 	CreateEngagement(branch string, productId int) (int, error)
@@ -24,12 +25,15 @@ type DefectDojoService interface {
 	SetURL(url string)
 }
 
+// DefectDojoServiceImpl is the concrete implementation of DefectDojoService.
 type DefectDojoServiceImpl struct {
 	client      client.Client
 	accessToken string
 	url         string
 }
 
+// newDefectDojoService creates a DefectDojoServiceImpl pre-configured with the given
+// HTTP client, API base URL, and access token.
 func newDefectDojoService(client client.Client, url string, accessToken string) DefectDojoService {
 	return &DefectDojoServiceImpl{
 		client:      client,
@@ -38,20 +42,27 @@ func newDefectDojoService(client client.Client, url string, accessToken string) 
 	}
 }
 
+// newDefectDojoServiceWithoutParam creates a DefectDojoServiceImpl with only an HTTP client,
+// leaving the URL and access token to be set later via SetURL and SetAccessToken.
 func newDefectDojoServiceWithoutParam(client client.Client) DefectDojoService {
 	return &DefectDojoServiceImpl{
 		client: client,
 	}
 }
 
+// SetURL sets the base URL used for all DefectDojo API requests.
 func (s *DefectDojoServiceImpl) SetURL(url string) {
 	s.url = url
 }
 
+// SetAccessToken sets the API access token used to authenticate against DefectDojo.
 func (s *DefectDojoServiceImpl) SetAccessToken(token string) {
 	s.accessToken = token
 }
 
+// GetProductByName fetches the DefectDojo product whose name matches productName.
+// It returns an error if the product does not exist, cannot be retrieved, or if
+// multiple products share the same name.
 func (s *DefectDojoServiceImpl) GetProductByName(productName string) (Product, error) {
 	var res GetProductByNameResponse
 
@@ -78,6 +89,9 @@ func (s *DefectDojoServiceImpl) GetProductByName(productName string) (Product, e
 	return Product{}, errors.New(errProductNotExist)
 }
 
+// GetEngagements retrieves all engagements for the given product using cursor-based
+// pagination (offset/limit). It accumulates results recursively until all pages
+// have been fetched and returns the complete slice.
 func (s *DefectDojoServiceImpl) GetEngagements(productId uint, offset int, limit int, engagements []Engagement) ([]Engagement, error) {
 	var res GetEngagementsResponse
 
@@ -102,6 +116,8 @@ func (s *DefectDojoServiceImpl) GetEngagements(productId uint, offset int, limit
 	return engagements, nil
 }
 
+// CreateEngagement creates a new CI engagement in DefectDojo for the given branch
+// and product. It returns the ID of the newly created engagement.
 func (s *DefectDojoServiceImpl) CreateEngagement(branch string, productId int) (int, error) {
 	var payload EngagementPayload
 
@@ -143,6 +159,8 @@ func (s *DefectDojoServiceImpl) CreateEngagement(branch string, productId int) (
 	return res.Id, nil
 }
 
+// UpdateEngagementEndDate updates the target end date of the given engagement to one
+// year from today. It returns true on success or an error if the update fails.
 func (s *DefectDojoServiceImpl) UpdateEngagementEndDate(engagementId, productId int) (bool, error) {
 	var payload EngagementPayload
 
@@ -169,6 +187,8 @@ func (s *DefectDojoServiceImpl) UpdateEngagementEndDate(engagementId, productId 
 	return true, nil
 }
 
+// ImportScan uploads a scan result file to DefectDojo using the given ScanPayload.
+// filename is used as the multipart form file name. Returns true on success.
 func (s *DefectDojoServiceImpl) ImportScan(payload ScanPayload, filename string) (bool, error) {
 	body, boundary, err := createMultipartFromScanPayload(payload, filename)
 	if err != nil {
@@ -190,6 +210,10 @@ func (s *DefectDojoServiceImpl) ImportScan(payload ScanPayload, filename string)
 	return true, nil
 }
 
+// createMultipartFromScanPayload serialises a ScanPayload into a multipart/form-data
+// body. Struct fields are mapped to form keys via the "form" struct tag. The raw
+// scan file is appended under the "file" key using filename. It returns the body
+// bytes, the multipart boundary content-type string, and any error encountered.
 func createMultipartFromScanPayload(payload ScanPayload, filename string) ([]byte, string, error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)

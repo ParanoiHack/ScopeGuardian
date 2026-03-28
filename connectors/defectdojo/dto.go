@@ -5,9 +5,10 @@ type Product struct {
 }
 
 type Engagement struct {
-	Id     int    `json: "id"`
-	Name   string `json: "name"`
-	Branch string `json: "branch_tag"`
+	Id        int    `json:"id"`
+	Name      string `json:"name"`
+	Branch    string `json:"branch_tag"`
+	TargetEnd string `json:"target_end"`
 }
 
 type GetProductByNameResponse struct {

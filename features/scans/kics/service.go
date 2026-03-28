@@ -16,12 +16,15 @@ import (
 	"time"
 )
 
+// KicsServiceImpl implements ScanServiceImpl for the KICS infrastructure-as-code scanner.
 type KicsServiceImpl struct {
 	path     string
 	platform string
 	output   string
 }
 
+// newKicsService builds a KicsServiceImpl from the loader configuration, resolving
+// the scan path and output file path relative to the SCAN_DIR environment variable.
 func newKicsService(config loader.Kics) interfaces.ScanServiceImpl {
 	return &KicsServiceImpl{
 		path:     fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], config.Path),
@@ -30,6 +33,8 @@ func newKicsService(config loader.Kics) interfaces.ScanServiceImpl {
 	}
 }
 
+// verifyConfig checks that the directory at path exists and is accessible.
+// Returns false and an error if the path cannot be stat'd.
 func verifyConfig(path string) (bool, error) {
 	if _, err := os.Stat(path); err != nil {
 		logger.Error(fmt.Sprintf(logErrorDirectorNotFound, path))
@@ -39,6 +44,9 @@ func verifyConfig(path string) (bool, error) {
 	return true, nil
 }
 
+// Start validates the scan directory and then invokes the KICS binary with the
+// appropriate arguments. It returns true on success or false and an error if the
+// directory is missing or the KICS process exits with a non-zero status.
 func (s *KicsServiceImpl) Start() (bool, error) {
 	if ok, err := verifyConfig(s.path); !ok && err != nil {
 		return ok, err
@@ -71,6 +79,9 @@ func (s *KicsServiceImpl) Start() (bool, error) {
 	return exec.Wrap(binaryPath, dirPath, args)
 }
 
+// LoadFindings reads the KICS JSON output file and converts each query result
+// into a slice of domain Finding objects. Returns an error if the file cannot
+// be read or parsed.
 func (s *KicsServiceImpl) LoadFindings() ([]models.Finding, error) {
 	buffer, err := os.ReadFile(s.output)
 	if err != nil {
@@ -104,6 +115,9 @@ func (s *KicsServiceImpl) LoadFindings() ([]models.Finding, error) {
 	return findings, nil
 }
 
+// Sync uploads the KICS scan output to DefectDojo via the given service.
+// It constructs a ScanPayload from the stored output file and the provided
+// engagement ID and branch, then calls ImportScan.
 func (s *KicsServiceImpl) Sync(engagementId int, branch string, service defectdojo.DefectDojoService) error {
 	var payload defectdojo.ScanPayload
 

@@ -21,6 +21,7 @@ const (
 	rowRecommendation = "Recommendation"
 )
 
+// DisplayBanner prints the ASCII art banner for scope-guardian to stdout.
 func DisplayBanner() {
 	fmt.Println(`                                                                                   
                                                                                                 @@  
@@ -74,6 +75,7 @@ func DisplayBanner() {
 	`)
 }
 
+// DisplayCredit prints the open-source credit and contact information for ParanoiHack.
 func DisplayCredit() {
 	fmt.Println(`
 		Open Source Software created and maintained by ParanoiHack
@@ -82,6 +84,9 @@ func DisplayCredit() {
 	`)
 }
 
+// DisplayFindings renders a formatted table of scan findings to stdout.
+// Each row contains the engine name, severity, finding name, CWE, description,
+// sink file path, sink line number, and remediation recommendation.
 func DisplayFindings(findings []models.Finding) {
 	t := table.NewWriter()
 
