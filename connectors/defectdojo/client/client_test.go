@@ -296,3 +296,31 @@ func TestClient_Put_ReadBodyError(t *testing.T) {
 	assert.Equal(t, -1, statusCode)
 	assert.Nil(t, body)
 }
+
+func TestClient_Do(t *testing.T) {
+	t.Run("Should delegate to underlying http client", func(t *testing.T) {
+		mockHTTP := newMockHTTPClient(func(req *http.Request) (*http.Response, error) {
+			return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader(nil))}, nil
+		})
+
+		c := NewClient(mockHTTP)
+		req, _ := http.NewRequest(http.MethodGet, "https://example.com", nil)
+		resp, err := c.Do(req)
+
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+	})
+
+	t.Run("Should return error from underlying http client", func(t *testing.T) {
+		mockHTTP := newMockHTTPClient(func(req *http.Request) (*http.Response, error) {
+			return nil, errors.New("transport error")
+		})
+
+		c := NewClient(mockHTTP)
+		req, _ := http.NewRequest(http.MethodGet, "https://example.com", nil)
+		resp, err := c.Do(req)
+
+		assert.NotNil(t, err)
+		assert.Nil(t, resp)
+	})
+}

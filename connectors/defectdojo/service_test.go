@@ -464,3 +464,19 @@ func TestCreateMultipartFromScanPayload(t *testing.T) {
 		assert.Nil(t, err)
 	})
 }
+
+func TestSetURL(t *testing.T) {
+	service := newDefectDojoServiceWithoutParam(nil)
+	service.SetURL("http://new-url:8080")
+
+	impl := service.(*DefectDojoServiceImpl)
+	assert.Equal(t, "http://new-url:8080", impl.url)
+}
+
+func TestSetAccessToken(t *testing.T) {
+	service := newDefectDojoServiceWithoutParam(nil)
+	service.SetAccessToken("new-token-xyz")
+
+	impl := service.(*DefectDojoServiceImpl)
+	assert.Equal(t, "new-token-xyz", impl.accessToken)
+}
