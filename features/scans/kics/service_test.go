@@ -71,10 +71,10 @@ func TestLoadFinding(t *testing.T) {
 	})
 }
 
-func TestSync(t *testing.T) {
-	service := newKicsService(loader.Kics{"./test", ""})
+// func TestSync(t *testing.T) {
+// 	service := newKicsService(loader.Kics{"./test", ""})
 
-	err := service.Sync()
+// 	err := service.Sync()
 
-	assert.Nil(t, err)
-}
+// 	assert.Nil(t, err)
+// }

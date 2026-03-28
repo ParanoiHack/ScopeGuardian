@@ -2,9 +2,13 @@ package engine
 
 import (
 	"fmt"
+	"net/http"
 	"reflect"
+	"scope-guardian/connectors/defectdojo"
+	"scope-guardian/connectors/defectdojo/client"
 	"scope-guardian/domains/interfaces"
 	"scope-guardian/domains/models"
+	environment_variable "scope-guardian/environnement_variable"
 	"scope-guardian/features/scans/kics"
 	"scope-guardian/loader"
 	"scope-guardian/logger"
@@ -70,8 +74,14 @@ func (e *Engine) LoadFindings() []models.Finding {
 	return results
 }
 
-func (e *Engine) SyncResults() {
+func (e *Engine) SyncResults(engagementId int, branch string) {
+	ddService := defectdojo.GetDefectDojoService(
+		client.NewClient(&http.Client{}),
+		environment_variable.EnvironmentVariable["DD_URL"],
+		environment_variable.EnvironmentVariable["DD_ACCESS_TOKEN"])
+
 	for k, scanner := range e.scanners {
+		scanner.Service.Sync(engagementId, branch, ddService) // check
 		_, _ = k, scanner
 		logger.Info(fmt.Sprintf(logInfoSyncResult, k))
 	}

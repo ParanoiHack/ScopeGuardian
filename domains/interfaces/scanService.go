@@ -1,9 +1,12 @@
 package interfaces
 
-import "scope-guardian/domains/models"
+import (
+	"scope-guardian/connectors/defectdojo"
+	"scope-guardian/domains/models"
+)
 
 type ScanServiceImpl interface {
 	Start() (bool, error)
 	LoadFindings() ([]models.Finding, error)
-	Sync(int, string) error
+	Sync(int, string, defectdojo.DefectDojoService) error
 }

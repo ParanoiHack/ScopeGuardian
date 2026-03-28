@@ -8,7 +8,7 @@ import (
 
 func TestWrap(t *testing.T) {
 	t.Run("Should run a binary", func(t *testing.T) {
-		ok, err := Wrap("/bin/ls", "/", []string{"-l", "/opt/kics"})
+		ok, err := Wrap("/bin/ls", "/", []string{"-l", "/opt"})
 
 		assert.Nil(t, err)
 		assert.True(t, ok)

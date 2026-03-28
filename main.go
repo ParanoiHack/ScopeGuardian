@@ -36,7 +36,7 @@ func main() {
 
 	findings := engine.LoadFindings()
 
-	engine.SyncResults()
+	engine.SyncResults(13, "final-test")
 
 	display.DisplayFindings(findings)
 }

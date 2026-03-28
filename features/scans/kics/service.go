@@ -17,18 +17,16 @@ import (
 )
 
 type KicsServiceImpl struct {
-	path      string
-	platform  string
-	output    string
-	ddService defectdojo.DefectDojoService
+	path     string
+	platform string
+	output   string
 }
 
-func newKicsService(config loader.Kics, defectDojo defectdojo.DefectDojoService) interfaces.ScanServiceImpl {
+func newKicsService(config loader.Kics) interfaces.ScanServiceImpl {
 	return &KicsServiceImpl{
-		path:      fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], config.Path),
-		output:    fmt.Sprintf("%s/%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], outputFolder, outputNameParameter),
-		platform:  config.Platform,
-		ddService: defectDojo,
+		path:     fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], config.Path),
+		output:   fmt.Sprintf("%s/%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], outputFolder, outputNameParameter),
+		platform: config.Platform,
 	}
 }
 
@@ -106,7 +104,7 @@ func (s *KicsServiceImpl) LoadFindings() ([]models.Finding, error) {
 	return findings, nil
 }
 
-func (s *KicsServiceImpl) Sync(engagementId int, branch string) error {
+func (s *KicsServiceImpl) Sync(engagementId int, branch string, service defectdojo.DefectDojoService) error {
 	var payload defectdojo.ScanPayload
 
 	payload.Timestamp = time.Now().Format("2006-01-02")
@@ -121,7 +119,7 @@ func (s *KicsServiceImpl) Sync(engagementId int, branch string) error {
 	payload.CloseOldFinding = closeOldFinding
 	payload.File, _ = os.ReadFile(s.output)
 
-	if ok, err := s.ddService.ImportScan(payload, s.output); !ok || err != nil {
+	if ok, err := service.ImportScan(payload, s.output); !ok || err != nil {
 		logger.Error(fmt.Sprintf(logErrorImportScan, engagementId))
 		return err
 	}
