@@ -27,12 +27,14 @@ func main() {
 
 	args, err := parser.Parse(os.Args[1:])
 	if err != nil {
-		logger.Panic(err.Error())
+		logger.Error(err.Error())
+		os.Exit(1)
 	}
 
 	config, err := loader.Load(args.Config)
 	if err != nil {
-		logger.Panic(err.Error())
+		logger.Error(err.Error())
+		os.Exit(1)
 	}
 
 	engine := engine.NewEngine()
