@@ -1,0 +1,109 @@
+version: "3.9"
+
+# Shared environment block reused by all DefectDojo application services.
+x-defectdojo-env: &defectdojo-env
+  DD_DATABASE_URL: postgresql://${POSTGRES_USER:-defectdojo}:${POSTGRES_PASSWORD:-defectdojo}@postgres:5432/${POSTGRES_DB:-defectdojo}
+  DD_CELERY_BROKER_URL: redis://redis:6379/0
+  DD_SECRET_KEY: ${DD_SECRET_KEY:-changeme-replace-with-a-strong-random-secret}
+  DD_ALLOWED_HOSTS: ${DD_ALLOWED_HOSTS:-localhost,127.0.0.1}
+  DD_TIME_ZONE: ${DD_TIME_ZONE:-UTC}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-defectdojo}
+      POSTGRES_USER: ${POSTGRES_USER:-defectdojo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-defectdojo}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-defectdojo}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Runs database migrations and seeds the admin user, then exits.
+  # All application services wait for this to complete successfully.
+  initializer:
+    image: defectdojo/defectdojo-django:latest
+    entrypoint: ["/entrypoint-initializer.sh"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      <<: *defectdojo-env
+      DD_ADMIN_USER: ${DD_ADMIN_USER:-admin}
+      DD_ADMIN_PASSWORD: ${DD_ADMIN_PASSWORD:-admin}
+      DD_ADMIN_MAIL: ${DD_ADMIN_MAIL:-admin@example.com}
+      DD_INITIALIZE: "True"
+    volumes:
+      - defectdojo_media:/app/media
+    restart: on-failure
+
+  # Service name must be "uwsgi" – the defectdojo-nginx image resolves
+  # its upstream as "uwsgi:3031" and the name is not configurable.
+  uwsgi:
+    image: defectdojo/defectdojo-django:latest
+    depends_on:
+      initializer:
+        condition: service_completed_successfully
+    environment:
+      <<: *defectdojo-env
+      DD_DJANGO_METRICS_ENABLED: "False"
+    volumes:
+      - defectdojo_media:/app/media
+    restart: unless-stopped
+
+  celeryworker:
+    image: defectdojo/defectdojo-django:latest
+    entrypoint: ["/entrypoint-celery-worker.sh"]
+    depends_on:
+      initializer:
+        condition: service_completed_successfully
+    environment:
+      <<: *defectdojo-env
+    volumes:
+      - defectdojo_media:/app/media
+    restart: unless-stopped
+
+  celerybeat:
+    image: defectdojo/defectdojo-django:latest
+    entrypoint: ["/entrypoint-celery-beat.sh"]
+    depends_on:
+      initializer:
+        condition: service_completed_successfully
+    environment:
+      <<: *defectdojo-env
+    volumes:
+      - defectdojo_media:/app/media
+    restart: unless-stopped
+
+  nginx:
+    image: defectdojo/defectdojo-nginx:latest
+    ports:
+      - "${DD_PORT:-8080}:8080"
+    depends_on:
+      uwsgi:
+        condition: service_started
+    environment:
+      NGINX_METRICS_ENABLED: "False"
+    volumes:
+      - defectdojo_media:/app/media
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  defectdojo_media:
