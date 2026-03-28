@@ -7,7 +7,7 @@ const (
 	CreateEngagementPath = "/engagements/"
 	UpdateEngagementPath = "/engagements/%d/"
 	ImportScanPath       = "/import-scan/"
-	GetFindingsPath      = "/findings/?test__engagement=%d&offset=%d&limit=%d"
+	GetFindingsPath      = "/findings/?test__engagement=%d&active=true&offset=%d&limit=%d"
 )
 
 const (
