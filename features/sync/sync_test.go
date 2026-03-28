@@ -205,3 +205,85 @@ func TestGetEngagementId(t *testing.T) {
 		assert.Equal(t, testEngagementId, id)
 	})
 }
+
+func TestGetDefectDojoFindings(t *testing.T) {
+	t.Run("Should return findings mapped to internal model", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockService := defectdojo.NewMockDefectDojoService(ctrl)
+
+		existingEngagement := defectdojo.Engagement{
+			Id:        testEngagementId,
+			Name:      expectedEngagementName(),
+			TargetEnd: futureDate(),
+		}
+
+		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
+		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{existingEngagement}, nil)
+		mockService.EXPECT().GetFindings(testEngagementId, 0, 100, []defectdojo.Finding{}).Return([]defectdojo.Finding{
+			{Id: 1, Title: "SQL Injection", Severity: "Critical"},
+			{Id: 2, Title: "XSS", Severity: "High"},
+		}, nil)
+
+		findings, err := GetDefectDojoFindings(mockService, testProjectName, testBranch, noProtectedBranches)
+
+		assert.Nil(t, err)
+		assert.Len(t, findings, 2)
+		assert.Equal(t, "SQL Injection", findings[0].Name)
+		assert.Equal(t, "Critical", findings[0].Severity)
+		assert.Equal(t, "XSS", findings[1].Name)
+		assert.Equal(t, "High", findings[1].Severity)
+	})
+
+	t.Run("Should return empty slice when no findings exist", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockService := defectdojo.NewMockDefectDojoService(ctrl)
+
+		existingEngagement := defectdojo.Engagement{
+			Id:        testEngagementId,
+			Name:      expectedEngagementName(),
+			TargetEnd: futureDate(),
+		}
+
+		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
+		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{existingEngagement}, nil)
+		mockService.EXPECT().GetFindings(testEngagementId, 0, 100, []defectdojo.Finding{}).Return([]defectdojo.Finding{}, nil)
+
+		findings, err := GetDefectDojoFindings(mockService, testProjectName, testBranch, noProtectedBranches)
+
+		assert.Nil(t, err)
+		assert.Empty(t, findings)
+	})
+
+	t.Run("Should return error when GetEngagementId fails", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockService := defectdojo.NewMockDefectDojoService(ctrl)
+
+		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{}, errors.New("product not found"))
+
+		findings, err := GetDefectDojoFindings(mockService, testProjectName, testBranch, noProtectedBranches)
+
+		assert.NotNil(t, err)
+		assert.Nil(t, findings)
+	})
+
+	t.Run("Should return error when GetFindings fails", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockService := defectdojo.NewMockDefectDojoService(ctrl)
+
+		existingEngagement := defectdojo.Engagement{
+			Id:        testEngagementId,
+			Name:      expectedEngagementName(),
+			TargetEnd: futureDate(),
+		}
+
+		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
+		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{existingEngagement}, nil)
+		mockService.EXPECT().GetFindings(testEngagementId, 0, 100, []defectdojo.Finding{}).Return(nil, errors.New("api error"))
+
+		findings, err := GetDefectDojoFindings(mockService, testProjectName, testBranch, noProtectedBranches)
+
+		assert.NotNil(t, err)
+		assert.Equal(t, errGetFindings, err.Error())
+		assert.Nil(t, findings)
+	})
+}

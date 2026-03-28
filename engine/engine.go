@@ -110,36 +110,15 @@ func (e *Engine) SyncResults(projectName string, branch string, protectedBranche
 	}
 }
 
-// GetDefectDojoFindings fetches findings from DefectDojo for the given project and branch,
-// and converts them into the internal Finding model. It is used to evaluate the security
-// gate against findings already stored in DefectDojo when the sync flag is active.
+// GetDefectDojoFindings fetches findings from DefectDojo for the given project and branch.
+// It delegates to sync.GetDefectDojoFindings after building the DefectDojo service client.
 func (e *Engine) GetDefectDojoFindings(projectName string, branch string, protectedBranches []string) ([]models.Finding, error) {
 	ddService := defectdojo.GetDefectDojoService(
 		client.NewClient(&http.Client{}),
 		environment_variable.EnvironmentVariable["DD_URL"],
 		environment_variable.EnvironmentVariable["DD_ACCESS_TOKEN"])
 
-	engagementId, err := featuresync.GetEngagementId(ddService, projectName, branch, protectedBranches)
-	if err != nil {
-		logger.Error(fmt.Sprintf(logErrorRetrieveEngagementId, projectName, branch))
-		return nil, err
-	}
-
-	ddFindings, err := ddService.GetFindings(engagementId, 0, 100, []defectdojo.Finding{})
-	if err != nil {
-		logger.Error(logErrorRetrieveDefectDojoFindings)
-		return nil, err
-	}
-
-	var findings []models.Finding
-	for _, f := range ddFindings {
-		findings = append(findings, models.Finding{
-			Severity: f.Severity,
-			Name:     f.Title,
-		})
-	}
-
-	return findings, nil
+	return featuresync.GetDefectDojoFindings(ddService, projectName, branch, protectedBranches)
 }
 
 // registerScanner adds a scanner under name in the engine's registry.

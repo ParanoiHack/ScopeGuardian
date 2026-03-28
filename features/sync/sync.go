@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"scope-guardian/connectors/defectdojo"
+	"scope-guardian/domains/models"
 	"scope-guardian/logger"
 	"time"
 )
@@ -16,6 +17,7 @@ const (
 	logErrorGetEngagements       = "Cannot retrieve engagements for product [%d]"
 	logErrorUpdateEndDate        = "Cannot update engagement end date [%d]"
 	logErrorCreateEngagement     = "Cannot create engagement for branch [%s]"
+	logErrorGetFindings          = "Cannot retrieve findings from DefectDojo for engagement [%d]"
 )
 
 const (
@@ -23,6 +25,7 @@ const (
 	errGetEngagements   = "cannot retrieve engagements"
 	errUpdateEndDate    = "cannot update engagement end date"
 	errCreateEngagement = "cannot create engagement"
+	errGetFindings      = "cannot retrieve findings"
 )
 
 // GetEngagementId retrieves the engagement ID to use for syncing scan results.
@@ -84,5 +87,32 @@ func isProtectedBranch(branch string, protectedBranches []string) bool {
 		}
 	}
 	return false
+}
+
+// GetDefectDojoFindings fetches the active findings for the given project and branch
+// from DefectDojo and converts them into the internal Finding model. It is used to
+// evaluate the security gate against findings already stored in DefectDojo when the
+// sync flag is active.
+func GetDefectDojoFindings(ddService defectdojo.DefectDojoService, projectName string, branch string, protectedBranches []string) ([]models.Finding, error) {
+	engagementId, err := GetEngagementId(ddService, projectName, branch, protectedBranches)
+	if err != nil {
+		return nil, err
+	}
+
+	ddFindings, err := ddService.GetFindings(engagementId, 0, 100, []defectdojo.Finding{})
+	if err != nil {
+		logger.Error(fmt.Sprintf(logErrorGetFindings, engagementId))
+		return nil, errors.New(errGetFindings)
+	}
+
+	var findings []models.Finding
+	for _, f := range ddFindings {
+		findings = append(findings, models.Finding{
+			Severity: f.Severity,
+			Name:     f.Title,
+		})
+	}
+
+	return findings, nil
 }
 
