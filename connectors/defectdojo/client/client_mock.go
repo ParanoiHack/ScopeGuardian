@@ -92,3 +92,18 @@ func (mr *MockClientMockRecorder) Post(url, body, headers interface{}) *gomock.C
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Post", reflect.TypeOf((*MockClient)(nil).Post), url, body, headers)
 }
+
+// Put mocks base method.
+func (m *MockClient) Put(url string, body []byte, headers http.Header) ([]byte, int) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Put", url, body, headers)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(int)
+	return ret0, ret1
+}
+
+// Put indicates an expected call of Put.
+func (mr *MockClientMockRecorder) Put(url, body, headers interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Put", reflect.TypeOf((*MockClient)(nil).Put), url, body, headers)
+}
