@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetSyftService(t *testing.T) {
-	service := GetSyftService(loader.Grype{})
+	service := GetSyftService(loader.Config{})
 	_, ok := service.(interfaces.ScanServiceImpl)
 
 	assert.NotNil(t, service)

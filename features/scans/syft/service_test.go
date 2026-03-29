@@ -5,14 +5,13 @@ import (
 	"os"
 	"scope-guardian/domains/interfaces"
 	environment_variable "scope-guardian/environnement_variable"
-	"scope-guardian/loader"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewSyftService(t *testing.T) {
-	service := newSyftService(loader.Grype{Path: "./test"})
+	service := newSyftService("./test")
 
 	_, ok := service.(interfaces.ScanServiceImpl)
 	assert.NotNil(t, service)
@@ -24,7 +23,7 @@ func TestSyftStart(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], ""))
 		environment_variable.ReloadEnv()
 
-		service := newSyftService(loader.Grype{Path: "./doesnotexist"})
+		service := newSyftService("./doesnotexist")
 
 		ok, err := service.Start()
 
@@ -36,7 +35,7 @@ func TestSyftStart(t *testing.T) {
 
 func TestSyftLoadFindings(t *testing.T) {
 	t.Run("Should return nil findings and nil error", func(t *testing.T) {
-		service := newSyftService(loader.Grype{Path: "./test"})
+		service := newSyftService("./test")
 
 		findings, err := service.LoadFindings()
 
@@ -47,7 +46,7 @@ func TestSyftLoadFindings(t *testing.T) {
 
 func TestSyftSync(t *testing.T) {
 	t.Run("Should return nil error", func(t *testing.T) {
-		service := newSyftService(loader.Grype{Path: "./test"})
+		service := newSyftService("./test")
 
 		err := service.Sync(1, "main", nil)
 

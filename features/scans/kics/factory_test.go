@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetKicsService(t *testing.T) {
-	service := GetKicsService(loader.Kics{})
+	service := GetKicsService(loader.Config{Path: "./test", Kics: &loader.Kics{}})
 	_, ok := service.(interfaces.ScanServiceImpl)
 
 	assert.NotNil(t, service)

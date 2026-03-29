@@ -6,7 +6,7 @@ import (
 )
 
 // GetSyftService constructs and returns a ScanServiceImpl for the Syft SBOM generator
-// using the provided Grype loader configuration.
-func GetSyftService(config loader.Grype) interfaces.ScanServiceImpl {
-	return newSyftService(config)
+// using the provided loader configuration.
+func GetSyftService(config loader.Config) interfaces.ScanServiceImpl {
+	return newSyftService(config.Path)
 }

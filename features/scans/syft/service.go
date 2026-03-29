@@ -9,7 +9,6 @@ import (
 	"scope-guardian/domains/models"
 	environment_variable "scope-guardian/environnement_variable"
 	"scope-guardian/exec"
-	"scope-guardian/loader"
 	"scope-guardian/logger"
 	"strings"
 )
@@ -19,11 +18,11 @@ type SyftServiceImpl struct {
 	path string
 }
 
-// newSyftService builds a SyftServiceImpl from the loader configuration, resolving
-// the scan path relative to the SCAN_DIR environment variable.
-func newSyftService(config loader.Grype) interfaces.ScanServiceImpl {
+// newSyftService builds a SyftServiceImpl from the scan path, resolving it
+// relative to the SCAN_DIR environment variable.
+func newSyftService(path string) interfaces.ScanServiceImpl {
 	return &SyftServiceImpl{
-		path: fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], config.Path),
+		path: fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], path),
 	}
 }
 

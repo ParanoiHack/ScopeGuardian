@@ -12,7 +12,8 @@ func TestLoad(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.EqualValues(t, "Scope-guardian configuration file", config.Title)
-		assert.EqualValues(t, "./", config.Kics.Path)
+		assert.EqualValues(t, "./", config.Path)
+		assert.NotNil(t, config.Kics)
 		assert.EqualValues(t, "terraform", config.Kics.Platform)
 	})
 
@@ -21,8 +22,9 @@ func TestLoad(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.EqualValues(t, "Scope-guardian configuration file", config.Title)
-		assert.EqualValues(t, "./", config.Grype.Path)
-		assert.EqualValues(t, Kics{}, config.Kics)
+		assert.EqualValues(t, "./", config.Path)
+		assert.NotNil(t, config.Grype)
+		assert.Nil(t, config.Kics)
 	})
 
 	t.Run("Should load configuration file without engine", func(t *testing.T) {
@@ -30,8 +32,8 @@ func TestLoad(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.EqualValues(t, "Scope-guardian configuration file", config.Title)
-		assert.EqualValues(t, Kics{}, config.Kics)
-		assert.EqualValues(t, Grype{}, config.Grype)
+		assert.Nil(t, config.Kics)
+		assert.Nil(t, config.Grype)
 	})
 
 	t.Run("Should not load configuration file cause wrong pathname", func(t *testing.T) {
