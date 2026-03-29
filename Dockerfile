@@ -80,7 +80,7 @@ COPY --from=opengrep_builder /tmp/build/opengrep /opt/opengrep/bin/opengrep
 COPY --from=grype_builder /tmp/grype/bin/grype /opt/grype/bin/grype
 COPY --from=syft_builder /tmp/syft/bin/syft /opt/syft/bin/syft
 
-COPY features/syft/config/syft.yaml /opt/syft/config/syft.yaml
+COPY features/scans/syft/config/syft.yaml /opt/syft/config/syft.yaml
 
 WORKDIR /tmp/data
 
