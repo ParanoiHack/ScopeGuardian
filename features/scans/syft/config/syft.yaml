@@ -23,15 +23,21 @@ config: ""
 # output:
 #   - "syft-json=<syft-json-output-file>"
 #   - "spdx-json=<spdx-json-output-file>" (env: SYFT_OUTPUT)
+#
+# syft-json  → consumed by grype for vulnerability scanning
+# cyclonedx-json → consumed by Dependency-Track for component & license management
 output:
-  - "syft-json"
+  - "syft-json=sbom.syft.json"
+  - "cyclonedx-json=sbom.cyclonedx.json"
 
 # file to write the default report output to (default is STDOUT) (env: SYFT_LEGACYFILE)
 legacyFile: ""
 
 format:
   # default value for all formats that support the "pretty" option (default is unset) (env: SYFT_FORMAT_PRETTY)
-  pretty: true
+  # disabled: SBOM files are machine-consumed (grype, Dependency-Track) so human-readable indentation
+  # only increases file size without benefit.
+  pretty: false
 
   template:
     # path to the template file to use when rendering the output with the template output format.
@@ -90,7 +96,8 @@ package:
   # search within archives that do not contain a file index to search against (tar, tar.gz, tar.bz2, etc)
   # note: enabling this may result in a performance impact since all discovered compressed tars will be decompressed
   # note: for now this only applies to the java package cataloger (env: SYFT_PACKAGE_SEARCH_UNINDEXED_ARCHIVES)
-  search-unindexed-archives: false
+  # enabled: catches Java dependencies bundled inside fat-jars and other unindexed archives.
+  search-unindexed-archives: true
 
   # search within archives that do contain a file index to search against (zip)
   # note: for now this only applies to the java package cataloger (env: SYFT_PACKAGE_SEARCH_INDEXED_ARCHIVES)
@@ -102,7 +109,8 @@ package:
 
 license:
   # include the content of licenses in the SBOM for a given syft scan; valid values are: [all unknown none] (env: SYFT_LICENSE_CONTENT)
-  content: "none"
+  # set to "all" so that Dependency-Track can perform licence compliance analysis on every component.
+  content: "all"
 
   # adjust the percent as a fraction of the total text, in normalized words, that
   # matches any valid license for the given inputs, expressed as a percentage across all of the licenses matched. (env: SYFT_LICENSE_COVERAGE)
@@ -219,7 +227,8 @@ java:
   # enables Syft to use the network to fetch version and license information for packages when
   # a parent or imported pom file is not found in the local maven repository.
   # the pom files are downloaded from the remote Maven repository at 'maven-url' (env: SYFT_JAVA_USE_NETWORK)
-  use-network:
+  # enabled: ensures accurate transitive dependency resolution and license data for Maven components.
+  use-network: true
 
   # use the local Maven repository to retrieve pom files. When Maven is installed and was previously used
   # for building the software that is being scanned, then most pom files will be available in this
@@ -250,7 +259,8 @@ javascript:
   npm-base-url: "https://registry.npmjs.org"
 
   # include development-scoped dependencies (env: SYFT_JAVASCRIPT_INCLUDE_DEV_DEPENDENCIES)
-  include-dev-dependencies:
+  # disabled: production SBOMs fed to grype and Dependency-Track should only contain runtime dependencies.
+  include-dev-dependencies: false
 
 linux-kernel:
   # whether to catalog linux kernel modules found within lib/modules/** directories (env: SYFT_LINUX_KERNEL_CATALOG_MODULES)
