@@ -7,6 +7,7 @@ const (
 	CreateEngagementPath = "/engagements/"
 	UpdateEngagementPath = "/engagements/%d/"
 	ImportScanPath       = "/import-scan/"
+	GetFindingsPath      = "/findings/?test__engagement=%d&active=true&offset=%d&limit=%d"
 )
 
 const (
@@ -36,6 +37,7 @@ const (
 	logErrorAddFile                 = "Cannot attach file to request"
 	logErrorCreateMultipartRequest  = "Cannot create multipart request"
 	logErrorImportScan              = "Cannot import scan"
+	logErrorRetrieveFindings        = "Cannot retrieve findings for engagement ID %d"
 )
 
 const (
@@ -49,4 +51,5 @@ const (
 	errUpdateEngagementEndDate = "cannot update engagement end date"
 	errWritingFile             = "cannot write file to request"
 	errImportScan              = "cannot import scan"
+	errRetrieveFindings        = "cannot retrieve findings"
 )

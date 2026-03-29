@@ -39,6 +39,17 @@ type EngagementPayload struct {
 	Product                   int      `json:"product,omitempty"`
 }
 
+type Finding struct {
+	Id       int    `json:"id"`
+	Title    string `json:"title"`
+	Severity string `json:"severity"`
+}
+
+type GetFindingsResponse struct {
+	Count   int       `json:"count"`
+	Results []Finding `json:"results"`
+}
+
 type ScanPayload struct {
 	Timestamp         string   `json:"scan_date" form:"scan_date"`
 	SeverityThreshold string   `json:"minimum_severity" form:"minimum_severity"`

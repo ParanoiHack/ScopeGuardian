@@ -480,3 +480,107 @@ func TestSetAccessToken(t *testing.T) {
 	impl := service.(*DefectDojoServiceImpl)
 	assert.Equal(t, "new-token-xyz", impl.accessToken)
 }
+
+func TestGetFindings(t *testing.T) {
+	gomockController := gomock.NewController(t)
+
+	t.Run("Should retrieve findings for an engagement", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
+
+		responseReturnMock := []byte(`
+			{
+				"count": 1,
+				"results": [
+					{
+						"id": 1,
+						"title": "SQL Injection",
+						"severity": "High"
+					}
+				]
+			}
+		`)
+
+		responseEndMock := []byte(`
+			{
+				"count": 1,
+				"results": []
+			}
+		`)
+
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+		gomock.InOrder(
+			clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseReturnMock, 200),
+			clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseEndMock, 200),
+		)
+
+		service := newDefectDojoService(clientMock, URL, TOKEN)
+
+		findings, err := service.GetFindings(42, 0, 1, []Finding{})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, 1, len(findings))
+		assert.EqualValues(t, 1, findings[0].Id)
+		assert.EqualValues(t, "SQL Injection", findings[0].Title)
+		assert.EqualValues(t, "High", findings[0].Severity)
+	})
+
+	t.Run("Should not retrieve findings due to wrong HTTP status code", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
+
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+		clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return([]byte(`{}`), 403)
+
+		service := newDefectDojoService(clientMock, URL, TOKEN)
+
+		findings, err := service.GetFindings(42, 0, 100, []Finding{})
+
+		assert.NotNil(t, err)
+		assert.Equal(t, errRetrieveFindings, err.Error())
+		assert.EqualValues(t, 0, len(findings))
+	})
+
+	t.Run("Should not retrieve findings due to wrong JSON object", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
+
+		responseReturnMock := []byte(`
+			{
+				"count": 1,
+				"results": [
+					{
+						"id": 1
+					}
+		`)
+
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+		clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseReturnMock, 200)
+
+		service := newDefectDojoService(clientMock, URL, TOKEN)
+
+		findings, err := service.GetFindings(42, 0, 100, []Finding{})
+
+		assert.NotNil(t, err)
+		assert.Equal(t, errUnmarshal, err.Error())
+		assert.EqualValues(t, 0, len(findings))
+	})
+
+	t.Run("Should return empty slice when no findings exist", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
+
+		responseReturnMock := []byte(`
+			{
+				"count": 0,
+				"results": []
+			}
+		`)
+
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+		clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseReturnMock, 200)
+
+		service := newDefectDojoService(clientMock, URL, TOKEN)
+
+		findings, err := service.GetFindings(42, 0, 100, []Finding{})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, 0, len(findings))
+	})
+}
