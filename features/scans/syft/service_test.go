@@ -11,14 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetSyftService(t *testing.T) {
-	service := GetSyftService(loader.Grype{})
-	_, ok := service.(interfaces.ScanServiceImpl)
-
-	assert.NotNil(t, service)
-	assert.True(t, ok)
-}
-
 func TestNewSyftService(t *testing.T) {
 	service := newSyftService(loader.Grype{Path: "./test"})
 

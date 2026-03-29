@@ -9,6 +9,14 @@ const (
 const (
 	scanArgument   = "scan"
 	configArgument = "-c"
+	outputArgument = "--output"
+	quietArgument  = "-q"
+)
+
+const (
+	outputFolder                    = "results"
+	syftJsonOutputNameParameter     = "sbom.syft.json"
+	cyclonedxJsonOutputNameParameter = "sbom.cyclonedx.json"
 )
 
 const (

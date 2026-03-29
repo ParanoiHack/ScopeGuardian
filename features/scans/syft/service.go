@@ -36,7 +36,13 @@ func (s *SyftServiceImpl) Start() (bool, error) {
 		return false, errors.New(errDirectoryNotFound)
 	}
 
-	args := []string{scanArgument, s.path, configArgument, configPath}
+	args := []string{
+		scanArgument, s.path,
+		configArgument, configPath,
+		outputArgument, fmt.Sprintf("syft-json=%s/%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], outputFolder, syftJsonOutputNameParameter),
+		outputArgument, fmt.Sprintf("cyclonedx-json=%s/%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], outputFolder, cyclonedxJsonOutputNameParameter),
+		quietArgument,
+	}
 
 	logger.Info(fmt.Sprintf(logInfoCommandLine, strings.Join(args, " ")))
 

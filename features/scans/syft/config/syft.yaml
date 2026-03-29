@@ -19,16 +19,10 @@ dev:
 config: ""
 
 # the output format(s) of the SBOM report (options: syft-table, syft-text, syft-json, spdx-json, ...)
-# to specify multiple output files in differing formats, use a list:
-# output:
-#   - "syft-json=<syft-json-output-file>"
-#   - "spdx-json=<spdx-json-output-file>" (env: SYFT_OUTPUT)
-#
-# syft-json  → consumed by grype for vulnerability scanning
-# cyclonedx-json → consumed by Dependency-Track for component & license management
-output:
-  - "syft-json=sbom.syft.json"
-  - "cyclonedx-json=sbom.cyclonedx.json"
+# output paths are provided at runtime via --output CLI arguments:
+#   syft-json  → consumed by grype for vulnerability scanning
+#   cyclonedx-json → consumed by Dependency-Track for component & license management
+output: []
 
 # file to write the default report output to (default is STDOUT) (env: SYFT_LEGACYFILE)
 legacyFile: ""
