@@ -16,12 +16,22 @@ func TestLoad(t *testing.T) {
 		assert.EqualValues(t, "terraform", config.Kics.Platform)
 	})
 
+	t.Run("Should load configuration file with grype section", func(t *testing.T) {
+		config, err := Load("./mocks/config_with_grype.toml")
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, "Scope-guardian configuration file", config.Title)
+		assert.EqualValues(t, "./", config.Grype.Path)
+		assert.EqualValues(t, Kics{}, config.Kics)
+	})
+
 	t.Run("Should load configuration file without engine", func(t *testing.T) {
 		config, err := Load("./mocks/config_no_engine.toml")
 
 		assert.Nil(t, err)
 		assert.EqualValues(t, "Scope-guardian configuration file", config.Title)
 		assert.EqualValues(t, Kics{}, config.Kics)
+		assert.EqualValues(t, Grype{}, config.Grype)
 	})
 
 	t.Run("Should not load configuration file cause wrong pathname", func(t *testing.T) {

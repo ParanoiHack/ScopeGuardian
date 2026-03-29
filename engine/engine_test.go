@@ -94,6 +94,20 @@ func TestInitialize(t *testing.T) {
 		assert.EqualValues(t, 1, len(engine.scanners))
 	})
 
+	t.Run("Should initialize engine with syft runner when grype is configured", func(t *testing.T) {
+		engine := NewEngine()
+
+		config, err := loader.Load("../loader/mocks/config_with_grype.toml")
+		assert.Nil(t, err)
+		assert.NotNil(t, config)
+
+		engine.Initialize(config)
+
+		assert.EqualValues(t, 1, len(engine.scanners))
+		_, ok := engine.scanners[syftScannerName]
+		assert.True(t, ok)
+	})
+
 	t.Run("Should not initialize engine with kics runner", func(t *testing.T) {
 		engine := NewEngine()
 

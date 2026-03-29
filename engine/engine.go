@@ -11,6 +11,7 @@ import (
 	environment_variable "scope-guardian/environnement_variable"
 	featuresync "scope-guardian/features/sync"
 	"scope-guardian/features/scans/kics"
+	"scope-guardian/features/scans/syft"
 	"scope-guardian/loader"
 	"scope-guardian/logger"
 	"sync"
@@ -36,11 +37,16 @@ func NewEngine() *Engine {
 }
 
 // Initialize reads the provided configuration and registers any scanner whose
-// section is present and non-empty. Currently supports KICS.
+// section is present and non-empty. Currently supports KICS and Syft (triggered by Grype config).
 func (e *Engine) Initialize(config loader.Config) {
 	if !reflect.DeepEqual(config.Kics, loader.Kics{}) {
 		logger.Info(logInfoKicsRegister)
 		e.registerScanner(kicsScannerName, kics.GetKicsService(config.Kics))
+	}
+
+	if !reflect.DeepEqual(config.Grype, loader.Grype{}) {
+		logger.Info(logInfoSyftRegister)
+		e.registerScanner(syftScannerName, syft.GetSyftService(config.Grype))
 	}
 }
 

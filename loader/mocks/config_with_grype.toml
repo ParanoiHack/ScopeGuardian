@@ -1,0 +1,4 @@
+title = "Scope-guardian configuration file"
+
+[grype]
+path = "./"
