@@ -69,6 +69,7 @@ func (s *KicsServiceImpl) Start() (bool, error) {
 		outputNameParameter,
 		ignoreOnExitArgument,
 		ignoreOnExitParameter,
+		silentArgument,
 	}...)
 
 	if s.platform != "" {
