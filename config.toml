@@ -1,7 +1,9 @@
 title = "Scope-guardian configuration file"
 
 protected_branches = ["main", "master"]
+path = "./WebGoat"
 
 [kics]
-path = "./WebGoat"
 platform = "Dockerfile"
+
+[grype]

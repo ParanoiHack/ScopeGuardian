@@ -23,11 +23,11 @@ type KicsServiceImpl struct {
 	output   string
 }
 
-// newKicsService builds a KicsServiceImpl from the loader configuration, resolving
-// the scan path and output file path relative to the SCAN_DIR environment variable.
-func newKicsService(config loader.Kics) interfaces.ScanServiceImpl {
+// newKicsService builds a KicsServiceImpl from the scan path and loader configuration,
+// resolving the scan path and output file path relative to the SCAN_DIR environment variable.
+func newKicsService(path string, config loader.Kics) interfaces.ScanServiceImpl {
 	return &KicsServiceImpl{
-		path:     fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], config.Path),
+		path:     fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], path),
 		output:   fmt.Sprintf("%s/%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], outputFolder, outputNameParameter),
 		platform: config.Platform,
 	}

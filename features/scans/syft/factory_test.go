@@ -1,4 +1,4 @@
-package kics
+package syft
 
 import (
 	"scope-guardian/domains/interfaces"
@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetKicsService(t *testing.T) {
-	service := GetKicsService(loader.Config{Path: "./test", Kics: &loader.Kics{}})
+func TestGetSyftService(t *testing.T) {
+	service := GetSyftService(loader.Config{})
 	_, ok := service.(interfaces.ScanServiceImpl)
 
 	assert.NotNil(t, service)
