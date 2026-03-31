@@ -103,8 +103,10 @@ func TestInitialize(t *testing.T) {
 
 		engine.Initialize(config)
 
-		assert.EqualValues(t, 1, len(engine.scanners))
+		assert.EqualValues(t, 2, len(engine.scanners))
 		_, ok := engine.scanners[syftScannerName]
+		assert.True(t, ok)
+		_, ok = engine.scanners[grypeScannerName]
 		assert.True(t, ok)
 	})
 

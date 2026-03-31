@@ -7,3 +7,4 @@ path = "./WebGoat"
 platform = "Dockerfile"
 
 [grype]
+ignore_states = "not-fixed,unknown,wont-fix"

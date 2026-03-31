@@ -2,3 +2,5 @@ title = "Scope-guardian configuration file"
 path = "./"
 
 [grype]
+ignore_states = "not-fixed,unknown,wont-fix"
+exclude = ["/etc/**"]

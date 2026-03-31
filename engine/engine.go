@@ -9,6 +9,7 @@ import (
 	"scope-guardian/domains/models"
 	environment_variable "scope-guardian/environnement_variable"
 	featuresync "scope-guardian/features/sync"
+	"scope-guardian/features/scans/grype"
 	"scope-guardian/features/scans/kics"
 	"scope-guardian/features/scans/syft"
 	"scope-guardian/loader"
@@ -46,6 +47,8 @@ func (e *Engine) Initialize(config loader.Config) {
 	if config.Grype != nil {
 		logger.Info(logInfoSyftRegister)
 		e.registerScanner(syftScannerName, syft.GetSyftService(config))
+		logger.Info(logInfoGrypeRegister)
+		e.registerScanner(grypeScannerName, grype.GetGrypeService(config))
 	}
 }
 
