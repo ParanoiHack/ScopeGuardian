@@ -2,6 +2,7 @@ package engine
 
 const (
 	logInfoKicsRegister    = "Kics enabled. Registring scanner for execution"
+	logInfoSyftRegister    = "Grype enabled. Registering Syft SBOM scanner for execution"
 	logInfoScannerStarting = "Starting %s scanning engine"
 	logInfoScannerSuccess  = "%s scanner succeeded"
 	logInfoFindingsLoaded  = "%s findings loaded"
@@ -17,4 +18,5 @@ const (
 
 const (
 	kicsScannerName = "Kics (IACST)"
+	syftScannerName = "Syft (SBOM)"
 )

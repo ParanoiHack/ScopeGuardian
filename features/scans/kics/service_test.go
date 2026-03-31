@@ -48,7 +48,7 @@ func (m *mockDefectDojoService) GetFindings(_ int, _ int, _ int, _ []defectdojo.
 var _ defectdojo.DefectDojoService = &mockDefectDojoService{}
 
 func TestNewKicsService(t *testing.T) {
-	service := newKicsService(loader.Kics{"./test", ""})
+	service := newKicsService("./test", loader.Kics{})
 
 	_, ok := service.(interfaces.ScanServiceImpl)
 	assert.NotNil(t, service)
@@ -74,7 +74,7 @@ func TestLoadFinding(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
-		service := newKicsService(loader.Kics{"./test", ""})
+		service := newKicsService("./test", loader.Kics{})
 
 		findings, err := service.LoadFindings()
 
@@ -86,7 +86,7 @@ func TestLoadFinding(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], ""))
 		environment_variable.ReloadEnv()
 
-		service := newKicsService(loader.Kics{"./test", ""})
+		service := newKicsService("./test", loader.Kics{})
 
 		findings, err := service.LoadFindings()
 
@@ -98,7 +98,7 @@ func TestLoadFinding(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/bad_format_results"))
 		environment_variable.ReloadEnv()
 
-		service := newKicsService(loader.Kics{"./test", ""})
+		service := newKicsService("./test", loader.Kics{})
 
 		findings, err := service.LoadFindings()
 
@@ -120,7 +120,7 @@ func TestSync(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
-		service := newKicsService(loader.Kics{"./test", ""})
+		service := newKicsService("./test", loader.Kics{})
 		ddMock := &mockDefectDojoService{importScanOk: true, importScanErr: nil}
 
 		err := service.Sync(1, "main", ddMock)
@@ -132,7 +132,7 @@ func TestSync(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
-		service := newKicsService(loader.Kics{"./test", ""})
+		service := newKicsService("./test", loader.Kics{})
 		ddMock := &mockDefectDojoService{importScanOk: false, importScanErr: fmt.Errorf("import failed")}
 
 		err := service.Sync(1, "main", ddMock)
