@@ -81,6 +81,7 @@ COPY --from=grype_builder /tmp/grype/bin/grype /opt/grype/bin/grype
 COPY --from=syft_builder /tmp/syft/bin/syft /opt/syft/bin/syft
 
 COPY features/scans/syft/config/syft.yaml /opt/syft/config/syft.yaml
+COPY features/scans/grype/config/grype.yaml /opt/grype/config/grype.yaml
 
 WORKDIR /tmp/data
 
