@@ -3,6 +3,7 @@ package syft
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"scope-guardian/connectors/defectdojo"
 	"scope-guardian/domains/interfaces"
@@ -13,10 +14,15 @@ import (
 	"strings"
 )
 
+// execRunner is the function signature used to invoke an external binary.
+// It matches exec.Wrap so that tests can substitute a lightweight mock.
+type execRunner func(binaryPath string, dirPath string, args []string, stdout io.Writer, stderr io.Writer, extraEnv ...string) (bool, error)
+
 // SyftServiceImpl implements ScanServiceImpl for the Syft SBOM generator.
 type SyftServiceImpl struct {
 	path                string
 	transitiveLibraries bool
+	runner              execRunner
 }
 
 // newSyftService builds a SyftServiceImpl from the scan path, resolving it
@@ -26,6 +32,7 @@ func newSyftService(path string, transitiveLibraries bool) interfaces.ScanServic
 	return &SyftServiceImpl{
 		path:                fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], path),
 		transitiveLibraries: transitiveLibraries,
+		runner:              exec.Wrap,
 	}
 }
 
@@ -53,7 +60,7 @@ func (s *SyftServiceImpl) Start() (bool, error) {
 	logger.Info(fmt.Sprintf(logInfoCommandLine, strings.Join(args, " ")))
 
 	transitiveValue := fmt.Sprintf("%v", s.transitiveLibraries)
-	return exec.Wrap(binaryPath, dirPath, args,
+	return s.runner(binaryPath, dirPath, args, os.Stdout, os.Stderr,
 		fmt.Sprintf("%s=%s", envJavaUseNetwork, transitiveValue),
 		fmt.Sprintf("%s=%s", envJavaResolveTransitiveDependencies, transitiveValue),
 	)

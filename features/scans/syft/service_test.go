@@ -2,6 +2,7 @@ package syft
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"scope-guardian/domains/interfaces"
 	environment_variable "scope-guardian/environnement_variable"
@@ -32,28 +33,34 @@ func TestSyftStart(t *testing.T) {
 		assert.EqualValues(t, errDirectoryNotFound, err.Error())
 	})
 
-	t.Run("Should return error when binary not found but directory exists", func(t *testing.T) {
+	t.Run("Should return error when runner fails and directory exists", func(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", os.TempDir())
 		environment_variable.ReloadEnv()
 
-		service := newSyftService(".", false)
+		svc := newSyftService(".", false).(*SyftServiceImpl)
+		svc.runner = func(_ string, _ string, _ []string, _ io.Writer, _ io.Writer, _ ...string) (bool, error) {
+			return false, fmt.Errorf("runner error")
+		}
 
-		ok, err := service.Start()
+		ok, err := svc.Start()
 
 		assert.NotNil(t, err)
 		assert.False(t, ok)
 	})
 
-	t.Run("Should log transitive libraries message and return error when binary not found", func(t *testing.T) {
+	t.Run("Should log transitive libraries message and succeed when runner succeeds", func(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", os.TempDir())
 		environment_variable.ReloadEnv()
 
-		service := newSyftService(".", true)
+		svc := newSyftService(".", true).(*SyftServiceImpl)
+		svc.runner = func(_ string, _ string, _ []string, _ io.Writer, _ io.Writer, _ ...string) (bool, error) {
+			return true, nil
+		}
 
-		ok, err := service.Start()
+		ok, err := svc.Start()
 
-		assert.NotNil(t, err)
-		assert.False(t, ok)
+		assert.Nil(t, err)
+		assert.True(t, ok)
 	})
 }
 

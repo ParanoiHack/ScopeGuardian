@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"scope-guardian/connectors/defectdojo"
 	"scope-guardian/domains/interfaces"
@@ -76,7 +77,7 @@ func (s *KicsServiceImpl) Start() (bool, error) {
 
 	logger.Info(fmt.Sprintf(logInfoCommandLine, strings.Join(args, " ")))
 
-	return exec.Wrap(binaryPath, dirPath, args)
+	return exec.Wrap(binaryPath, dirPath, args, io.Discard, io.Discard)
 }
 
 // LoadFindings reads the KICS JSON output file and converts each query result
