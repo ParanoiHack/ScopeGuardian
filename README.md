@@ -23,6 +23,8 @@ Scope-Guardian is a CLI tool that runs security scanners on your codebase and sy
 
 - Go 1.25+ (only needed when building from source)
 - [KICS](https://github.com/Checkmarx/kics) binary available at `/opt/kics/bin/kics` (pre-installed in the Docker image)
+- [Syft](https://github.com/anchore/syft) binary available at `/opt/syft/bin/syft` (pre-installed in the Docker image; required when `[grype]` is configured)
+- [Grype](https://github.com/anchore/grype) binary available at `/opt/grype/bin/grype` (pre-installed in the Docker image; required when `[grype]` is configured)
 - A running DefectDojo instance and an API access token (required only when `--sync` is used)
 
 ---
@@ -70,7 +72,10 @@ scope-guardian [flags] <config-file>
 ### Execution Order
 
 ```
-Parse flags → Load config.toml → Initialize scanners → Run scanners
+Parse flags → Load config.toml → Initialize scanners
+  → Phase 1: Run prerequisite scanners concurrently (Syft SBOM generation)
+  → Phase 2: Run dependent/independent scanners concurrently (Grype, KICS)
+           Any scanner whose prerequisite failed is skipped automatically
   → Load findings → [Sync to DefectDojo] → Display findings
   → [Evaluate security gate → exit(-1) on failure]
 ```
@@ -97,6 +102,18 @@ path = "./my-service"
 # Infrastructure platform type. Passed as --type to KICS.
 # Examples: "Dockerfile", "Terraform", "CloudFormation", "Kubernetes", "Ansible"
 platform = "Dockerfile"
+
+# Grype – software-composition analysis (SCA) vulnerability scanner.
+# Enabling this section also enables Syft SBOM generation as a prerequisite.
+[grype]
+# Comma-separated vulnerability states to ignore.
+# Common values: "not-fixed", "unknown", "wont-fix"
+ignore_states = "not-fixed,unknown,wont-fix"
+# When true, Syft resolves transitive Java dependencies from Maven Central.
+# This increases scan accuracy for Java projects but significantly increases scan time.
+transitive_libraries = false
+# Optional list of path patterns to exclude from Grype scanning.
+# exclude = ["**/vendor/**", "**/testdata/**"]
 ```
 
 ### Fields Reference
@@ -107,8 +124,13 @@ platform = "Dockerfile"
 | `protected_branches` | string array | no | Branches whose engagements get a 1-year end date. Defaults to empty (all branches get 1 week). |
 | `[kics].path` | string | yes* | Path to the directory to scan. Resolved as `$SCAN_DIR/<path>`. |
 | `[kics].platform` | string | no | KICS platform filter (e.g. `Dockerfile`). When omitted KICS scans all supported types. |
+| `[grype].ignore_states` | string | no | Comma-separated Grype vulnerability states to suppress (e.g. `not-fixed,unknown,wont-fix`). |
+| `[grype].transitive_libraries` | bool | no | When `true`, Syft resolves transitive Java dependencies via Maven Central. Default: `false`. |
+| `[grype].exclude` | string array | no | Path glob patterns to exclude from Grype scanning (e.g. `["**/vendor/**"]`). |
 
 \* Required only if you want KICS scanning to run. Omitting the entire `[kics]` section disables the scanner.
+
+Omitting the entire `[grype]` section disables both Grype and the Syft SBOM generation step.
 
 ---
 
@@ -196,6 +218,20 @@ The KICS scanner uploads its JSON output file to DefectDojo via the `/api/v2/imp
 | Group by | `finding_title` | Merge findings with the same title |
 | Create finding groups | `true` | Group related findings together |
 | Apply tags to findings | `true` | Tag each finding with `IACST` |
+| Close old findings | `true` | Findings absent from the new scan are closed automatically |
+| Branch tag | `<branch>` | Associates the results with the scanned branch |
+
+### Grype Sync Behaviour
+
+The Grype scanner uploads its JSON output file to DefectDojo via the `/api/v2/import-scan/` endpoint as a `multipart/form-data` request. The following options are set on every import:
+
+| Option | Value | Effect |
+|--------|-------|--------|
+| Scan type | `Anchore Grype` | Tells DefectDojo which parser to use |
+| Severity threshold | `Info` | Import findings of all severities |
+| Group by | `finding_title` | Merge findings with the same title |
+| Create finding groups | `true` | Group related findings together |
+| Apply tags to findings | `true` | Tag each finding with `SCA` |
 | Close old findings | `true` | Findings absent from the new scan are closed automatically |
 | Branch tag | `<branch>` | Associates the results with the scanned branch |
 
