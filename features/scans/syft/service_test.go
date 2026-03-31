@@ -11,7 +11,7 @@ import (
 )
 
 func TestNewSyftService(t *testing.T) {
-	service := newSyftService("./test")
+	service := newSyftService("./test", false)
 
 	_, ok := service.(interfaces.ScanServiceImpl)
 	assert.NotNil(t, service)
@@ -23,7 +23,7 @@ func TestSyftStart(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], ""))
 		environment_variable.ReloadEnv()
 
-		service := newSyftService("./doesnotexist")
+		service := newSyftService("./doesnotexist", false)
 
 		ok, err := service.Start()
 
@@ -35,7 +35,7 @@ func TestSyftStart(t *testing.T) {
 
 func TestSyftLoadFindings(t *testing.T) {
 	t.Run("Should return nil findings and nil error", func(t *testing.T) {
-		service := newSyftService("./test")
+		service := newSyftService("./test", false)
 
 		findings, err := service.LoadFindings()
 
@@ -46,7 +46,7 @@ func TestSyftLoadFindings(t *testing.T) {
 
 func TestSyftSync(t *testing.T) {
 	t.Run("Should return nil error", func(t *testing.T) {
-		service := newSyftService("./test")
+		service := newSyftService("./test", false)
 
 		err := service.Sync(1, "main", nil)
 

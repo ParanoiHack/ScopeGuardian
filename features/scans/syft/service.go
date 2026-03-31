@@ -15,14 +15,17 @@ import (
 
 // SyftServiceImpl implements ScanServiceImpl for the Syft SBOM generator.
 type SyftServiceImpl struct {
-	path string
+	path                string
+	transitiveLibraries bool
 }
 
 // newSyftService builds a SyftServiceImpl from the scan path, resolving it
-// relative to the SCAN_DIR environment variable.
-func newSyftService(path string) interfaces.ScanServiceImpl {
+// relative to the SCAN_DIR environment variable. transitiveLibraries controls
+// whether Syft resolves transitive Java dependencies from Maven Central.
+func newSyftService(path string, transitiveLibraries bool) interfaces.ScanServiceImpl {
 	return &SyftServiceImpl{
-		path: fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], path),
+		path:                fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], path),
+		transitiveLibraries: transitiveLibraries,
 	}
 }
 
@@ -45,7 +48,11 @@ func (s *SyftServiceImpl) Start() (bool, error) {
 
 	logger.Info(fmt.Sprintf(logInfoCommandLine, strings.Join(args, " ")))
 
-	return exec.Wrap(binaryPath, dirPath, args)
+	transitiveValue := fmt.Sprintf("%v", s.transitiveLibraries)
+	return exec.Wrap(binaryPath, dirPath, args,
+		fmt.Sprintf("%s=%s", envJavaUseNetwork, transitiveValue),
+		fmt.Sprintf("%s=%s", envJavaResolveTransitiveDependencies, transitiveValue),
+	)
 }
 
 // LoadFindings is intentionally empty: Syft is used only to produce the SBOM

@@ -27,3 +27,8 @@ const (
 const (
 	errDirectoryNotFound = "directory not found"
 )
+
+const (
+	envJavaUseNetwork                    = "SYFT_JAVA_USE_NETWORK"
+	envJavaResolveTransitiveDependencies = "SYFT_JAVA_RESOLVE_TRANSITIVE_DEPENDENCIES"
+)
