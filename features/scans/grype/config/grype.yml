@@ -1,6 +1,6 @@
 log:
   # suppress all logging output (env: GRYPE_LOG_QUIET)
-  quiet: false
+  quiet: true
 
   # explicitly set the logging level (available: [error warn info debug trace]) (env: GRYPE_LOG_LEVEL)
   level: "warn"
@@ -35,13 +35,13 @@ pretty: false
 distro: ""
 
 # generate CPEs for packages with no CPE data (env: GRYPE_ADD_CPES_IF_NONE)
-add-cpes-if-none: false
+add-cpes-if-none: true
 
 # specify the path to a Go template file (requires 'template' output to be selected) (env: GRYPE_OUTPUT_TEMPLATE_FILE)
 output-template-file: ""
 
 # enable/disable checking for application updates on startup (env: GRYPE_CHECK_FOR_APP_UPDATE)
-check-for-app-update: true
+check-for-app-update: false
 
 # ignore matches for vulnerabilities that are not fixed (env: GRYPE_ONLY_FIXED)
 only-fixed: false
@@ -172,7 +172,7 @@ match:
 
 # upon scanning, if a severity is found at or above the given severity then the return code will be 1
 # default is unset which will skip this validation (options: negligible, low, medium, high, critical) (env: GRYPE_FAIL_ON_SEVERITY)
-fail-on-severity: ""
+fail-on-severity: "high"
 
 registry:
   # skip TLS verification when communicating with the registry (env: GRYPE_REGISTRY_INSECURE_SKIP_TLS_VERIFY)
@@ -275,3 +275,4 @@ db:
   max-update-check-frequency: 2h0m0s
 
 exp:
+  # placeholder for future experimental options; currently no experimental features are enabled
