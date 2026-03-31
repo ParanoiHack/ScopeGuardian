@@ -139,7 +139,7 @@ func (e *Engine) LoadFindings() []models.Finding {
 // SyncResults uploads each scanner's findings to DefectDojo under the engagement
 // matching the given projectName and branch. If no matching engagement exists one
 // is created automatically. protectedBranches determines the engagement end date duration.
-// Errors are logged and the sync is skipped for that scanner.
+// Prerequisites (e.g. Syft) do not contribute findings and are not synced here.
 func (e *Engine) SyncResults(projectName string, branch string, protectedBranches []string) {
 	ddService := defectdojo.GetDefectDojoService(
 		client.NewClient(&http.Client{}),
@@ -150,12 +150,6 @@ func (e *Engine) SyncResults(projectName string, branch string, protectedBranche
 	if err != nil {
 		logger.Error(fmt.Sprintf(logErrorRetrieveEngagementId, projectName, branch))
 		return
-	}
-
-	for k, scanner := range e.prerequisites {
-		scanner.Service.Sync(engagementId, branch, ddService) // check
-		_, _ = k, scanner
-		logger.Info(fmt.Sprintf(logInfoSyncResult, k))
 	}
 
 	for k, scanner := range e.scanners {
