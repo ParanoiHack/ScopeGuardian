@@ -15,6 +15,7 @@ const (
 	logErrorLoadFinding          = "Cannot load finding for %s scanner"
 	logErrorRegisterScanner      = "Cannot register scanner %s"
 	logErrorRetrieveEngagementId = "Cannot retrieve engagement ID for project [%s] branch [%s]"
+	logErrorSkippingScanner      = "Skipping %s scanner because prerequisite %s failed"
 )
 
 const (

@@ -21,23 +21,29 @@ import (
 // runs them in parallel, aggregates their findings, and optionally syncs
 // results to DefectDojo.
 type Engine struct {
-	scanners map[string]Scanner
+	prerequisites map[string]Scanner
+	scanners      map[string]Scanner
 }
 
 // Scanner wraps a ScanServiceImpl so it can be stored in the engine's registry.
+// DependsOn is the name of a prerequisite scanner that must succeed before this
+// scanner is allowed to start (empty means no dependency).
 type Scanner struct {
-	Service interfaces.ScanServiceImpl
+	Service   interfaces.ScanServiceImpl
+	DependsOn string
 }
 
 // NewEngine allocates and returns an empty Engine ready to accept scanners.
 func NewEngine() *Engine {
 	return &Engine{
-		scanners: make(map[string]Scanner),
+		prerequisites: make(map[string]Scanner),
+		scanners:      make(map[string]Scanner),
 	}
 }
 
 // Initialize reads the provided configuration and registers any scanner whose
-// section is present and non-empty. Currently supports KICS and Syft (triggered by Grype config).
+// section is present and non-empty. Syft is registered as a prerequisite for
+// Grype so that it always runs and completes before Grype starts.
 func (e *Engine) Initialize(config loader.Config) {
 	if config.Kics != nil {
 		logger.Info(logInfoKicsRegister)
@@ -46,18 +52,52 @@ func (e *Engine) Initialize(config loader.Config) {
 
 	if config.Grype != nil {
 		logger.Info(logInfoSyftRegister)
-		e.registerScanner(syftScannerName, syft.GetSyftService(config))
+		e.registerPrerequisite(syftScannerName, syft.GetSyftService(config))
 		logger.Info(logInfoGrypeRegister)
-		e.registerScanner(grypeScannerName, grype.GetGrypeService(config))
+		e.registerDependentScanner(grypeScannerName, grype.GetGrypeService(config), syftScannerName)
 	}
 }
 
-// Start launches all registered scanners concurrently and waits for them to finish.
+// Start runs all registered scanners in two phases:
+//  1. Prerequisites (e.g. Syft) are executed concurrently and the engine waits
+//     for all of them to finish. The name of each failed prerequisite is recorded.
+//  2. Regular scanners (e.g. Grype, KICS) are then executed concurrently. Any
+//     scanner whose DependsOn prerequisite failed is skipped with a log message.
+//
 // Errors from individual scanners are logged but do not stop the other scanners.
 func (e *Engine) Start() {
 	var wg sync.WaitGroup
+	failedPrereqs := make(map[string]bool)
+	var mu sync.Mutex
 
+	// Phase 1: run prerequisites concurrently and wait.
+	for k, scanner := range e.prerequisites {
+		wg.Add(1)
+		go func(scannerName string, service interfaces.ScanServiceImpl) {
+			defer wg.Done()
+
+			logger.Info(fmt.Sprintf(logInfoScannerStarting, scannerName))
+			if ok, err := service.Start(); !ok || err != nil {
+				logger.Error(err.Error())
+				logger.Error(fmt.Sprintf(logErrorScannerFailed, scannerName))
+				mu.Lock()
+				failedPrereqs[scannerName] = true
+				mu.Unlock()
+			} else {
+				logger.Info(fmt.Sprintf(logInfoScannerSuccess, scannerName))
+			}
+		}(k, scanner.Service)
+	}
+
+	wg.Wait()
+
+	// Phase 2: run scanners concurrently, skipping those whose prerequisite failed.
 	for k, scanner := range e.scanners {
+		if scanner.DependsOn != "" && failedPrereqs[scanner.DependsOn] {
+			logger.Error(fmt.Sprintf(logErrorSkippingScanner, k, scanner.DependsOn))
+			continue
+		}
+
 		wg.Add(1)
 		go func(scannerName string, service interfaces.ScanServiceImpl) {
 			defer wg.Done()
@@ -75,11 +115,22 @@ func (e *Engine) Start() {
 	wg.Wait()
 }
 
-// LoadFindings collects and merges the findings from all registered scanners.
-// Errors from individual scanners are logged; successfully loaded findings are
-// still included in the returned slice.
+// LoadFindings collects and merges the findings from all registered scanners and
+// prerequisites. Errors from individual scanners are logged; successfully loaded
+// findings are still included in the returned slice.
 func (e *Engine) LoadFindings() []models.Finding {
 	var results []models.Finding
+
+	for k, scanner := range e.prerequisites {
+		findings, err := scanner.Service.LoadFindings()
+		if err != nil {
+			logger.Error(err.Error())
+			logger.Error(fmt.Sprintf(logErrorLoadFinding, k))
+		} else {
+			logger.Info(fmt.Sprintf(logInfoFindingsLoaded, k))
+			results = append(results, findings...)
+		}
+	}
 
 	for k, scanner := range e.scanners {
 		findings, err := scanner.Service.LoadFindings()
@@ -111,6 +162,12 @@ func (e *Engine) SyncResults(projectName string, branch string, protectedBranche
 		return
 	}
 
+	for k, scanner := range e.prerequisites {
+		scanner.Service.Sync(engagementId, branch, ddService) // check
+		_, _ = k, scanner
+		logger.Info(fmt.Sprintf(logInfoSyncResult, k))
+	}
+
 	for k, scanner := range e.scanners {
 		scanner.Service.Sync(engagementId, branch, ddService) // check
 		_, _ = k, scanner
@@ -127,6 +184,40 @@ func (e *Engine) GetDefectDojoFindings(projectName string, branch string, protec
 		environment_variable.EnvironmentVariable["DD_ACCESS_TOKEN"])
 
 	return featuresync.GetDefectDojoFindings(ddService, projectName, branch, protectedBranches)
+}
+
+// registerPrerequisite adds a scanner that must run and finish before any dependent
+// scanner in the regular registry is allowed to start. It returns false (and logs
+// an error) if the name is empty or already registered.
+func (e *Engine) registerPrerequisite(name string, service interfaces.ScanServiceImpl) bool {
+	if _, ok := e.prerequisites[name]; ok || name == "" {
+		logger.Error(fmt.Sprintf(logErrorRegisterScanner, name))
+		return false
+	}
+
+	e.prerequisites[name] = Scanner{
+		Service: service,
+	}
+
+	return true
+}
+
+// registerDependentScanner adds a scanner under name in the engine's registry with
+// an explicit dependency on a named prerequisite. The scanner will be skipped during
+// Start if that prerequisite failed. It returns false (and logs an error) if the name
+// is empty or already registered.
+func (e *Engine) registerDependentScanner(name string, service interfaces.ScanServiceImpl, dependsOn string) bool {
+	if _, ok := e.scanners[name]; ok || name == "" {
+		logger.Error(fmt.Sprintf(logErrorRegisterScanner, name))
+		return false
+	}
+
+	e.scanners[name] = Scanner{
+		Service:   service,
+		DependsOn: dependsOn,
+	}
+
+	return true
 }
 
 // registerScanner adds a scanner under name in the engine's registry.

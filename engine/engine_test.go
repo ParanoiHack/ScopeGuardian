@@ -18,12 +18,14 @@ const (
 type mockScanService struct {
 	startOk     bool
 	startErr    error
+	started     bool
 	findings    []models.Finding
 	findingsErr error
 	syncErr     error
 }
 
 func (m *mockScanService) Start() (bool, error) {
+	m.started = true
 	return m.startOk, m.startErr
 }
 
@@ -42,6 +44,7 @@ func TestNewEngine(t *testing.T) {
 
 	assert.NotNil(t, engine)
 	assert.EqualValues(t, 0, len(engine.scanners))
+	assert.EqualValues(t, 0, len(engine.prerequisites))
 }
 
 func TestRegisterScanner(t *testing.T) {
@@ -81,6 +84,60 @@ func TestRegisterScanner(t *testing.T) {
 	})
 }
 
+func TestRegisterPrerequisite(t *testing.T) {
+	t.Run("Should register prerequisite", func(t *testing.T) {
+		engine := NewEngine()
+		mock := &mockScanService{startOk: true}
+
+		ok := engine.registerPrerequisite(testEngine, mock)
+
+		assert.True(t, ok)
+		assert.EqualValues(t, 1, len(engine.prerequisites))
+	})
+
+	t.Run("Should not register two prerequisites under the same name", func(t *testing.T) {
+		engine := NewEngine()
+		mock := &mockScanService{startOk: true}
+		engine.registerPrerequisite(testEngine, mock)
+
+		ok := engine.registerPrerequisite(testEngine, mock)
+		assert.False(t, ok)
+		assert.EqualValues(t, 1, len(engine.prerequisites))
+	})
+
+	t.Run("Should not register a prerequisite with an empty name", func(t *testing.T) {
+		engine := NewEngine()
+		mock := &mockScanService{startOk: true}
+
+		ok := engine.registerPrerequisite("", mock)
+		assert.False(t, ok)
+		assert.EqualValues(t, 0, len(engine.prerequisites))
+	})
+}
+
+func TestRegisterDependentScanner(t *testing.T) {
+	t.Run("Should register dependent scanner with DependsOn set", func(t *testing.T) {
+		engine := NewEngine()
+		mock := &mockScanService{startOk: true}
+
+		ok := engine.registerDependentScanner(testEngine, mock, "some-prerequisite")
+
+		assert.True(t, ok)
+		assert.EqualValues(t, 1, len(engine.scanners))
+		assert.EqualValues(t, "some-prerequisite", engine.scanners[testEngine].DependsOn)
+	})
+
+	t.Run("Should not register two dependent scanners under the same name", func(t *testing.T) {
+		engine := NewEngine()
+		mock := &mockScanService{startOk: true}
+		engine.registerDependentScanner(testEngine, mock, "prereq")
+
+		ok := engine.registerDependentScanner(testEngine, mock, "prereq")
+		assert.False(t, ok)
+		assert.EqualValues(t, 1, len(engine.scanners))
+	})
+}
+
 func TestInitialize(t *testing.T) {
 	t.Run("Should initialize engine with kics runner", func(t *testing.T) {
 		engine := NewEngine()
@@ -103,11 +160,13 @@ func TestInitialize(t *testing.T) {
 
 		engine.Initialize(config)
 
-		assert.EqualValues(t, 2, len(engine.scanners))
-		_, ok := engine.scanners[syftScannerName]
+		assert.EqualValues(t, 1, len(engine.prerequisites))
+		assert.EqualValues(t, 1, len(engine.scanners))
+		_, ok := engine.prerequisites[syftScannerName]
 		assert.True(t, ok)
 		_, ok = engine.scanners[grypeScannerName]
 		assert.True(t, ok)
+		assert.EqualValues(t, syftScannerName, engine.scanners[grypeScannerName].DependsOn)
 	})
 
 	t.Run("Should not initialize engine with kics runner", func(t *testing.T) {
@@ -150,6 +209,57 @@ func TestStart(t *testing.T) {
 		assert.NotPanics(t, func() {
 			engine.Start()
 		})
+	})
+
+	t.Run("Should run prerequisite before dependent scanner", func(t *testing.T) {
+		engine := NewEngine()
+		prereq := &mockScanService{startOk: true, startErr: nil}
+		dependent := &mockScanService{startOk: true, startErr: nil}
+
+		engine.registerPrerequisite("prereq", prereq)
+		engine.registerDependentScanner("dependent", dependent, "prereq")
+
+		assert.NotPanics(t, func() {
+			engine.Start()
+		})
+
+		assert.True(t, prereq.started)
+		assert.True(t, dependent.started)
+	})
+
+	t.Run("Should skip dependent scanner when prerequisite fails", func(t *testing.T) {
+		engine := NewEngine()
+		prereq := &mockScanService{startOk: false, startErr: errors.New("prereq failed")}
+		dependent := &mockScanService{startOk: true, startErr: nil}
+
+		engine.registerPrerequisite("prereq", prereq)
+		engine.registerDependentScanner("dependent", dependent, "prereq")
+
+		assert.NotPanics(t, func() {
+			engine.Start()
+		})
+
+		assert.True(t, prereq.started)
+		assert.False(t, dependent.started)
+	})
+
+	t.Run("Should still run independent scanner when prerequisite fails", func(t *testing.T) {
+		engine := NewEngine()
+		prereq := &mockScanService{startOk: false, startErr: errors.New("prereq failed")}
+		dependent := &mockScanService{startOk: true, startErr: nil}
+		independent := &mockScanService{startOk: true, startErr: nil}
+
+		engine.registerPrerequisite("prereq", prereq)
+		engine.registerDependentScanner("dependent", dependent, "prereq")
+		engine.registerScanner("independent", independent)
+
+		assert.NotPanics(t, func() {
+			engine.Start()
+		})
+
+		assert.True(t, prereq.started)
+		assert.False(t, dependent.started)
+		assert.True(t, independent.started)
 	})
 }
 
