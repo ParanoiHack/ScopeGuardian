@@ -31,6 +31,30 @@ func TestSyftStart(t *testing.T) {
 		assert.False(t, ok)
 		assert.EqualValues(t, errDirectoryNotFound, err.Error())
 	})
+
+	t.Run("Should return error when binary not found but directory exists", func(t *testing.T) {
+		_ = os.Setenv("SCAN_DIR", os.TempDir())
+		environment_variable.ReloadEnv()
+
+		service := newSyftService(".", false)
+
+		ok, err := service.Start()
+
+		assert.NotNil(t, err)
+		assert.False(t, ok)
+	})
+
+	t.Run("Should log transitive libraries message and return error when binary not found", func(t *testing.T) {
+		_ = os.Setenv("SCAN_DIR", os.TempDir())
+		environment_variable.ReloadEnv()
+
+		service := newSyftService(".", true)
+
+		ok, err := service.Start()
+
+		assert.NotNil(t, err)
+		assert.False(t, ok)
+	})
 }
 
 func TestSyftLoadFindings(t *testing.T) {
