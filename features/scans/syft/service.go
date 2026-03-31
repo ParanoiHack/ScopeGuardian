@@ -46,6 +46,10 @@ func (s *SyftServiceImpl) Start() (bool, error) {
 		quietArgument,
 	}
 
+	if s.transitiveLibraries {
+		logger.Info(logInfoTransitiveLibraries)
+	}
+
 	logger.Info(fmt.Sprintf(logInfoCommandLine, strings.Join(args, " ")))
 
 	transitiveValue := fmt.Sprintf("%v", s.transitiveLibraries)
