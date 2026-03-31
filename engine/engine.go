@@ -115,22 +115,12 @@ func (e *Engine) Start() {
 	wg.Wait()
 }
 
-// LoadFindings collects and merges the findings from all registered scanners and
-// prerequisites. Errors from individual scanners are logged; successfully loaded
-// findings are still included in the returned slice.
+// LoadFindings collects and merges the findings from all registered scanners.
+// Prerequisites (e.g. Syft) do not contribute findings and are not iterated here.
+// Errors from individual scanners are logged; successfully loaded findings are
+// still included in the returned slice.
 func (e *Engine) LoadFindings() []models.Finding {
 	var results []models.Finding
-
-	for k, scanner := range e.prerequisites {
-		findings, err := scanner.Service.LoadFindings()
-		if err != nil {
-			logger.Error(err.Error())
-			logger.Error(fmt.Sprintf(logErrorLoadFinding, k))
-		} else {
-			logger.Info(fmt.Sprintf(logInfoFindingsLoaded, k))
-			results = append(results, findings...)
-		}
-	}
 
 	for k, scanner := range e.scanners {
 		findings, err := scanner.Service.LoadFindings()
