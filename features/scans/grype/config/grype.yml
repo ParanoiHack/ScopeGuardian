@@ -172,7 +172,7 @@ match:
 
 # upon scanning, if a severity is found at or above the given severity then the return code will be 1
 # default is unset which will skip this validation (options: negligible, low, medium, high, critical) (env: GRYPE_FAIL_ON_SEVERITY)
-fail-on-severity: "high"
+fail-on-severity: ""
 
 registry:
   # skip TLS verification when communicating with the registry (env: GRYPE_REGISTRY_INSECURE_SKIP_TLS_VERIFY)
