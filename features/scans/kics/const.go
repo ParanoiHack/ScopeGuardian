@@ -27,7 +27,6 @@ const (
 	pathArgument          = "--path"
 	typeArgument          = "--type"
 	ignoreOnExitArgument  = "--ignore-on-exit"
-	silentArgument        = "--silent"
 )
 
 const (
