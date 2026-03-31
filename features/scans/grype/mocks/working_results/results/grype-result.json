@@ -4,7 +4,11 @@
 			"vulnerability": {
 				"id": "CVE-2021-1234",
 				"severity": "High",
-				"description": "A test high severity vulnerability in test-package"
+				"description": "A test high severity vulnerability in test-package",
+				"fix": {
+					"versions": ["1.2.0"],
+					"state": "fixed"
+				}
 			},
 			"artifact": {
 				"name": "test-package",
@@ -21,7 +25,11 @@
 			"vulnerability": {
 				"id": "CVE-2021-5678",
 				"severity": "Medium",
-				"description": "A test medium severity vulnerability in another-package"
+				"description": "A test medium severity vulnerability in another-package",
+				"fix": {
+					"versions": [],
+					"state": "not-fixed"
+				}
 			},
 			"artifact": {
 				"name": "another-package",

@@ -48,3 +48,8 @@ const (
 const (
 	errSbomNotFound = "sbom not found"
 )
+
+const (
+	recommendationUpgrade         = "Upgrade to %s"
+	recommendationUpgradeMultiple = "Upgrade to one of: %s"
+)

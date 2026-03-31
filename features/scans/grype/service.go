@@ -90,12 +90,20 @@ func (s *GrypeServiceImpl) LoadFindings() ([]models.Finding, error) {
 			sinkFile = match.Artifact.Locations[0].Path
 		}
 
+		recommendation := ""
+		if len(match.Vulnerability.Fix.Versions) == 1 {
+			recommendation = fmt.Sprintf(recommendationUpgrade, match.Vulnerability.Fix.Versions[0])
+		} else if len(match.Vulnerability.Fix.Versions) > 1 {
+			recommendation = fmt.Sprintf(recommendationUpgradeMultiple, strings.Join(match.Vulnerability.Fix.Versions, ", "))
+		}
+
 		findings = append(findings, models.Finding{
-			Engine:      scannerType,
-			Severity:    match.Vulnerability.Severity,
-			Name:        match.Vulnerability.ID,
-			Description: match.Vulnerability.Description,
-			SinkFile:    sinkFile,
+			Engine:         scannerType,
+			Severity:       strings.ToUpper(match.Vulnerability.Severity),
+			Name:           fmt.Sprintf("%s %s", match.Artifact.Name, match.Artifact.Version),
+			Description:    match.Vulnerability.Description,
+			SinkFile:       sinkFile,
+			Recommendation: recommendation,
 		})
 	}
 

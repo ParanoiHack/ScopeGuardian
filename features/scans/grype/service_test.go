@@ -81,6 +81,14 @@ func TestLoadFindings(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.EqualValues(t, 2, len(findings))
+
+		assert.EqualValues(t, "test-package 1.0.0", findings[0].Name)
+		assert.EqualValues(t, "HIGH", findings[0].Severity)
+		assert.EqualValues(t, "Upgrade to 1.2.0", findings[0].Recommendation)
+
+		assert.EqualValues(t, "another-package 2.0.0", findings[1].Name)
+		assert.EqualValues(t, "MEDIUM", findings[1].Severity)
+		assert.EqualValues(t, "", findings[1].Recommendation)
 	})
 
 	t.Run("Should not load findings due to lack of results", func(t *testing.T) {

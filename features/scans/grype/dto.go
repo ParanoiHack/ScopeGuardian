@@ -1,9 +1,15 @@
 package grype
 
+type GrypeFix struct {
+	Versions []string `json:"versions"`
+	State    string   `json:"state"`
+}
+
 type GrypeVulnerability struct {
-	ID          string `json:"id"`
-	Severity    string `json:"severity"`
-	Description string `json:"description"`
+	ID          string    `json:"id"`
+	Severity    string    `json:"severity"`
+	Description string    `json:"description"`
+	Fix         GrypeFix  `json:"fix"`
 }
 
 type GrypeArtifactLocation struct {
