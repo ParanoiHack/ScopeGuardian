@@ -95,13 +95,27 @@ func (s *OpenGrepServiceImpl) LoadFindings() ([]models.Finding, error) {
 
 	var findings []models.Finding
 	for _, item := range results.Results {
+		severity := strings.ToUpper(item.Extra.Metadata.Impact)
+		if item.Extra.Metadata.Confidence != "" {
+			severity = fmt.Sprintf("%s (%s)", severity, strings.ToUpper(item.Extra.Metadata.Confidence))
+		}
+
+		cwe := ""
+		if len(item.Extra.Metadata.Cwe) > 0 {
+			cwe = item.Extra.Metadata.Cwe[0]
+		}
+
+		description := strings.Join(item.Extra.Metadata.Owasp, ", ")
+
 		findings = append(findings, models.Finding{
-			Engine:      scannerType,
-			Severity:    strings.ToUpper(item.Extra.Severity),
-			Name:        item.CheckId,
-			Description: item.Extra.Message,
-			SinkFile:    item.Path,
-			SinkLine:    item.Start.Line,
+			Engine:         scannerType,
+			Severity:       severity,
+			Name:           item.CheckId,
+			Cwe:            cwe,
+			Description:    description,
+			Recommendation: item.Extra.Message,
+			SinkFile:       item.Path,
+			SinkLine:       item.Start.Line,
 		})
 	}
 

@@ -97,12 +97,18 @@ func TestOpenGrepLoadFindings(t *testing.T) {
 		assert.EqualValues(t, 2, len(findings))
 
 		assert.EqualValues(t, "python.lang.security.deserialization.avoided-pickle-usage", findings[0].Name)
-		assert.EqualValues(t, "ERROR", findings[0].Severity)
+		assert.EqualValues(t, "HIGH (HIGH)", findings[0].Severity)
+		assert.EqualValues(t, "CWE-502: Deserialization of Untrusted Data", findings[0].Cwe)
+		assert.EqualValues(t, "A8:2017-Insecure Deserialization", findings[0].Description)
+		assert.EqualValues(t, "Deserialization with `pickle` is insecure; it can lead to arbitrary code execution.", findings[0].Recommendation)
 		assert.EqualValues(t, "/app/src/utils.py", findings[0].SinkFile)
 		assert.EqualValues(t, 42, findings[0].SinkLine)
 
 		assert.EqualValues(t, "python.lang.security.audit.formatted-sql-query", findings[1].Name)
-		assert.EqualValues(t, "WARNING", findings[1].Severity)
+		assert.EqualValues(t, "MEDIUM (LOW)", findings[1].Severity)
+		assert.EqualValues(t, "CWE-89: Improper Neutralization of Special Elements used in an SQL Command", findings[1].Cwe)
+		assert.EqualValues(t, "A1:2017-Injection", findings[1].Description)
+		assert.EqualValues(t, "Detected possible formatted SQL query. Use parameterized queries instead.", findings[1].Recommendation)
 	})
 
 	t.Run("Should not load findings due to lack of results", func(t *testing.T) {

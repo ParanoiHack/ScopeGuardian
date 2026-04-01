@@ -5,17 +5,23 @@ type OpenGrepResultLocation struct {
 	Col  int `json:"col"`
 }
 
+type OpenGrepMetadata struct {
+	Cwe        []string `json:"cwe"`
+	Owasp      []string `json:"owasp"`
+	Impact     string   `json:"impact"`
+	Confidence string   `json:"confidence"`
+}
+
 type OpenGrepExtra struct {
-	Message  string            `json:"message"`
-	Severity string            `json:"severity"`
-	Metadata map[string]interface{} `json:"metadata"`
+	Message  string           `json:"message"`
+	Metadata OpenGrepMetadata `json:"metadata"`
 }
 
 type OpenGrepResult struct {
-	CheckId string               `json:"check_id"`
-	Path    string               `json:"path"`
+	CheckId string                 `json:"check_id"`
+	Path    string                 `json:"path"`
 	Start   OpenGrepResultLocation `json:"start"`
-	Extra   OpenGrepExtra        `json:"extra"`
+	Extra   OpenGrepExtra          `json:"extra"`
 }
 
 type OpenGrepResults struct {
