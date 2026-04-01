@@ -9,9 +9,27 @@ import (
 )
 
 func TestGetSyftService(t *testing.T) {
-	service := GetSyftService(loader.Config{})
-	_, ok := service.(interfaces.ScanServiceImpl)
+	t.Run("Should return a ScanServiceImpl without grype config", func(t *testing.T) {
+		service := GetSyftService(loader.Config{})
+		_, ok := service.(interfaces.ScanServiceImpl)
 
-	assert.NotNil(t, service)
-	assert.True(t, ok)
+		assert.NotNil(t, service)
+		assert.True(t, ok)
+	})
+
+	t.Run("Should use transitiveLibraries from grype config when false", func(t *testing.T) {
+		service := GetSyftService(loader.Config{Grype: &loader.Grype{TransitiveLibraries: false}})
+		_, ok := service.(interfaces.ScanServiceImpl)
+
+		assert.NotNil(t, service)
+		assert.True(t, ok)
+	})
+
+	t.Run("Should use transitiveLibraries from grype config when true", func(t *testing.T) {
+		service := GetSyftService(loader.Config{Grype: &loader.Grype{TransitiveLibraries: true}})
+		_, ok := service.(interfaces.ScanServiceImpl)
+
+		assert.NotNil(t, service)
+		assert.True(t, ok)
+	})
 }

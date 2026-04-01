@@ -221,8 +221,8 @@ java:
   # enables Syft to use the network to fetch version and license information for packages when
   # a parent or imported pom file is not found in the local maven repository.
   # the pom files are downloaded from the remote Maven repository at 'maven-url' (env: SYFT_JAVA_USE_NETWORK)
-  # enabled: ensures accurate transitive dependency resolution and license data for Maven components.
-  use-network: true
+  # controlled at runtime via the grype.transitive_libraries option in config.toml.
+  use-network: false
 
   # use the local Maven repository to retrieve pom files. When Maven is installed and was previously used
   # for building the software that is being scanned, then most pom files will be available in this
@@ -243,7 +243,8 @@ java:
   max-parent-recursive-depth: 0
 
   # resolve transient dependencies such as those defined in a dependency's POM on Maven central (env: SYFT_JAVA_RESOLVE_TRANSITIVE_DEPENDENCIES)
-  resolve-transitive-dependencies: true
+  # controlled at runtime via the grype.transitive_libraries option in config.toml.
+  resolve-transitive-dependencies: false
 
 javascript:
   # enables Syft to use the network to fill in more detailed license information (env: SYFT_JAVASCRIPT_SEARCH_REMOTE_LICENSES)
