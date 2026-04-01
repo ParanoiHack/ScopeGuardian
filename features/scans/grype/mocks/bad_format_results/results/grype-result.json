@@ -1,0 +1,7 @@
+{
+	"matches": [
+		{
+			"vulnerability": {
+				"id": "CVE-2021-9999",
+				"severity": "Critical",
+				"description": "A test critical vulnerability with no artifact location"

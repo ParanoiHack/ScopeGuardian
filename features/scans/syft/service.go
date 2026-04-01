@@ -3,6 +3,7 @@ package syft
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"scope-guardian/connectors/defectdojo"
 	"scope-guardian/domains/interfaces"
@@ -13,16 +14,25 @@ import (
 	"strings"
 )
 
+// execRunner is the function signature used to invoke an external binary.
+// It matches exec.Wrap so that tests can substitute a lightweight mock.
+type execRunner func(binaryPath string, dirPath string, args []string, stdout io.Writer, stderr io.Writer, extraEnv ...string) (bool, error)
+
 // SyftServiceImpl implements ScanServiceImpl for the Syft SBOM generator.
 type SyftServiceImpl struct {
-	path string
+	path                string
+	transitiveLibraries bool
+	runner              execRunner
 }
 
 // newSyftService builds a SyftServiceImpl from the scan path, resolving it
-// relative to the SCAN_DIR environment variable.
-func newSyftService(path string) interfaces.ScanServiceImpl {
+// relative to the SCAN_DIR environment variable. transitiveLibraries controls
+// whether Syft resolves transitive Java dependencies from Maven Central.
+func newSyftService(path string, transitiveLibraries bool) interfaces.ScanServiceImpl {
 	return &SyftServiceImpl{
-		path: fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], path),
+		path:                fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], path),
+		transitiveLibraries: transitiveLibraries,
+		runner:              exec.Wrap,
 	}
 }
 
@@ -43,9 +53,17 @@ func (s *SyftServiceImpl) Start() (bool, error) {
 		quietArgument,
 	}
 
+	if s.transitiveLibraries {
+		logger.Info(logInfoTransitiveLibraries)
+	}
+
 	logger.Info(fmt.Sprintf(logInfoCommandLine, strings.Join(args, " ")))
 
-	return exec.Wrap(binaryPath, dirPath, args)
+	transitiveValue := fmt.Sprintf("%v", s.transitiveLibraries)
+	return s.runner(binaryPath, dirPath, args, os.Stdout, os.Stderr,
+		fmt.Sprintf("%s=%s", envJavaUseNetwork, transitiveValue),
+		fmt.Sprintf("%s=%s", envJavaResolveTransitiveDependencies, transitiveValue),
+	)
 }
 
 // LoadFindings is intentionally empty: Syft is used only to produce the SBOM

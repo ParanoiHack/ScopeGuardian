@@ -20,10 +20,16 @@ const (
 )
 
 const (
-	logInfoCommandLine        = "Command line invoked [%s]"
-	logErrorDirectoryNotFound = "Cannot find directory [%s]"
+	logInfoCommandLine          = "Command line invoked [%s]"
+	logInfoTransitiveLibraries  = "Transitive libraries resolution is enabled. This may significantly increase scan time."
+	logErrorDirectoryNotFound   = "Cannot find directory [%s]"
 )
 
 const (
 	errDirectoryNotFound = "directory not found"
+)
+
+const (
+	envJavaUseNetwork                    = "SYFT_JAVA_USE_NETWORK"
+	envJavaResolveTransitiveDependencies = "SYFT_JAVA_RESOLVE_TRANSITIVE_DEPENDENCIES"
 )
