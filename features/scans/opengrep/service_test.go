@@ -111,6 +111,21 @@ func TestOpenGrepLoadFindings(t *testing.T) {
 		assert.EqualValues(t, "Detected possible formatted SQL query. Use parameterized queries instead.", findings[1].Recommendation)
 	})
 
+	t.Run("Should load findings when cwe and owasp are plain strings", func(t *testing.T) {
+		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/string_metadata_results"))
+		environment_variable.ReloadEnv()
+
+		service := newOpenGrepService("./test", loader.Opengrep{})
+
+		findings, err := service.LoadFindings()
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, 1, len(findings))
+		assert.EqualValues(t, "CWE-502: Deserialization of Untrusted Data", findings[0].Cwe)
+		assert.EqualValues(t, "A8:2017-Insecure Deserialization", findings[0].Description)
+		assert.EqualValues(t, "HIGH (HIGH)", findings[0].Severity)
+	})
+
 	t.Run("Should not load findings due to lack of results", func(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], ""))
 		environment_variable.ReloadEnv()

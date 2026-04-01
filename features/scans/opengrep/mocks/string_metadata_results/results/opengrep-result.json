@@ -1,0 +1,18 @@
+{
+	"results": [
+		{
+			"check_id": "python.lang.security.deserialization.avoided-pickle-usage",
+			"path": "/app/src/utils.py",
+			"start": {"line": 42, "col": 5},
+			"extra": {
+				"message": "Deserialization with `pickle` is insecure; it can lead to arbitrary code execution.",
+				"metadata": {
+					"cwe": "CWE-502: Deserialization of Untrusted Data",
+					"owasp": "A8:2017-Insecure Deserialization",
+					"impact": "HIGH",
+					"confidence": "HIGH"
+				}
+			}
+		}
+	]
+}
