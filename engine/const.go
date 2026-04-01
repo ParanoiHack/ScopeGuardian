@@ -1,9 +1,10 @@
 package engine
 
 const (
-	logInfoKicsRegister    = "Kics enabled. Registring scanner for execution"
-	logInfoSyftRegister    = "Grype enabled. Registering Syft SBOM scanner for execution"
-	logInfoGrypeRegister   = "Grype enabled. Registering Grype vulnerability scanner for execution"
+	logInfoKicsRegister      = "Kics enabled. Registring scanner for execution"
+	logInfoSyftRegister      = "Grype enabled. Registering Syft SBOM scanner for execution"
+	logInfoGrypeRegister     = "Grype enabled. Registering Grype vulnerability scanner for execution"
+	logInfoOpenGrepRegister  = "OpenGrep enabled. Registering OpenGrep SAST scanner for execution"
 	logInfoScannerStarting = "Starting %s scanning engine"
 	logInfoScannerSuccess  = "%s scanner succeeded"
 	logInfoFindingsLoaded  = "%s findings loaded"
@@ -19,7 +20,8 @@ const (
 )
 
 const (
-	kicsScannerName  = "Kics (IACST)"
-	syftScannerName  = "Syft (SBOM)"
-	grypeScannerName = "Grype (SCA)"
+	kicsScannerName      = "Kics (IACST)"
+	syftScannerName      = "Syft (SBOM)"
+	grypeScannerName     = "Grype (SCA)"
+	opengrepScannerName  = "OpenGrep (SAST)"
 )

@@ -1,0 +1,8 @@
+{
+	"results": [
+		{
+			"check_id": "python.lang.security.deserialization.avoided-pickle-usage",
+			"path": "/app/src/utils.py",
+			"start": {"line": 42, "col": 5},
+			"extra": {
+				"message": "Deserialization with `pickle` is insecure

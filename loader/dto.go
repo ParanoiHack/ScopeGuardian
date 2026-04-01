@@ -7,6 +7,7 @@ type (
 		Path              string
 		Kics              *Kics
 		Grype             *Grype
+		Opengrep          *Opengrep
 		ProtectedBranches []string `toml:"protected_branches"`
 	}
 
@@ -24,5 +25,11 @@ type (
 		// dependencies from Maven Central during SBOM generation. Disabled by
 		// default because network resolution significantly increases scan time.
 		TransitiveLibraries bool `toml:"transitive_libraries"`
+	}
+
+	// Opengrep contains the configuration for the OpenGrep SAST scanner.
+	Opengrep struct {
+		Exclude     []string `toml:"exclude"`
+		ExcludeRule []string `toml:"exclude_rule"`
 	}
 )
