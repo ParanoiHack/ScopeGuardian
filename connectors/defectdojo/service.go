@@ -213,7 +213,7 @@ func (s *DefectDojoServiceImpl) ImportScan(payload ScanPayload, filename string)
 	_, code := s.client.Post(fmt.Sprintf(
 		"%s%s%s", s.url, APIPrefix, ImportScanPath), body, headers)
 
-	if code != http.StatusCreated {
+	if code != http.StatusCreated && code != http.StatusOK {
 		logger.Error(logErrorImportScan)
 		return false, errors.New(errImportScan)
 	}
