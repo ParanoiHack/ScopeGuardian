@@ -1,6 +1,7 @@
 package opengrep
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"scope-guardian/connectors/defectdojo"
@@ -97,7 +98,7 @@ func TestOpenGrepLoadFindings(t *testing.T) {
 		assert.EqualValues(t, 2, len(findings))
 
 		assert.EqualValues(t, "python.lang.security.deserialization.avoided-pickle-usage", findings[0].Name)
-		assert.EqualValues(t, "HIGH (HIGH)", findings[0].Severity)
+		assert.EqualValues(t, "HIGH", findings[0].Severity)
 		assert.EqualValues(t, "CWE-502: Deserialization of Untrusted Data", findings[0].Cwe)
 		assert.EqualValues(t, "A8:2017-Insecure Deserialization", findings[0].Description)
 		assert.EqualValues(t, "Deserialization with `pickle` is insecure; it can lead to arbitrary code execution.", findings[0].Recommendation)
@@ -105,7 +106,7 @@ func TestOpenGrepLoadFindings(t *testing.T) {
 		assert.EqualValues(t, 42, findings[0].SinkLine)
 
 		assert.EqualValues(t, "python.lang.security.audit.formatted-sql-query", findings[1].Name)
-		assert.EqualValues(t, "MEDIUM (LOW)", findings[1].Severity)
+		assert.EqualValues(t, "MEDIUM", findings[1].Severity)
 		assert.EqualValues(t, "CWE-89: Improper Neutralization of Special Elements used in an SQL Command", findings[1].Cwe)
 		assert.EqualValues(t, "A1:2017-Injection", findings[1].Description)
 		assert.EqualValues(t, "Detected possible formatted SQL query. Use parameterized queries instead.", findings[1].Recommendation)
@@ -123,7 +124,7 @@ func TestOpenGrepLoadFindings(t *testing.T) {
 		assert.EqualValues(t, 1, len(findings))
 		assert.EqualValues(t, "CWE-502: Deserialization of Untrusted Data", findings[0].Cwe)
 		assert.EqualValues(t, "A8:2017-Insecure Deserialization", findings[0].Description)
-		assert.EqualValues(t, "HIGH (HIGH)", findings[0].Severity)
+		assert.EqualValues(t, "HIGH", findings[0].Severity)
 	})
 
 	t.Run("Should not load findings due to lack of results", func(t *testing.T) {
@@ -148,6 +149,58 @@ func TestOpenGrepLoadFindings(t *testing.T) {
 
 		assert.NotNil(t, err)
 		assert.Nil(t, findings)
+	})
+}
+
+func TestEnrichOpenGrepResults(t *testing.T) {
+	t.Run("Should add severity from impact when missing", func(t *testing.T) {
+		input := []byte(`{"results":[{"extra":{"message":"msg","metadata":{"impact":"HIGH","confidence":"HIGH"}}}]}`)
+		output := enrichOpenGrepResults(input)
+
+		var wrapper map[string]interface{}
+		err := json.Unmarshal(output, &wrapper)
+		assert.Nil(t, err)
+
+		results := wrapper["results"].([]interface{})
+		extra := results[0].(map[string]interface{})["extra"].(map[string]interface{})
+		assert.EqualValues(t, "HIGH", extra["severity"])
+	})
+
+	t.Run("Should not overwrite existing severity", func(t *testing.T) {
+		input := []byte(`{"results":[{"extra":{"severity":"LOW","message":"msg","metadata":{"impact":"HIGH"}}}]}`)
+		output := enrichOpenGrepResults(input)
+
+		var wrapper map[string]interface{}
+		err := json.Unmarshal(output, &wrapper)
+		assert.Nil(t, err)
+
+		results := wrapper["results"].([]interface{})
+		extra := results[0].(map[string]interface{})["extra"].(map[string]interface{})
+		assert.EqualValues(t, "LOW", extra["severity"])
+	})
+
+	t.Run("Should return original bytes on invalid JSON", func(t *testing.T) {
+		input := []byte(`not json`)
+		output := enrichOpenGrepResults(input)
+		assert.Equal(t, input, output)
+	})
+
+	t.Run("Should preserve all existing fields", func(t *testing.T) {
+		input := []byte(`{"results":[{"check_id":"rule","path":"/a.py","extra":{"message":"msg","metadata":{"impact":"MEDIUM"}}}],"errors":[]}`)
+		output := enrichOpenGrepResults(input)
+
+		var wrapper map[string]interface{}
+		err := json.Unmarshal(output, &wrapper)
+		assert.Nil(t, err)
+		assert.NotNil(t, wrapper["errors"])
+
+		results := wrapper["results"].([]interface{})
+		result := results[0].(map[string]interface{})
+		assert.EqualValues(t, "rule", result["check_id"])
+		assert.EqualValues(t, "/a.py", result["path"])
+
+		extra := result["extra"].(map[string]interface{})
+		assert.EqualValues(t, "MEDIUM", extra["severity"])
 	})
 }
 

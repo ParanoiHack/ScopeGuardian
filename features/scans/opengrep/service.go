@@ -96,9 +96,6 @@ func (s *OpenGrepServiceImpl) LoadFindings() ([]models.Finding, error) {
 	var findings []models.Finding
 	for _, item := range results.Results {
 		severity := strings.ToUpper(item.Extra.Metadata.Impact)
-		if item.Extra.Metadata.Confidence != "" {
-			severity = fmt.Sprintf("%s (%s)", severity, strings.ToUpper(item.Extra.Metadata.Confidence))
-		}
 
 		cwe := ""
 		if len(item.Extra.Metadata.Cwe) > 0 {
@@ -120,6 +117,52 @@ func (s *OpenGrepServiceImpl) LoadFindings() ([]models.Finding, error) {
 	}
 
 	return findings, nil
+}
+
+// enrichOpenGrepResults ensures each result in the OpenGrep JSON output carries an
+// extra.severity field, which DefectDojo's Semgrep JSON Report parser requires.
+// OpenGrep stores severity as extra.metadata.impact; this function copies that value
+// into extra.severity when the field is absent. The original bytes are returned
+// unchanged if the JSON cannot be parsed.
+func enrichOpenGrepResults(data []byte) []byte {
+	var wrapper map[string]interface{}
+	if err := json.Unmarshal(data, &wrapper); err != nil {
+		return data
+	}
+
+	results, ok := wrapper["results"].([]interface{})
+	if !ok {
+		return data
+	}
+
+	for _, r := range results {
+		result, ok := r.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		extra, ok := result["extra"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		if _, hasSeverity := extra["severity"]; hasSeverity {
+			continue
+		}
+		metadata, ok := extra["metadata"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		impact, ok := metadata["impact"].(string)
+		if !ok || impact == "" {
+			continue
+		}
+		extra["severity"] = strings.ToUpper(impact)
+	}
+
+	enriched, err := json.Marshal(wrapper)
+	if err != nil {
+		return data
+	}
+	return enriched
 }
 
 // Sync uploads the OpenGrep scan output to DefectDojo via the given service.
@@ -144,7 +187,7 @@ func (s *OpenGrepServiceImpl) Sync(engagementId int, branch string, service defe
 		logger.Error(fmt.Sprintf(logErrorFileNotFound, s.output))
 		return err
 	}
-	payload.File = fileContent
+	payload.File = enrichOpenGrepResults(fileContent)
 
 	if ok, err := service.ImportScan(payload, s.output); !ok || err != nil {
 		logger.Error(fmt.Sprintf(logErrorImportScan, engagementId))

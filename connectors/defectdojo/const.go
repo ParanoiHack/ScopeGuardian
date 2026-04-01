@@ -37,7 +37,8 @@ const (
 	logErrorUnknownType             = "Unknow type [%s]"
 	logErrorAddFile                 = "Cannot attach file to request"
 	logErrorCreateMultipartRequest  = "Cannot create multipart request"
-	logErrorImportScan              = "Cannot import scan (HTTP %d)"
+	logErrorImportScan         = "Cannot import scan via %s (HTTP %d)"
+	logErrorImportScanResponse = "Import scan rejected by DefectDojo: %s"
 	logErrorRetrieveFindings        = "Cannot retrieve findings for engagement ID %d"
 )
 
