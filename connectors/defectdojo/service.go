@@ -200,8 +200,6 @@ func (s *DefectDojoServiceImpl) UpdateEngagementEndDate(engagementId, productId 
 
 // ImportScan uploads a scan result file to DefectDojo using the given ScanPayload.
 // filename is used as the multipart form file name. Returns true on success.
-// If /import-scan/ returns 400 (a test of this type already exists in the engagement),
-// it automatically retries using /reimport-scan/ to update the existing test.
 func (s *DefectDojoServiceImpl) ImportScan(payload ScanPayload, filename string) (bool, error) {
 	body, boundary, err := createMultipartFromScanPayload(payload, filename)
 	if err != nil {
@@ -212,30 +210,11 @@ func (s *DefectDojoServiceImpl) ImportScan(payload ScanPayload, filename string)
 	headers := s.client.GetHeaders(s.accessToken)
 	headers.Set(client.ContentTypeKey, boundary)
 
-	respBody, code := s.client.Post(fmt.Sprintf(
+	_, code := s.client.Post(fmt.Sprintf(
 		"%s%s%s", s.url, APIPrefix, ImportScanPath), body, headers)
 
-	usedReimport := false
-	if code == http.StatusBadRequest {
-		logger.Error(fmt.Sprintf(logErrorImportScanResponse, string(respBody)))
-		body, boundary, err = createMultipartFromScanPayload(payload, filename)
-		if err != nil {
-			logger.Error(logErrorCreateMultipartRequest)
-			return false, err
-		}
-		headers = s.client.GetHeaders(s.accessToken)
-		headers.Set(client.ContentTypeKey, boundary)
-		_, code = s.client.Post(fmt.Sprintf(
-			"%s%s%s", s.url, APIPrefix, ReimportScanPath), body, headers)
-		usedReimport = true
-	}
-
 	if code < http.StatusOK || code >= http.StatusMultipleChoices {
-		path := ImportScanPath
-		if usedReimport {
-			path = ReimportScanPath
-		}
-		logger.Error(fmt.Sprintf(logErrorImportScan, path, code))
+		logger.Error(fmt.Sprintf(logErrorImportScan, ImportScanPath, code))
 		return false, errors.New(errImportScan)
 	}
 

@@ -7,7 +7,6 @@ const (
 	CreateEngagementPath = "/engagements/"
 	UpdateEngagementPath = "/engagements/%d/"
 	ImportScanPath       = "/import-scan/"
-	ReimportScanPath     = "/reimport-scan/"
 	GetFindingsPath      = "/findings/?test__engagement=%d&active=true&offset=%d&limit=%d"
 )
 
@@ -38,7 +37,6 @@ const (
 	logErrorAddFile                 = "Cannot attach file to request"
 	logErrorCreateMultipartRequest  = "Cannot create multipart request"
 	logErrorImportScan         = "Cannot import scan via %s (HTTP %d)"
-	logErrorImportScanResponse = "Import scan rejected by DefectDojo: %s"
 	logErrorRetrieveFindings        = "Cannot retrieve findings for engagement ID %d"
 )
 

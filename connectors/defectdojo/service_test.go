@@ -428,7 +428,7 @@ func TestImportScan(t *testing.T) {
 		assert.True(t, ok)
 	})
 
-	t.Run("Should import scan with 200 OK (reimport)", func(t *testing.T) {
+	t.Run("Should import scan with 200 OK", func(t *testing.T) {
 		clientMock := client.NewMockClient(gomockController)
 
 		clientMock.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(""), 200).AnyTimes()
@@ -454,41 +454,6 @@ func TestImportScan(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.True(t, ok)
-	})
-
-	t.Run("Should fallback to reimport when import returns 400", func(t *testing.T) {
-		clientMock := client.NewMockClient(gomockController)
-
-		gomock.InOrder(
-			clientMock.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(""), 400),
-			clientMock.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(""), 201),
-		)
-		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
-
-		service := newDefectDojoService(clientMock, URL, TOKEN)
-
-		ok, err := service.ImportScan(ScanPayload{}, "../../features/scans/kics/mocks/working_results/results/kics-results.json")
-
-		assert.Nil(t, err)
-		assert.True(t, ok)
-	})
-
-	t.Run("Should fail when both import and reimport return non-2xx", func(t *testing.T) {
-		clientMock := client.NewMockClient(gomockController)
-
-		gomock.InOrder(
-			clientMock.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(""), 400),
-			clientMock.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(""), 500),
-		)
-		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
-
-		service := newDefectDojoService(clientMock, URL, TOKEN)
-
-		ok, err := service.ImportScan(ScanPayload{}, "../../features/scans/kics/mocks/working_results/results/kics-results.json")
-
-		assert.NotNil(t, err)
-		assert.EqualValues(t, errImportScan, err.Error())
-		assert.False(t, ok)
 	})
 
 	t.Run("Should not import scan", func(t *testing.T) {
