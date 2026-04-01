@@ -40,7 +40,7 @@ const (
 	logErrorDirectorNotFound = "Cannot find directory [%s]"
 	logErrorFileNotFound     = "Cannot find file [%s]"
 	logErrorParseResults     = "Cannot parse kics results"
-	logErrorImportScan       = "Cannot import scan into engagment [%d]"
+	logErrorImportScan       = "Cannot import scan into engagement [%d]"
 )
 
 const (

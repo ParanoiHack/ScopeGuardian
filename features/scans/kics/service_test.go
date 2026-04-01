@@ -139,4 +139,16 @@ func TestSync(t *testing.T) {
 
 		assert.NotNil(t, err)
 	})
+
+	t.Run("Should return error when output file not found", func(t *testing.T) {
+		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], ""))
+		environment_variable.ReloadEnv()
+
+		service := newKicsService("./test", loader.Kics{})
+		ddMock := &mockDefectDojoService{}
+
+		err := service.Sync(1, "main", ddMock)
+
+		assert.NotNil(t, err)
+	})
 }

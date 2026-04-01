@@ -159,9 +159,12 @@ func (e *Engine) SyncResults(projectName string, branch string, protectedBranche
 	}
 
 	for k, scanner := range e.scanners {
-		scanner.Service.Sync(engagementId, branch, ddService) // check
-		_, _ = k, scanner
 		logger.Info(fmt.Sprintf(logInfoSyncResult, k))
+		if err := scanner.Service.Sync(engagementId, branch, ddService); err != nil {
+			logger.Error(fmt.Sprintf(logErrorSyncResult, k))
+		} else {
+			logger.Info(fmt.Sprintf(logInfoSyncResultSuccess, k))
+		}
 	}
 }
 
