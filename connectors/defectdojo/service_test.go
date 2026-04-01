@@ -442,6 +442,20 @@ func TestImportScan(t *testing.T) {
 		assert.True(t, ok)
 	})
 
+	t.Run("Should import scan with 202 Accepted", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
+
+		clientMock.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(""), 202).AnyTimes()
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+
+		service := newDefectDojoService(clientMock, URL, TOKEN)
+
+		ok, err := service.ImportScan(ScanPayload{}, "../../features/scans/kics/mocks/working_results/results/kics-results.json")
+
+		assert.Nil(t, err)
+		assert.True(t, ok)
+	})
+
 	t.Run("Should not import scan", func(t *testing.T) {
 		clientMock := client.NewMockClient(gomockController)
 

@@ -36,7 +36,7 @@ const (
 	logErrorUnknownType             = "Unknow type [%s]"
 	logErrorAddFile                 = "Cannot attach file to request"
 	logErrorCreateMultipartRequest  = "Cannot create multipart request"
-	logErrorImportScan              = "Cannot import scan"
+	logErrorImportScan              = "Cannot import scan (HTTP %d)"
 	logErrorRetrieveFindings        = "Cannot retrieve findings for engagement ID %d"
 )
 
