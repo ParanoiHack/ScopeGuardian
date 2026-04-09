@@ -8,6 +8,7 @@ on:
 jobs:
   ci:
     name: CI
+    if: github.event.base_ref == 'refs/heads/main'
     uses: ./.github/workflows/ci.yml
     permissions:
       contents: read
@@ -47,3 +48,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            KICS_VERSION=v2.1.17
+            OPENGREP_VERSION=v1.13.1
+            GRYPE_VERSION=v0.104.2
+            SYFT_VERSION=v1.38.2
