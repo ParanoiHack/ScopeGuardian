@@ -1,4 +1,4 @@
-# Contributing to Scope-Guardian
+# Contributing to ScopeGuardian
 
 Thank you for taking the time to contribute! Every contribution — bug reports, feature ideas, documentation improvements, and code changes — is welcome and appreciated.
 
@@ -28,14 +28,14 @@ By participating in this project you agree to abide by the [Contributor Covenant
 2. **Clone** your fork locally:
 
    ```bash
-   git clone https://github.com/<your-username>/scope-guardian.git
-   cd scope-guardian
+   git clone https://github.com/<your-username>/ScopeGuardian.git
+   cd ScopeGuardian
    ```
 
 3. **Add the upstream remote** so you can keep your fork in sync:
 
    ```bash
-   git remote add upstream https://github.com/ParanoiHack/scope-guardian.git
+   git remote add upstream https://github.com/ParanoiHack/ScopeGuardian.git
    ```
 
 ---
@@ -44,13 +44,13 @@ By participating in this project you agree to abide by the [Contributor Covenant
 
 ### Reporting Bugs
 
-- Search the [existing issues](https://github.com/ParanoiHack/scope-guardian/issues) first to avoid duplicates.
+- Search the [existing issues](https://github.com/ParanoiHack/ScopeGuardian/issues) first to avoid duplicates.
 - If no issue exists, open one using the **Bug Report** template and fill in all fields.
 - For **security vulnerabilities** follow the [Security Policy](SECURITY.md) instead of opening a public issue.
 
 ### Requesting Features
 
-- Search [existing issues](https://github.com/ParanoiHack/scope-guardian/issues) for similar ideas first.
+- Search [existing issues](https://github.com/ParanoiHack/ScopeGuardian/issues) for similar ideas first.
 - If none exists, open an issue using the **Feature Request** template.
 
 ### Submitting Pull Requests
@@ -86,7 +86,7 @@ A maintainer will review your PR. Please be patient — reviews may take a few d
 **Build from source**
 
 ```bash
-go build -o scope-guardian .
+go build -o ScopeGuardian .
 ```
 
 **Run the test suite**
