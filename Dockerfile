@@ -1,3 +1,13 @@
+### START ----- SCOPE-GUARDIAN ###
+FROM golang:1.25-alpine3.23 AS scope_guardian_builder
+
+WORKDIR /go/src/scope-guardian
+
+COPY . .
+
+RUN CGO_ENABLED=0 go build -o /tmp/scope-guardian .
+### END ----- SCOPE-GUARDIAN ###
+
 ### START ----- KICS ###
 FROM golang:1.25-alpine3.23 AS kics_builder
 
@@ -68,7 +78,9 @@ WORKDIR /tmp/syft
 RUN ./install.sh
 ### END ----- SYFT ###
 
-FROM golang:1.25-alpine3.23
+FROM alpine:3.23
+
+COPY --from=scope_guardian_builder /tmp/scope-guardian /opt/scope-guardian/bin/scope-guardian
 
 COPY --from=kics_builder /tmp/kics/bin/kics /opt/kics/bin/kics
 COPY --from=kics_builder /tmp/kics/assets/queries /opt/kics/assets/queries
@@ -85,8 +97,6 @@ COPY features/scans/grype/config/grype.yaml /opt/grype/config/grype.yaml
 
 WORKDIR /tmp/data
 
-RUN apk add git && git clone https://github.com/Nitr4x/WebGoat.git
-
 ENV SCAN_DIR=/tmp/data
 
-WORKDIR /go/src/
+ENTRYPOINT ["/opt/scope-guardian/bin/scope-guardian"]
