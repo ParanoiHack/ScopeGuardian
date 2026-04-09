@@ -42,6 +42,20 @@ SCAN_DIR=/path/to/repos ./scope-guardian \
   --branch main \
   ./config.toml
 
+# Run a scan with quiet mode (no logs)
+SCAN_DIR=/path/to/repos ./scope-guardian \
+  --projectName my-service \
+  --branch main \
+  -q \
+  ./config.toml
+
+# Run a scan and write logs to a file
+SCAN_DIR=/path/to/repos ./scope-guardian \
+  --projectName my-service \
+  --branch main \
+  -o /tmp/scan.log \
+  ./config.toml
+
 # Run a scan, sync results to DefectDojo, and enforce a security gate
 SCAN_DIR=/path/to/repos \
 DD_URL=http://localhost:8080 \
@@ -68,6 +82,8 @@ scope-guardian [flags] <config-file>
 | `--branch` | string | yes | Branch being scanned (e.g. `main`, `feature/my-branch`). |
 | `--sync` | bool | no | Upload scan results to DefectDojo. Requires `DD_URL` and `DD_ACCESS_TOKEN`. Default: `false`. |
 | `--threshold` | string | no | Comma-separated severity thresholds that define the security gate (see [Security Gate](#how-the-security-gate-works)). |
+| `-q` | bool | no | Quiet mode: suppress all log output. Default: `false`. |
+| `-o` | string | no | Write log output to the specified file instead of stdout. |
 | `<config-file>` | path | yes | Path to the TOML configuration file. |
 
 ### Execution Order

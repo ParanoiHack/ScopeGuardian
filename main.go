@@ -13,7 +13,9 @@ import (
 )
 
 const (
-	logInfoLoadConfigFile = "Loading configuration file"
+	logInfoLoadConfigFile  = "Loading configuration file"
+	logErrOutputFile       = "Failed to create output log file"
+	logErrCloseOutputFile  = "Failed to close output log file"
 )
 
 func main() {
@@ -24,14 +26,32 @@ func main() {
 	display.DisplayBanner()
 	display.DisplayCredit()
 
-	logger.Info(logInfoLoadConfigFile)
-
 	args, err := parser.Parse(os.Args[1:])
 	if err != nil {
 		logger.Error(err.Error())
 		parser.PrintUsage(os.Stdout)
 		os.Exit(1)
 	}
+
+	if args.Quiet {
+		logger.SetGlobalLogger(logger.NewNullLogger())
+	} else if args.Output != "" {
+		f, err := os.Create(args.Output)
+		if err != nil {
+			logger.Error(logErrOutputFile, logger.Err(err))
+			os.Exit(1)
+		}
+		defer func() {
+			if cerr := f.Close(); cerr != nil {
+				logger.Error(logErrCloseOutputFile, logger.Err(cerr))
+			}
+		}()
+		logger.SetGlobalLogger(
+			logger.NewSlogLogger(
+				slog.New(slog.NewTextHandler(f, &slog.HandlerOptions{}))))
+	}
+
+	logger.Info(logInfoLoadConfigFile)
 
 	config, err := loader.Load(args.Config)
 	if err != nil {
