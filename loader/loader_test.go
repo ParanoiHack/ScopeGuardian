@@ -36,6 +36,20 @@ func TestLoad(t *testing.T) {
 		assert.EqualValues(t, "Scope-guardian configuration file", config.Title)
 		assert.Nil(t, config.Kics)
 		assert.Nil(t, config.Grype)
+		assert.Nil(t, config.Opengrep)
+	})
+
+	t.Run("Should load configuration file with opengrep section", func(t *testing.T) {
+		config, err := Load("./mocks/config_with_opengrep.toml")
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, "Scope-guardian configuration file", config.Title)
+		assert.EqualValues(t, "./", config.Path)
+		assert.NotNil(t, config.Opengrep)
+		assert.Nil(t, config.Kics)
+		assert.Nil(t, config.Grype)
+		assert.EqualValues(t, []string{"tests/**", "vendor/**"}, config.Opengrep.Exclude)
+		assert.EqualValues(t, []string{"python.lang.correctness"}, config.Opengrep.ExcludeRule)
 	})
 
 	t.Run("Should not load configuration file cause wrong pathname", func(t *testing.T) {

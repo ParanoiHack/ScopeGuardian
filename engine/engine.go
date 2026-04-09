@@ -11,6 +11,7 @@ import (
 	featuresync "scope-guardian/features/sync"
 	"scope-guardian/features/scans/grype"
 	"scope-guardian/features/scans/kics"
+	"scope-guardian/features/scans/opengrep"
 	"scope-guardian/features/scans/syft"
 	"scope-guardian/loader"
 	"scope-guardian/logger"
@@ -55,6 +56,11 @@ func (e *Engine) Initialize(config loader.Config) {
 		e.registerPrerequisite(syftScannerName, syft.GetSyftService(config))
 		logger.Info(logInfoGrypeRegister)
 		e.registerDependentScanner(grypeScannerName, grype.GetGrypeService(config), syftScannerName)
+	}
+
+	if config.Opengrep != nil {
+		logger.Info(logInfoOpenGrepRegister)
+		e.registerScanner(opengrepScannerName, opengrep.GetOpenGrepService(config))
 	}
 }
 
@@ -153,9 +159,12 @@ func (e *Engine) SyncResults(projectName string, branch string, protectedBranche
 	}
 
 	for k, scanner := range e.scanners {
-		scanner.Service.Sync(engagementId, branch, ddService) // check
-		_, _ = k, scanner
 		logger.Info(fmt.Sprintf(logInfoSyncResult, k))
+		if err := scanner.Service.Sync(engagementId, branch, ddService); err != nil {
+			logger.Error(fmt.Sprintf(logErrorSyncResult, k))
+		} else {
+			logger.Info(fmt.Sprintf(logInfoSyncResultSuccess, k))
+		}
 	}
 }
 

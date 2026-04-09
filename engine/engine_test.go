@@ -180,6 +180,20 @@ func TestInitialize(t *testing.T) {
 
 		assert.EqualValues(t, 0, len(engine.scanners))
 	})
+
+	t.Run("Should initialize engine with opengrep runner", func(t *testing.T) {
+		engine := NewEngine()
+
+		config, err := loader.Load("../loader/mocks/config_with_opengrep.toml")
+		assert.Nil(t, err)
+		assert.NotNil(t, config)
+
+		engine.Initialize(config)
+
+		assert.EqualValues(t, 1, len(engine.scanners))
+		_, ok := engine.scanners[opengrepScannerName]
+		assert.True(t, ok)
+	})
 }
 
 func TestStart(t *testing.T) {

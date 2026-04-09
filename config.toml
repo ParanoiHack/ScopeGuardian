@@ -9,3 +9,7 @@ platform = "Dockerfile"
 [grype]
 ignore_states = "not-fixed,unknown,wont-fix"
 transitive_libraries = false
+
+[opengrep]
+exclude = ["tests/**"]
+exclude_rule = []

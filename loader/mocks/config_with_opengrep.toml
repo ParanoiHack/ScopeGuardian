@@ -1,0 +1,6 @@
+title = "Scope-guardian configuration file"
+path = "./"
+
+[opengrep]
+exclude = ["tests/**", "vendor/**"]
+exclude_rule = ["python.lang.correctness"]

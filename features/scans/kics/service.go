@@ -132,7 +132,12 @@ func (s *KicsServiceImpl) Sync(engagementId int, branch string, service defectdo
 	payload.ScanType = scanType
 	payload.EngagementId = engagementId
 	payload.CloseOldFinding = closeOldFinding
-	payload.File, _ = os.ReadFile(s.output)
+	fileContent, err := os.ReadFile(s.output)
+	if err != nil {
+		logger.Error(fmt.Sprintf(logErrorFileNotFound, s.output))
+		return err
+	}
+	payload.File = fileContent
 
 	if ok, err := service.ImportScan(payload, s.output); !ok || err != nil {
 		logger.Error(fmt.Sprintf(logErrorImportScan, engagementId))
