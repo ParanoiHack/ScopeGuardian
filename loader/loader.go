@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"scope-guardian/logger"
+	"ScopeGuardian/logger"
 
 	"github.com/pelletier/go-toml/v2"
 )

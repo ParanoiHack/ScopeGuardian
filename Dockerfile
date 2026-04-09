@@ -1,11 +1,11 @@
 ### START ----- SCOPE-GUARDIAN ###
 FROM golang:1.25-alpine3.23 AS scope_guardian_builder
 
-WORKDIR /go/src/scope-guardian
+WORKDIR /go/src/ScopeGuardian
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -o /tmp/scope-guardian .
+RUN CGO_ENABLED=0 go build -o /tmp/ScopeGuardian .
 ### END ----- SCOPE-GUARDIAN ###
 
 ### START ----- KICS ###
@@ -80,7 +80,7 @@ RUN ./install.sh
 
 FROM alpine:3.23
 
-COPY --from=scope_guardian_builder /tmp/scope-guardian /opt/scope-guardian/bin/scope-guardian
+COPY --from=scope_guardian_builder /tmp/ScopeGuardian /opt/ScopeGuardian/bin/ScopeGuardian
 
 COPY --from=kics_builder /tmp/kics/bin/kics /opt/kics/bin/kics
 COPY --from=kics_builder /tmp/kics/assets/queries /opt/kics/assets/queries
@@ -95,4 +95,4 @@ COPY --from=syft_builder /tmp/syft/bin/syft /opt/syft/bin/syft
 COPY features/scans/syft/config/syft.yaml /opt/syft/config/syft.yaml
 COPY features/scans/grype/config/grype.yaml /opt/grype/config/grype.yaml
 
-ENTRYPOINT ["/opt/scope-guardian/bin/scope-guardian"]
+ENTRYPOINT ["/opt/ScopeGuardian/bin/ScopeGuardian"]

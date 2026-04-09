@@ -3,10 +3,10 @@ package kics
 import (
 	"fmt"
 	"os"
-	"scope-guardian/connectors/defectdojo"
-	"scope-guardian/domains/interfaces"
-	environment_variable "scope-guardian/environnement_variable"
-	"scope-guardian/loader"
+	"ScopeGuardian/connectors/defectdojo"
+	"ScopeGuardian/domains/interfaces"
+	environment_variable "ScopeGuardian/environnement_variable"
+	"ScopeGuardian/loader"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

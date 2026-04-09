@@ -3,8 +3,8 @@ package display
 import (
 	"fmt"
 	"io"
-	"scope-guardian/domains/models"
-	environment_variable "scope-guardian/environnement_variable"
+	"ScopeGuardian/domains/models"
+	environment_variable "ScopeGuardian/environnement_variable"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -22,7 +22,7 @@ const (
 	rowRecommendation = "Recommendation"
 )
 
-// DisplayBanner prints the ASCII art banner for scope-guardian to w.
+// DisplayBanner prints the ASCII art banner for ScopeGuardian to w.
 func DisplayBanner(w io.Writer) {
 	fmt.Fprintln(w, `                                                                                   
                                                                                                 @@  

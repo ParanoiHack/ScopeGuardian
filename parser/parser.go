@@ -13,7 +13,7 @@ var validSeverities = []string{severityCritical, severityHigh, severityMedium, s
 
 // PrintUsage writes the CLI usage help to w.
 func PrintUsage(w io.Writer) {
-	fmt.Fprintln(w, "Usage: scope-guardian [flags] <config-file>")
+	fmt.Fprintln(w, "Usage: ScopeGuardian [flags] <config-file>")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Arguments:")
 	fmt.Fprintln(w, "  <config-file>  Path to the TOML configuration file (required)")
@@ -29,17 +29,17 @@ func PrintUsage(w io.Writer) {
 	fmt.Fprintln(w, "  -o string              Write output to the specified file in addition to stdout (optional)")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Example:")
-	fmt.Fprintln(w, "  scope-guardian --projectName my-service --branch main ./config.toml")
-	fmt.Fprintln(w, "  scope-guardian --projectName my-service --branch main --threshold critical=1,high=2 --sync ./config.toml")
-	fmt.Fprintln(w, "  scope-guardian --projectName my-service --branch main -q ./config.toml")
-	fmt.Fprintln(w, "  scope-guardian --projectName my-service --branch main -o /tmp/scan.log ./config.toml")
+	fmt.Fprintln(w, "  ScopeGuardian --projectName my-service --branch main ./config.toml")
+	fmt.Fprintln(w, "  ScopeGuardian --projectName my-service --branch main --threshold critical=1,high=2 --sync ./config.toml")
+	fmt.Fprintln(w, "  ScopeGuardian --projectName my-service --branch main -q ./config.toml")
+	fmt.Fprintln(w, "  ScopeGuardian --projectName my-service --branch main -o /tmp/scan.log ./config.toml")
 }
 
 // Parse parses the CLI arguments in args and returns a validated Args struct.
 // It returns an error if required flags (--projectName, --branch) are missing,
 // the config-file positional argument is absent, or the threshold flag is malformed.
 func Parse(args []string) (Args, error) {
-	fs := flag.NewFlagSet("scope-guardian", flag.ContinueOnError)
+	fs := flag.NewFlagSet("ScopeGuardian", flag.ContinueOnError)
 
 	sync        := fs.Bool("sync", false, "Enable sync result with DefectDojo")
 	threshold   := fs.String("threshold", "", "Enable security gate (e.g., critical=1,high=2)")

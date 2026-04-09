@@ -3,12 +3,12 @@ package main
 import (
 	"io"
 	"os"
-	"scope-guardian/display"
-	"scope-guardian/engine"
-	"scope-guardian/loader"
-	"scope-guardian/logger"
-	"scope-guardian/parser"
-	securitygate "scope-guardian/features/security-gate"
+	"ScopeGuardian/display"
+	"ScopeGuardian/engine"
+	"ScopeGuardian/loader"
+	"ScopeGuardian/logger"
+	"ScopeGuardian/parser"
+	securitygate "ScopeGuardian/features/security-gate"
 
 	"golang.org/x/exp/slog"
 )

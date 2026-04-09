@@ -8,8 +8,8 @@ import (
 	"mime/multipart"
 	"net/http"
 	"reflect"
-	"scope-guardian/connectors/defectdojo/client"
-	"scope-guardian/logger"
+	"ScopeGuardian/connectors/defectdojo/client"
+	"ScopeGuardian/logger"
 	"strconv"
 	"time"
 )

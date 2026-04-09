@@ -3,9 +3,9 @@ package sync
 import (
 	"errors"
 	"fmt"
-	"scope-guardian/connectors/defectdojo"
-	"scope-guardian/domains/models"
-	"scope-guardian/logger"
+	"ScopeGuardian/connectors/defectdojo"
+	"ScopeGuardian/domains/models"
+	"ScopeGuardian/logger"
 	"time"
 )
 

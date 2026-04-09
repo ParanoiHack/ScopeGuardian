@@ -1,8 +1,8 @@
 package interfaces
 
 import (
-	"scope-guardian/connectors/defectdojo"
-	"scope-guardian/domains/models"
+	"ScopeGuardian/connectors/defectdojo"
+	"ScopeGuardian/domains/models"
 )
 
 // ScanServiceImpl is the interface that every scanner must implement.

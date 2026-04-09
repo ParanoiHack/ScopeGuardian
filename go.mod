@@ -1,4 +1,4 @@
-module scope-guardian
+module ScopeGuardian
 
 go 1.24.4
 

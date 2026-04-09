@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"scope-guardian/connectors/defectdojo/client"
+	"ScopeGuardian/connectors/defectdojo/client"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"

@@ -1,8 +1,8 @@
 package opengrep
 
 import (
-	"scope-guardian/domains/interfaces"
-	"scope-guardian/loader"
+	"ScopeGuardian/domains/interfaces"
+	"ScopeGuardian/loader"
 )
 
 // GetOpenGrepService constructs and returns a ScanServiceImpl for the OpenGrep scanner

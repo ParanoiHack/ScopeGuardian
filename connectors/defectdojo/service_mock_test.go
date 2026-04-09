@@ -35,7 +35,7 @@ func TestMockDefectDojoService_GetEngagements_Succeeds(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mock := NewMockDefectDojoService(ctrl)
 
-	expected := []Engagement{{Id: 1, Name: "scope-guardian-main"}}
+	expected := []Engagement{{Id: 1, Name: "ScopeGuardian-main"}}
 	mock.EXPECT().GetEngagements(uint(1), 0, 100, gomock.Any()).Return(expected, nil)
 
 	engagements, err := mock.GetEngagements(1, 0, 100, []Engagement{})

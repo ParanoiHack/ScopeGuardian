@@ -1,8 +1,8 @@
 package syft
 
 import (
-	"scope-guardian/domains/interfaces"
-	"scope-guardian/loader"
+	"ScopeGuardian/domains/interfaces"
+	"ScopeGuardian/loader"
 )
 
 // GetSyftService constructs and returns a ScanServiceImpl for the Syft SBOM generator
