@@ -25,10 +25,14 @@ func PrintUsage(w io.Writer) {
 	fmt.Fprintln(w, "  --threshold string     Enable security gate, e.g. critical=1 or critical=1,high=2 (optional)")
 	fmt.Fprintln(w, "                         Supported severities: critical, high, medium, low, info")
 	fmt.Fprintln(w, "                         Multiple thresholds can be comma-separated (e.g. critical=1,high=2)")
+	fmt.Fprintln(w, "  -q                     Quiet mode: suppress all log output (default: false)")
+	fmt.Fprintln(w, "  -o string              Write output to the specified file in addition to stdout (optional)")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Example:")
 	fmt.Fprintln(w, "  scope-guardian --projectName my-service --branch main ./config.toml")
 	fmt.Fprintln(w, "  scope-guardian --projectName my-service --branch main --threshold critical=1,high=2 --sync ./config.toml")
+	fmt.Fprintln(w, "  scope-guardian --projectName my-service --branch main -q ./config.toml")
+	fmt.Fprintln(w, "  scope-guardian --projectName my-service --branch main -o /tmp/scan.log ./config.toml")
 }
 
 // Parse parses the CLI arguments in args and returns a validated Args struct.
@@ -41,6 +45,8 @@ func Parse(args []string) (Args, error) {
 	threshold   := fs.String("threshold", "", "Enable security gate (e.g., critical=1,high=2)")
 	projectName := fs.String("projectName", "", "Name of the project to scan")
 	branch      := fs.String("branch", "", "Project branch to scan")
+	quiet       := fs.Bool("q", false, "Quiet mode: suppress all log output")
+	output      := fs.String("o", "", "Write output to the specified file in addition to stdout")
 
 	if err := fs.Parse(args); err != nil {
 		return Args{}, err
@@ -75,6 +81,8 @@ func Parse(args []string) (Args, error) {
 		ProjectName: *projectName,
 		Branch:      *branch,
 		Sync:        *sync,
+		Quiet:       *quiet,
+		Output:      *output,
 		Thresholds:  parsedThresholds,
 	}, nil
 }

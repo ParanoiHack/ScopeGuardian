@@ -89,6 +89,36 @@ func TestParse(t *testing.T) {
 		assert.EqualValues(t, 1, args.Thresholds[0].Value)
 	})
 
+	t.Run("Should parse quiet flag as true", func(t *testing.T) {
+		args, err := Parse([]string{"-q", "--projectName", "my-project", "--branch", "main", "./config.toml"})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, true, args.Quiet)
+		assert.EqualValues(t, "", args.Output)
+	})
+
+	t.Run("Should parse output flag", func(t *testing.T) {
+		args, err := Parse([]string{"-o", "/tmp/scan.log", "--projectName", "my-project", "--branch", "main", "./config.toml"})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, false, args.Quiet)
+		assert.EqualValues(t, "/tmp/scan.log", args.Output)
+	})
+
+	t.Run("Should default quiet to false when not set", func(t *testing.T) {
+		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "./config.toml"})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, false, args.Quiet)
+	})
+
+	t.Run("Should default output to empty string when not set", func(t *testing.T) {
+		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "./config.toml"})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, "", args.Output)
+	})
+
 	t.Run("Should parse multiple comma-separated thresholds", func(t *testing.T) {
 		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "--threshold", "critical=1,high=2", "./config.toml"})
 
@@ -165,4 +195,6 @@ func TestPrintUsage(t *testing.T) {
 	assert.Contains(t, output, "--sync")
 	assert.Contains(t, output, "--threshold")
 	assert.Contains(t, output, "<config-file>")
+	assert.Contains(t, output, "-q")
+	assert.Contains(t, output, "-o")
 }

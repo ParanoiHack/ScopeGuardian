@@ -48,6 +48,11 @@ func Any(key string, value any) Field {
 
 type nullLogger struct{}
 
+// NewNullLogger returns a Logger that silently discards all log messages.
+func NewNullLogger() Logger {
+	return &nullLogger{}
+}
+
 func (n nullLogger) Info(_ string, _ ...Field) {}
 
 func (n nullLogger) Error(_ string, _ ...Field) {}

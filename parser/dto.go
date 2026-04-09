@@ -6,6 +6,8 @@ type (
 		ProjectName string
 		Branch      string
 		Sync        bool
+		Quiet       bool
+		Output      string
 		Thresholds  []Threshold
 	}
 

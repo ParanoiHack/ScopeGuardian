@@ -1,6 +1,7 @@
 package display
 
 import (
+	"bytes"
 	"scope-guardian/domains/models"
 	"testing"
 
@@ -9,19 +10,19 @@ import (
 
 func TestDisplayBanner(t *testing.T) {
 	assert.NotPanics(t, func() {
-		DisplayBanner()
+		DisplayBanner(&bytes.Buffer{})
 	})
 }
 
 func TestDisplayCredit(t *testing.T) {
 	assert.NotPanics(t, func() {
-		DisplayCredit()
+		DisplayCredit(&bytes.Buffer{})
 	})
 }
 
 func TestDisplayFindings_Empty(t *testing.T) {
 	assert.NotPanics(t, func() {
-		DisplayFindings([]models.Finding{})
+		DisplayFindings(&bytes.Buffer{}, []models.Finding{})
 	})
 }
 
@@ -50,12 +51,12 @@ func TestDisplayFindings_WithData(t *testing.T) {
 	}
 
 	assert.NotPanics(t, func() {
-		DisplayFindings(findings)
+		DisplayFindings(&bytes.Buffer{}, findings)
 	})
 }
 
 func TestDisplayFindings_NilFindings(t *testing.T) {
 	assert.NotPanics(t, func() {
-		DisplayFindings(nil)
+		DisplayFindings(&bytes.Buffer{}, nil)
 	})
 }
