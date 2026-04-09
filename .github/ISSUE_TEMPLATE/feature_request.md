@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest a new feature or improvement for Scope-Guardian
+about: Suggest a new feature or improvement for ScopeGuardian
 title: "[Feature] "
 labels: enhancement
 assignees: ""

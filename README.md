@@ -1,6 +1,6 @@
-# Scope-Guardian
+# ScopeGuardian
 
-Scope-Guardian is a CLI tool that runs security scanners on your codebase and synchronises the results with [DefectDojo](https://github.com/DefectDojo/django-DefectDojo). It can optionally enforce a security gate that blocks a CI/CD pipeline when finding counts exceed configurable thresholds.
+ScopeGuardian is a CLI tool that runs security scanners on your codebase and synchronises the results with [DefectDojo](https://github.com/DefectDojo/django-DefectDojo). It can optionally enforce a security gate that blocks a CI/CD pipeline when finding counts exceed configurable thresholds.
 
 ---
 
@@ -34,23 +34,23 @@ Scope-Guardian is a CLI tool that runs security scanners on your codebase and sy
 
 ```bash
 # Build the binary
-go build -o scope-guardian .
+go build -o ScopeGuardian .
 
 # Run a basic scan (no sync, no gate)
-SCAN_DIR=/path/to/repos ./scope-guardian \
+SCAN_DIR=/path/to/repos ./ScopeGuardian \
   --projectName my-service \
   --branch main \
   ./config.toml
 
 # Run a scan with quiet mode (no logs)
-SCAN_DIR=/path/to/repos ./scope-guardian \
+SCAN_DIR=/path/to/repos ./ScopeGuardian \
   --projectName my-service \
   --branch main \
   -q \
   ./config.toml
 
 # Run a scan and write logs to a file
-SCAN_DIR=/path/to/repos ./scope-guardian \
+SCAN_DIR=/path/to/repos ./ScopeGuardian \
   --projectName my-service \
   --branch main \
   -o /tmp/scan.log \
@@ -60,7 +60,7 @@ SCAN_DIR=/path/to/repos ./scope-guardian \
 SCAN_DIR=/path/to/repos \
 DD_URL=http://localhost:8080 \
 DD_ACCESS_TOKEN=<your-token> \
-./scope-guardian \
+./ScopeGuardian \
   --projectName my-service \
   --branch main \
   --sync \
@@ -73,7 +73,7 @@ DD_ACCESS_TOKEN=<your-token> \
 ## CLI Usage
 
 ```
-scope-guardian [flags] <config-file>
+ScopeGuardian [flags] <config-file>
 ```
 
 | Flag | Type | Required | Description |
@@ -183,7 +183,7 @@ cp .env.example .env
 
 ## How Engagements Are Handled
 
-Scope-Guardian uses a single DefectDojo **engagement** per project/branch combination to store all findings for that branch. Engagements are managed automatically — you never have to create or update them manually.
+ScopeGuardian uses a single DefectDojo **engagement** per project/branch combination to store all findings for that branch. Engagements are managed automatically — you never have to create or update them manually.
 
 ### Engagement Naming
 
@@ -334,11 +334,11 @@ For each threshold rule:
 
 ## Running with Docker
 
-The provided `Dockerfile` builds a multi-stage image that bundles Scope-Guardian together with KICS, OpenGrep, Grype, and Syft.
+The provided `Dockerfile` builds a multi-stage image that bundles ScopeGuardian together with KICS, OpenGrep, Grype, and Syft.
 
 ```bash
 # Build the image
-docker build -t scope-guardian .
+docker build -t ScopeGuardian .
 
 # Run a scan
 docker run --rm \
@@ -347,7 +347,7 @@ docker run --rm \
   -e SCAN_DIR=/tmp/data \
   -e DD_URL=http://host.docker.internal:8080 \
   -e DD_ACCESS_TOKEN=<your-token> \
-  scope-guardian \
+  ScopeGuardian \
   --projectName my-service \
   --branch main \
   --sync \
@@ -386,8 +386,8 @@ export DD_ACCESS_TOKEN=<your-token>
 
 ### Creating a DefectDojo Product
 
-Before running Scope-Guardian with `--sync`, create a **Product** in DefectDojo whose name matches the `--projectName` value you will pass on the command line.
+Before running ScopeGuardian with `--sync`, create a **Product** in DefectDojo whose name matches the `--projectName` value you will pass on the command line.
 
 1. In DefectDojo go to **Products → Add Product**.
 2. Set **Name** to exactly the value you will pass as `--projectName` (e.g. `my-service`).
-3. Save. Scope-Guardian will manage engagements under this product automatically.
+3. Save. ScopeGuardian will manage engagements under this product automatically.

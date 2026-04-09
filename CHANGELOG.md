@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Scope-Guardian are documented in this file.
+All notable changes to ScopeGuardian are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ### Added
 
-- Initial open-source release of Scope-Guardian
+- Initial open-source release of ScopeGuardian
 - KICS infrastructure-as-code scanner integration
 - Grype software-composition analysis (SCA) scanner integration with Syft SBOM generation
 - OpenGrep SAST scanner integration
@@ -18,4 +18,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 - Multi-stage Docker image bundling all scanner binaries
 - `docker-compose.yml` for local DefectDojo setup
 
-[Unreleased]: https://github.com/ParanoiHack/scope-guardian/compare/HEAD...HEAD
+[Unreleased]: https://github.com/ParanoiHack/ScopeGuardian/compare/HEAD...HEAD
