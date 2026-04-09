@@ -14,7 +14,7 @@ We take security seriously. If you discover a vulnerability in Scope-Guardian, *
 
 Report it privately using one of these channels:
 
-- **Email**: security@paranoihack.io
+- **Email**: contact@paranoihack.com
 - **GitHub private advisory**: [Open a private advisory](https://github.com/ParanoiHack/scope-guardian/security/advisories/new)
 
 ### What to include
