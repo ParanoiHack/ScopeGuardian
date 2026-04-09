@@ -4,11 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+    branches:
+      - main
 
 jobs:
   ci:
     name: CI
-    if: github.event.base_ref == 'refs/heads/main'
     uses: ./.github/workflows/ci.yml
     permissions:
       contents: read
