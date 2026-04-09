@@ -95,8 +95,4 @@ COPY --from=syft_builder /tmp/syft/bin/syft /opt/syft/bin/syft
 COPY features/scans/syft/config/syft.yaml /opt/syft/config/syft.yaml
 COPY features/scans/grype/config/grype.yaml /opt/grype/config/grype.yaml
 
-WORKDIR /tmp/data
-
-ENV SCAN_DIR=/tmp/data
-
 ENTRYPOINT ["/opt/scope-guardian/bin/scope-guardian"]
