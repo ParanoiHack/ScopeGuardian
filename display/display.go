@@ -2,6 +2,7 @@ package display
 
 import (
 	"fmt"
+	"io"
 	"scope-guardian/domains/models"
 	environment_variable "scope-guardian/environnement_variable"
 
@@ -21,9 +22,9 @@ const (
 	rowRecommendation = "Recommendation"
 )
 
-// DisplayBanner prints the ASCII art banner for scope-guardian to stdout.
-func DisplayBanner() {
-	fmt.Println(`                                                                                   
+// DisplayBanner prints the ASCII art banner for scope-guardian to w.
+func DisplayBanner(w io.Writer) {
+	fmt.Fprintln(w, `                                                                                   
                                                                                                 @@  
                                                                                             =@@@@@  
                                                                                          @@@@@@@@   
@@ -75,19 +76,19 @@ func DisplayBanner() {
 	`)
 }
 
-// DisplayCredit prints the open-source credit and contact information for ParanoiHack.
-func DisplayCredit() {
-	fmt.Println(`
+// DisplayCredit prints the open-source credit and contact information for ParanoiHack to w.
+func DisplayCredit(w io.Writer) {
+	fmt.Fprintln(w, `
 		Open Source Software created and maintained by ParanoiHack
 				https://paranoihack.ch
 				contact@paranoihack.com
 	`)
 }
 
-// DisplayFindings renders a formatted table of scan findings to stdout.
+// DisplayFindings renders a formatted table of scan findings to w.
 // Each row contains the engine name, severity, finding name, CWE, description,
 // sink file path, sink line number, and remediation recommendation.
-func DisplayFindings(findings []models.Finding) {
+func DisplayFindings(w io.Writer, findings []models.Finding) {
 	t := table.NewWriter()
 
 	for _, finding := range findings {
@@ -120,5 +121,5 @@ func DisplayFindings(findings []models.Finding) {
 	t.Style().Options.DrawBorder = true
 	t.Style().Options.SeparateRows = true
 
-	fmt.Println(t.Render())
+	fmt.Fprintln(w, t.Render())
 }

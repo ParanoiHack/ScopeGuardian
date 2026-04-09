@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"os"
 	"scope-guardian/display"
 	"scope-guardian/engine"
@@ -13,9 +14,9 @@ import (
 )
 
 const (
-	logInfoLoadConfigFile  = "Loading configuration file"
-	logErrOutputFile       = "Failed to create output log file"
-	logErrCloseOutputFile  = "Failed to close output log file"
+	logInfoLoadConfigFile = "Loading configuration file"
+	logErrOutputFile      = "Failed to create output log file"
+	logErrCloseOutputFile = "Failed to close output log file"
 )
 
 func main() {
@@ -23,15 +24,17 @@ func main() {
 		logger.NewSlogLogger(
 			slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))))
 
-	display.DisplayBanner()
-	display.DisplayCredit()
-
 	args, err := parser.Parse(os.Args[1:])
 	if err != nil {
 		logger.Error(err.Error())
 		parser.PrintUsage(os.Stdout)
 		os.Exit(1)
 	}
+
+	// displayOut is the writer used for banner, credit, and findings output.
+	// logOut is the writer used for structured log messages.
+	// When -o is set both writers tee to stdout AND the file.
+	displayOut := io.Writer(os.Stdout)
 
 	if args.Quiet {
 		logger.SetGlobalLogger(logger.NewNullLogger())
@@ -46,10 +49,15 @@ func main() {
 				logger.Error(logErrCloseOutputFile, logger.Err(cerr))
 			}
 		}()
+		tee := io.MultiWriter(os.Stdout, f)
+		displayOut = tee
 		logger.SetGlobalLogger(
 			logger.NewSlogLogger(
-				slog.New(slog.NewTextHandler(f, &slog.HandlerOptions{}))))
+				slog.New(slog.NewTextHandler(tee, &slog.HandlerOptions{}))))
 	}
+
+	display.DisplayBanner(displayOut)
+	display.DisplayCredit(displayOut)
 
 	logger.Info(logInfoLoadConfigFile)
 
@@ -59,23 +67,23 @@ func main() {
 		os.Exit(1)
 	}
 
-	engine := engine.NewEngine()
+	eng := engine.NewEngine()
 
-	engine.Initialize(config)
-	engine.Start()
+	eng.Initialize(config)
+	eng.Start()
 
-	findings := engine.LoadFindings()
+	findings := eng.LoadFindings()
 
 	if args.Sync {
-		engine.SyncResults(args.ProjectName, args.Branch, config.ProtectedBranches)
+		eng.SyncResults(args.ProjectName, args.Branch, config.ProtectedBranches)
 	}
 
-	display.DisplayFindings(findings)
+	display.DisplayFindings(displayOut, findings)
 
 	if len(args.Thresholds) > 0 {
 		findingsToEvaluate := findings
 		if args.Sync {
-			remoteFindings, err := engine.GetDefectDojoFindings(args.ProjectName, args.Branch, config.ProtectedBranches)
+			remoteFindings, err := eng.GetDefectDojoFindings(args.ProjectName, args.Branch, config.ProtectedBranches)
 			if err != nil {
 				logger.Error(err.Error())
 			} else {

@@ -83,7 +83,7 @@ scope-guardian [flags] <config-file>
 | `--sync` | bool | no | Upload scan results to DefectDojo. Requires `DD_URL` and `DD_ACCESS_TOKEN`. Default: `false`. |
 | `--threshold` | string | no | Comma-separated severity thresholds that define the security gate (see [Security Gate](#how-the-security-gate-works)). |
 | `-q` | bool | no | Quiet mode: suppress all log output. Default: `false`. |
-| `-o` | string | no | Write log output to the specified file instead of stdout. |
+| `-o` | string | no | Write all output (logs, banner, findings) to the specified file in addition to stdout. |
 | `<config-file>` | path | yes | Path to the TOML configuration file. |
 
 ### Execution Order

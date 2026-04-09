@@ -26,7 +26,7 @@ func PrintUsage(w io.Writer) {
 	fmt.Fprintln(w, "                         Supported severities: critical, high, medium, low, info")
 	fmt.Fprintln(w, "                         Multiple thresholds can be comma-separated (e.g. critical=1,high=2)")
 	fmt.Fprintln(w, "  -q                     Quiet mode: suppress all log output (default: false)")
-	fmt.Fprintln(w, "  -o string              Write log output to the specified file instead of stdout (optional)")
+	fmt.Fprintln(w, "  -o string              Write output to the specified file in addition to stdout (optional)")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Example:")
 	fmt.Fprintln(w, "  scope-guardian --projectName my-service --branch main ./config.toml")
@@ -46,7 +46,7 @@ func Parse(args []string) (Args, error) {
 	projectName := fs.String("projectName", "", "Name of the project to scan")
 	branch      := fs.String("branch", "", "Project branch to scan")
 	quiet       := fs.Bool("q", false, "Quiet mode: suppress all log output")
-	output      := fs.String("o", "", "Write log output to the specified file instead of stdout")
+	output      := fs.String("o", "", "Write output to the specified file in addition to stdout")
 
 	if err := fs.Parse(args); err != nil {
 		return Args{}, err
