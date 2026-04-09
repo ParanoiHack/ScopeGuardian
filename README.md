@@ -23,6 +23,7 @@ Scope-Guardian is a CLI tool that runs security scanners on your codebase and sy
 
 - Go 1.25+ (only needed when building from source)
 - [KICS](https://github.com/Checkmarx/kics) binary available at `/opt/kics/bin/kics` (pre-installed in the Docker image)
+- [OpenGrep](https://github.com/opengrep/opengrep) binary available at `/opt/opengrep/bin/opengrep` (pre-installed in the Docker image; required when `[opengrep]` is configured)
 - [Syft](https://github.com/anchore/syft) binary available at `/opt/syft/bin/syft` (pre-installed in the Docker image; required when `[grype]` is configured)
 - [Grype](https://github.com/anchore/grype) binary available at `/opt/grype/bin/grype` (pre-installed in the Docker image; required when `[grype]` is configured)
 - A running DefectDojo instance and an API access token (required only when `--sync` is used)
@@ -74,7 +75,7 @@ scope-guardian [flags] <config-file>
 ```
 Parse flags → Load config.toml → Initialize scanners
   → Phase 1: Run prerequisite scanners concurrently (Syft SBOM generation)
-  → Phase 2: Run dependent/independent scanners concurrently (Grype, KICS)
+  → Phase 2: Run dependent/independent scanners concurrently (Grype, KICS, OpenGrep)
            Any scanner whose prerequisite failed is skipped automatically
   → Load findings → [Sync to DefectDojo] → Display findings
   → [Evaluate security gate → exit(-1) on failure]
@@ -114,6 +115,15 @@ ignore_states = "not-fixed,unknown,wont-fix"
 transitive_libraries = false
 # Optional list of path patterns to exclude from Grype scanning.
 # exclude = ["**/vendor/**", "**/testdata/**"]
+
+# OpenGrep – static application security testing (SAST) scanner.
+[opengrep]
+# Directory to scan, relative to the SCAN_DIR environment variable.
+path = "./my-service"
+# Optional list of path patterns to exclude from scanning.
+# exclude = ["**/vendor/**", "**/testdata/**"]
+# Optional list of rule IDs to skip.
+# exclude_rule = ["python.lang.security.audit.formatted-sql-query.formatted-sql-query"]
 ```
 
 ### Fields Reference
@@ -127,10 +137,15 @@ transitive_libraries = false
 | `[grype].ignore_states` | string | no | Comma-separated Grype vulnerability states to suppress (e.g. `not-fixed,unknown,wont-fix`). |
 | `[grype].transitive_libraries` | bool | no | When `true`, Syft resolves transitive Java dependencies via Maven Central. Default: `false`. |
 | `[grype].exclude` | string array | no | Path glob patterns to exclude from Grype scanning (e.g. `["**/vendor/**"]`). |
+| `[opengrep].path` | string | yes* | Path to the directory to scan. Resolved as `$SCAN_DIR/<path>`. |
+| `[opengrep].exclude` | string array | no | Path glob patterns to exclude from OpenGrep scanning (e.g. `["**/vendor/**"]`). |
+| `[opengrep].exclude_rule` | string array | no | OpenGrep rule IDs to skip (e.g. `["python.lang.security.audit.formatted-sql-query.formatted-sql-query"]`). |
 
 \* Required only if you want KICS scanning to run. Omitting the entire `[kics]` section disables the scanner.
 
 Omitting the entire `[grype]` section disables both Grype and the Syft SBOM generation step.
+
+Omitting the entire `[opengrep]` section disables the SAST scanner.
 
 ---
 
@@ -232,6 +247,20 @@ The Grype scanner uploads its JSON output file to DefectDojo via the `/api/v2/im
 | Group by | `finding_title` | Merge findings with the same title |
 | Create finding groups | `true` | Group related findings together |
 | Apply tags to findings | `true` | Tag each finding with `SCA` |
+| Close old findings | `true` | Findings absent from the new scan are closed automatically |
+| Branch tag | `<branch>` | Associates the results with the scanned branch |
+
+### OpenGrep Sync Behaviour
+
+The OpenGrep scanner uploads its JSON output file to DefectDojo via the `/api/v2/import-scan/` endpoint as a `multipart/form-data` request. Before uploading, the file is enriched so that each result contains an `extra.severity` field required by DefectDojo's Semgrep JSON Report parser (the value is copied from `extra.metadata.impact`). The following options are set on every import:
+
+| Option | Value | Effect |
+|--------|-------|--------|
+| Scan type | `Semgrep JSON Report` | Tells DefectDojo which parser to use |
+| Severity threshold | `Info` | Import findings of all severities |
+| Group by | `finding_title` | Merge findings with the same title |
+| Create finding groups | `true` | Group related findings together |
+| Apply tags to findings | `true` | Tag each finding with `SAST` |
 | Close old findings | `true` | Findings absent from the new scan are closed automatically |
 | Branch tag | `<branch>` | Associates the results with the scanned branch |
 
