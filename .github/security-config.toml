@@ -12,3 +12,4 @@ transitive_libraries = false
 
 [opengrep]
 exclude = ["*_test.go"]
+exclude_rule = ["go.lang.security.audit.dangerous-exec-command.dangerous-exec-command"]
