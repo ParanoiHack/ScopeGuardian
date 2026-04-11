@@ -18,6 +18,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-defectdojo}"]
       interval: 10s
@@ -27,6 +33,12 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+      - /data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -52,6 +64,11 @@ services:
     volumes:
       - defectdojo_media:/app/media
     restart: on-failure
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
 
   # Service name must be "uwsgi" – the defectdojo-nginx image resolves
   # its upstream as "uwsgi:3031" and the name is not configurable.
@@ -66,6 +83,11 @@ services:
     volumes:
       - defectdojo_media:/app/media
     restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
 
   celeryworker:
     image: defectdojo/defectdojo-django:latest
@@ -78,6 +100,11 @@ services:
     volumes:
       - defectdojo_media:/app/media
     restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
 
   celerybeat:
     image: defectdojo/defectdojo-django:latest
@@ -90,6 +117,11 @@ services:
     volumes:
       - defectdojo_media:/app/media
     restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
 
   nginx:
     image: defectdojo/defectdojo-nginx:latest
@@ -103,6 +135,13 @@ services:
     volumes:
       - defectdojo_media:/app/media
     restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+      - /var/run
 
 volumes:
   postgres_data:

@@ -1,9 +1,11 @@
 package exec
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 // Wrap executes the binary at binaryPath with the given args inside dirPath.
@@ -14,6 +16,9 @@ import (
 // Optional extraEnv entries (formatted as "KEY=VALUE") are appended to the
 // child process environment without affecting the parent process.
 func Wrap(binaryPath string, dirPath string, args []string, stdout io.Writer, stderr io.Writer, extraEnv ...string) (bool, error) {
+	if !filepath.IsAbs(binaryPath) {
+		return false, fmt.Errorf("binaryPath must be an absolute path: %q", binaryPath)
+	}
 	cmd := exec.Command(binaryPath, args...)
 
 	cmd.Dir = dirPath
