@@ -11,4 +11,4 @@ ignore_states = "not-fixed,unknown,wont-fix"
 transitive_libraries = false
 
 [opengrep]
-exclude = []
+exclude = ["*_test.go"]
