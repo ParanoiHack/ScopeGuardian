@@ -1,8 +1,11 @@
 package display
 
 import (
+	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"io"
+	"strconv"
 	"ScopeGuardian/domains/models"
 	environment_variable "ScopeGuardian/environnement_variable"
 
@@ -20,6 +23,12 @@ const (
 	rowSinkFile       = "Sink File"
 	rowSinkLine       = "Sink Line"
 	rowRecommendation = "Recommendation"
+
+	// CSV column headers use compact names (no spaces) to be machine-readable.
+	csvColSinkFile = "SinkFile"
+	csvColSinkLine = "SinkLine"
+
+	errUnsupportedFormat = "unsupported format: %s"
 )
 
 // DisplayBanner prints the ASCII art banner for ScopeGuardian to w.
@@ -122,4 +131,54 @@ func DisplayFindings(w io.Writer, findings []models.Finding) {
 	t.Style().Options.SeparateRows = true
 
 	fmt.Fprintln(w, t.Render())
+}
+
+// DumpFindings writes the findings to w in the specified format.
+// Supported formats are "json", "csv", and "raw" (table).
+// An error is returned if the format is unsupported or if writing fails.
+func DumpFindings(w io.Writer, findings []models.Finding, format string) error {
+	switch format {
+	case "json":
+		return dumpFindingsJSON(w, findings)
+	case "csv":
+		return dumpFindingsCSV(w, findings)
+	case "raw":
+		dumpFindingsRaw(w, findings)
+		return nil
+	default:
+		return fmt.Errorf(errUnsupportedFormat, format)
+	}
+}
+
+func dumpFindingsJSON(w io.Writer, findings []models.Finding) error {
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	return enc.Encode(findings)
+}
+
+func dumpFindingsCSV(w io.Writer, findings []models.Finding) error {
+	cw := csv.NewWriter(w)
+	if err := cw.Write([]string{rowEngine, rowSeverity, rowName, rowCwe, rowDescription, csvColSinkFile, csvColSinkLine, rowRecommendation}); err != nil {
+		return err
+	}
+	for _, f := range findings {
+		if err := cw.Write([]string{
+			f.Engine,
+			f.Severity,
+			f.Name,
+			f.Cwe,
+			f.Description,
+			f.SinkFile,
+			strconv.Itoa(f.SinkLine),
+			f.Recommendation,
+		}); err != nil {
+			return err
+		}
+	}
+	cw.Flush()
+	return cw.Error()
+}
+
+func dumpFindingsRaw(w io.Writer, findings []models.Finding) {
+	DisplayFindings(w, findings)
 }

@@ -49,11 +49,19 @@ SCAN_DIR=/path/to/repos ./ScopeGuardian \
   -q \
   ./config.toml
 
-# Run a scan and write logs to a file
+# Run a scan and write findings to a file (JSON by default)
 SCAN_DIR=/path/to/repos ./ScopeGuardian \
   --projectName my-service \
   --branch main \
-  -o /tmp/scan.log \
+  -o /tmp/findings.json \
+  ./config.toml
+
+# Run a scan and write findings as CSV
+SCAN_DIR=/path/to/repos ./ScopeGuardian \
+  --projectName my-service \
+  --branch main \
+  -o /tmp/findings.csv \
+  --format csv \
   ./config.toml
 
 # Run a scan, sync results to DefectDojo, and enforce a security gate
@@ -83,7 +91,8 @@ ScopeGuardian [flags] <config-file>
 | `--sync` | bool | no | Upload scan results to DefectDojo. Requires `DD_URL` and `DD_ACCESS_TOKEN`. Default: `false`. |
 | `--threshold` | string | no | Comma-separated severity thresholds that define the security gate (see [Security Gate](#how-the-security-gate-works)). |
 | `-q` | bool | no | Quiet mode: suppress all log output. Default: `false`. |
-| `-o` | string | no | Write all output (logs, banner, findings) to the specified file in addition to stdout. |
+| `-o` | string | no | Write findings to the specified file. Banner and logs are not included; only the scan findings are written. |
+| `--format` | string | no | Output format used when `-o` is set. Accepted values: `json` (default), `csv`, `raw` (plain table). |
 | `<config-file>` | path | yes | Path to the TOML configuration file. |
 
 ### Execution Order
@@ -93,7 +102,8 @@ Parse flags → Load config.toml → Initialize scanners
   → Phase 1: Run prerequisite scanners concurrently (Syft SBOM generation)
   → Phase 2: Run dependent/independent scanners concurrently (Grype, KICS, OpenGrep)
            Any scanner whose prerequisite failed is skipped automatically
-  → Load findings → [Sync to DefectDojo] → Display findings
+  → Load findings → [Sync to DefectDojo] → Display findings (stdout)
+  → [-o: Dump findings to file in --format (json/csv/raw)]
   → [Evaluate security gate → exit(-1) on failure]
 ```
 

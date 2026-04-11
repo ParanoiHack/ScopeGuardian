@@ -26,13 +26,14 @@ func PrintUsage(w io.Writer) {
 	fmt.Fprintln(w, "                         Supported severities: critical, high, medium, low, info")
 	fmt.Fprintln(w, "                         Multiple thresholds can be comma-separated (e.g. critical=1,high=2)")
 	fmt.Fprintln(w, "  -q                     Quiet mode: suppress all log output (default: false)")
-	fmt.Fprintln(w, "  -o string              Write output to the specified file in addition to stdout (optional)")
+	fmt.Fprintln(w, "  -o string              Write findings to the specified file (optional)")
+	fmt.Fprintln(w, "  --format string        Output format for -o: json, csv, or raw (default: json)")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Example:")
 	fmt.Fprintln(w, "  ScopeGuardian --projectName my-service --branch main ./config.toml")
 	fmt.Fprintln(w, "  ScopeGuardian --projectName my-service --branch main --threshold critical=1,high=2 --sync ./config.toml")
 	fmt.Fprintln(w, "  ScopeGuardian --projectName my-service --branch main -q ./config.toml")
-	fmt.Fprintln(w, "  ScopeGuardian --projectName my-service --branch main -o /tmp/scan.log ./config.toml")
+	fmt.Fprintln(w, "  ScopeGuardian --projectName my-service --branch main -o /tmp/scan.json --format json ./config.toml")
 }
 
 // Parse parses the CLI arguments in args and returns a validated Args struct.
@@ -46,7 +47,8 @@ func Parse(args []string) (Args, error) {
 	projectName := fs.String("projectName", "", "Name of the project to scan")
 	branch      := fs.String("branch", "", "Project branch to scan")
 	quiet       := fs.Bool("q", false, "Quiet mode: suppress all log output")
-	output      := fs.String("o", "", "Write output to the specified file in addition to stdout")
+	output      := fs.String("o", "", "Write findings to the specified file")
+	format      := fs.String("format", FormatJSON, "Output format for -o: json, csv, or raw")
 
 	if err := fs.Parse(args); err != nil {
 		return Args{}, err
@@ -76,6 +78,10 @@ func Parse(args []string) (Args, error) {
 		parsedThresholds = ts
 	}
 
+	if !isValidFormat(*format) {
+		return Args{}, fmt.Errorf(errInvalidFormat, *format)
+	}
+
 	return Args{
 		Config:      config,
 		ProjectName: *projectName,
@@ -83,6 +89,7 @@ func Parse(args []string) (Args, error) {
 		Sync:        *sync,
 		Quiet:       *quiet,
 		Output:      *output,
+		Format:      *format,
 		Thresholds:  parsedThresholds,
 	}, nil
 }
@@ -131,6 +138,16 @@ func parseThreshold(s string) (*Threshold, error) {
 func isValidSeverity(severity string) bool {
 	for _, s := range validSeverities {
 		if s == severity {
+			return true
+		}
+	}
+	return false
+}
+
+// isValidFormat reports whether format is one of the recognised output formats.
+func isValidFormat(format string) bool {
+	for _, f := range validFormats {
+		if f == format {
 			return true
 		}
 	}

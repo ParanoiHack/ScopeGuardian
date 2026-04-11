@@ -8,6 +8,7 @@ type (
 		Sync        bool
 		Quiet       bool
 		Output      string
+		Format      string
 		Thresholds  []Threshold
 	}
 

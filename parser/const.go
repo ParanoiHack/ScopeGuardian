@@ -7,6 +7,7 @@ const (
 	errInvalidThreshold      = "invalid threshold format, expected severity=value (e.g., critical=1)"
 	errInvalidSeverity       = "invalid severity: %s, must be one of: critical, high, medium, low, info"
 	errInvalidThresholdValue = "invalid threshold value: %s, must be a non-negative integer"
+	errInvalidFormat         = "invalid format: %s, must be one of: json, csv, raw"
 )
 
 const (
@@ -16,3 +17,11 @@ const (
 	severityLow      = "low"
 	severityInfo     = "info"
 )
+
+const (
+	FormatJSON = "json"
+	FormatCSV  = "csv"
+	FormatRaw  = "raw"
+)
+
+var validFormats = []string{FormatJSON, FormatCSV, FormatRaw}
