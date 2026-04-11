@@ -14,6 +14,7 @@ import (
 
 const (
 	logInfoLoadConfigFile = "Loading configuration file"
+	logInfoDumpFindings   = "Findings successfully written to output file"
 	logErrOutputFile      = "Failed to create output file"
 	logErrCloseOutputFile = "Failed to close output file"
 	logErrDumpFindings    = "Failed to write findings to output file"
@@ -74,6 +75,7 @@ func main() {
 			logger.Error(logErrDumpFindings, logger.Err(err))
 			os.Exit(1)
 		}
+		logger.Info(logInfoDumpFindings, logger.Any("file", args.Output))
 	}
 
 	if len(args.Thresholds) > 0 {
