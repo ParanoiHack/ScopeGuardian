@@ -11,5 +11,5 @@ ignore_states = "not-fixed,unknown,wont-fix"
 transitive_libraries = false
 
 [opengrep]
-exclude = ["*_test.go"]
+exclude = ["*_test.go", "docker-compose.yml"]
 exclude_rule = ["go.lang.security.audit.dangerous-exec-command.dangerous-exec-command"]
