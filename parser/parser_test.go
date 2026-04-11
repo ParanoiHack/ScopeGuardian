@@ -103,6 +103,42 @@ func TestParse(t *testing.T) {
 		assert.Nil(t, err)
 		assert.EqualValues(t, false, args.Quiet)
 		assert.EqualValues(t, "/tmp/scan.log", args.Output)
+		assert.EqualValues(t, FormatJSON, args.Format)
+	})
+
+	t.Run("Should parse format flag as json", func(t *testing.T) {
+		args, err := Parse([]string{"--format", "json", "--projectName", "my-project", "--branch", "main", "./config.toml"})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, FormatJSON, args.Format)
+	})
+
+	t.Run("Should parse format flag as csv", func(t *testing.T) {
+		args, err := Parse([]string{"--format", "csv", "--projectName", "my-project", "--branch", "main", "./config.toml"})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, FormatCSV, args.Format)
+	})
+
+	t.Run("Should parse format flag as raw", func(t *testing.T) {
+		args, err := Parse([]string{"--format", "raw", "--projectName", "my-project", "--branch", "main", "./config.toml"})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, FormatRaw, args.Format)
+	})
+
+	t.Run("Should default format to json when not set", func(t *testing.T) {
+		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "./config.toml"})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, FormatJSON, args.Format)
+	})
+
+	t.Run("Should not parse when format is invalid", func(t *testing.T) {
+		args, err := Parse([]string{"--format", "xml", "--projectName", "my-project", "--branch", "main", "./config.toml"})
+
+		assert.NotNil(t, err)
+		assert.EqualValues(t, Args{}, args)
 	})
 
 	t.Run("Should default quiet to false when not set", func(t *testing.T) {
@@ -197,4 +233,5 @@ func TestPrintUsage(t *testing.T) {
 	assert.Contains(t, output, "<config-file>")
 	assert.Contains(t, output, "-q")
 	assert.Contains(t, output, "-o")
+	assert.Contains(t, output, "--format")
 }

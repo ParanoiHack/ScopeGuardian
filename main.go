@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io"
 	"os"
 	"ScopeGuardian/display"
 	"ScopeGuardian/engine"
@@ -15,8 +14,9 @@ import (
 
 const (
 	logInfoLoadConfigFile = "Loading configuration file"
-	logErrOutputFile      = "Failed to create output log file"
-	logErrCloseOutputFile = "Failed to close output log file"
+	logErrOutputFile      = "Failed to create output file"
+	logErrCloseOutputFile = "Failed to close output file"
+	logErrDumpFindings    = "Failed to write findings to output file"
 )
 
 func main() {
@@ -31,33 +31,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	// displayOut is the writer used for banner, credit, and findings output.
-	// logOut is the writer used for structured log messages.
-	// When -o is set both writers tee to stdout AND the file.
-	displayOut := io.Writer(os.Stdout)
-
 	if args.Quiet {
 		logger.SetGlobalLogger(logger.NewNullLogger())
-	} else if args.Output != "" {
-		f, err := os.Create(args.Output)
-		if err != nil {
-			logger.Error(logErrOutputFile, logger.Err(err))
-			os.Exit(1)
-		}
-		defer func() {
-			if cerr := f.Close(); cerr != nil {
-				logger.Error(logErrCloseOutputFile, logger.Err(cerr))
-			}
-		}()
-		tee := io.MultiWriter(os.Stdout, f)
-		displayOut = tee
-		logger.SetGlobalLogger(
-			logger.NewSlogLogger(
-				slog.New(slog.NewTextHandler(tee, &slog.HandlerOptions{}))))
 	}
 
-	display.DisplayBanner(displayOut)
-	display.DisplayCredit(displayOut)
+	display.DisplayBanner(os.Stdout)
+	display.DisplayCredit(os.Stdout)
 
 	logger.Info(logInfoLoadConfigFile)
 
@@ -78,7 +57,24 @@ func main() {
 		eng.SyncResults(args.ProjectName, args.Branch, config.ProtectedBranches)
 	}
 
-	display.DisplayFindings(displayOut, findings)
+	display.DisplayFindings(os.Stdout, findings)
+
+	if args.Output != "" {
+		f, err := os.Create(args.Output)
+		if err != nil {
+			logger.Error(logErrOutputFile, logger.Err(err))
+			os.Exit(1)
+		}
+		defer func() {
+			if cerr := f.Close(); cerr != nil {
+				logger.Error(logErrCloseOutputFile, logger.Err(cerr))
+			}
+		}()
+		if err := display.DumpFindings(f, findings, args.Format); err != nil {
+			logger.Error(logErrDumpFindings, logger.Err(err))
+			os.Exit(1)
+		}
+	}
 
 	if len(args.Thresholds) > 0 {
 		findingsToEvaluate := findings
