@@ -6,7 +6,7 @@ on:
 
 jobs:
   security:
-    name: Security Scan
+    name: ScopeGuardian
     runs-on: ubuntu-latest
     permissions:
       contents: read
