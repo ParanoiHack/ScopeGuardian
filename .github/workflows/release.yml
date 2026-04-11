@@ -43,6 +43,7 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
+            type=ref,event=tag
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -52,7 +53,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            KICS_VERSION=v2.1.17
-            OPENGREP_VERSION=v1.13.1
-            GRYPE_VERSION=v0.104.2
-            SYFT_VERSION=v1.38.2
+            KICS_VERSION=${{ vars.KICS_VERSION }}
+            OPENGREP_VERSION=${{ vars.OPENGREP_VERSION }}
+            GRYPE_VERSION=${{ vars.GRYPE_VERSION }}
+            SYFT_VERSION=${{ vars.SYFT_VERSION }}
