@@ -15,6 +15,7 @@ func TestLoad(t *testing.T) {
 		assert.EqualValues(t, "./", config.Path)
 		assert.NotNil(t, config.Kics)
 		assert.EqualValues(t, "terraform", config.Kics.Platform)
+		assert.EqualValues(t, []string{"a227ec01-f97a-4084-91a4-47b350c1db54"}, config.Kics.ExcludeQueries)
 	})
 
 	t.Run("Should load configuration file with grype section", func(t *testing.T) {

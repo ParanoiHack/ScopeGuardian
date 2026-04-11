@@ -55,6 +55,14 @@ func TestNewKicsService(t *testing.T) {
 	assert.True(t, ok)
 }
 
+func TestNewKicsServiceWithExcludeQueries(t *testing.T) {
+	service := newKicsService("./test", loader.Kics{ExcludeQueries: []string{"a227ec01-f97a-4084-91a4-47b350c1db54"}})
+
+	impl, ok := service.(*KicsServiceImpl)
+	assert.True(t, ok)
+	assert.EqualValues(t, []string{"a227ec01-f97a-4084-91a4-47b350c1db54"}, impl.excludeQueries)
+}
+
 func TestVerifyConfig(t *testing.T) {
 	t.Run("Config should be OK", func(t *testing.T) {
 		ok, err := verifyConfig(fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks"))

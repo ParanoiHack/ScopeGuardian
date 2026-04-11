@@ -129,6 +129,8 @@ path = "./my-service"
 # Infrastructure platform type. Passed as --type to KICS.
 # Examples: "Dockerfile", "Terraform", "CloudFormation", "Kubernetes", "Ansible"
 platform = "Dockerfile"
+# Optional list of KICS query IDs to exclude from scanning.
+# exclude_queries = ["a227ec01-f97a-4084-91a4-47b350c1db54"]
 
 # Grype – software-composition analysis (SCA) vulnerability scanner.
 # Enabling this section also enables Syft SBOM generation as a prerequisite.
@@ -160,6 +162,7 @@ path = "./my-service"
 | `protected_branches` | string array | no | Branches whose engagements get a 1-year end date. Defaults to empty (all branches get 1 week). |
 | `[kics].path` | string | yes* | Path to the directory to scan. Resolved as `$SCAN_DIR/<path>`. |
 | `[kics].platform` | string | no | KICS platform filter (e.g. `Dockerfile`). When omitted KICS scans all supported types. |
+| `[kics].exclude_queries` | string array | no | KICS query IDs to skip (e.g. `["a227ec01-f97a-4084-91a4-47b350c1db54"]`). |
 | `[grype].ignore_states` | string | no | Comma-separated Grype vulnerability states to suppress (e.g. `not-fixed,unknown,wont-fix`). |
 | `[grype].transitive_libraries` | bool | no | When `true`, Syft resolves transitive Java dependencies via Maven Central. Default: `false`. |
 | `[grype].exclude` | string array | no | Path glob patterns to exclude from Grype scanning (e.g. `["**/vendor/**"]`). |
