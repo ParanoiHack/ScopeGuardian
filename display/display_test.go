@@ -2,7 +2,7 @@ package display
 
 import (
 	"bytes"
-	"scope-guardian/domains/models"
+	"ScopeGuardian/domains/models"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

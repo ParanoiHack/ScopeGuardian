@@ -1,8 +1,8 @@
 package kics
 
 import (
-	"scope-guardian/domains/interfaces"
-	"scope-guardian/loader"
+	"ScopeGuardian/domains/interfaces"
+	"ScopeGuardian/loader"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

@@ -1,8 +1,8 @@
 package securitygate
 
 import (
-	"scope-guardian/domains/models"
-	"scope-guardian/parser"
+	"ScopeGuardian/domains/models"
+	"ScopeGuardian/parser"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

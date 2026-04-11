@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"scope-guardian/domains/interfaces"
-	environment_variable "scope-guardian/environnement_variable"
+	"ScopeGuardian/domains/interfaces"
+	environment_variable "ScopeGuardian/environnement_variable"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

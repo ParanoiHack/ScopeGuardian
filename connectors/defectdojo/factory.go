@@ -1,6 +1,6 @@
 package defectdojo
 
-import "scope-guardian/connectors/defectdojo/client"
+import "ScopeGuardian/connectors/defectdojo/client"
 
 // GetDefectDojoService constructs and returns a DefectDojoService configured with
 // the provided HTTP client, API base URL, and access token.

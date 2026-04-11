@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"scope-guardian/connectors/defectdojo"
-	"scope-guardian/domains/interfaces"
-	"scope-guardian/domains/models"
-	environment_variable "scope-guardian/environnement_variable"
-	"scope-guardian/exec"
-	"scope-guardian/logger"
+	"ScopeGuardian/connectors/defectdojo"
+	"ScopeGuardian/domains/interfaces"
+	"ScopeGuardian/domains/models"
+	environment_variable "ScopeGuardian/environnement_variable"
+	"ScopeGuardian/exec"
+	"ScopeGuardian/logger"
 	"strings"
 )
 

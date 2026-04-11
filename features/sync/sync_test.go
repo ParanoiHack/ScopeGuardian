@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"scope-guardian/connectors/defectdojo"
+	"ScopeGuardian/connectors/defectdojo"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -191,7 +191,7 @@ func TestGetEngagementId(t *testing.T) {
 
 		otherEngagement := defectdojo.Engagement{
 			Id:        99,
-			Name:      "scope-guardian-other-branch",
+			Name:      "ScopeGuardian-other-branch",
 			TargetEnd: futureDate(),
 		}
 

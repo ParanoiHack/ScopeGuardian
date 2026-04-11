@@ -1,8 +1,8 @@
 package grype
 
 import (
-	"scope-guardian/domains/interfaces"
-	"scope-guardian/loader"
+	"ScopeGuardian/domains/interfaces"
+	"ScopeGuardian/loader"
 )
 
 // GetGrypeService constructs and returns a ScanServiceImpl for the Grype vulnerability scanner

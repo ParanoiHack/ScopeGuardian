@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"scope-guardian/logger"
+	"ScopeGuardian/logger"
 )
 
 // Client is the interface for making HTTP requests to the DefectDojo API.

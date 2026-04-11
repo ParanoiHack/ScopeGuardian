@@ -189,7 +189,7 @@ func TestPrintUsage(t *testing.T) {
 	PrintUsage(&buf)
 
 	output := buf.String()
-	assert.Contains(t, output, "scope-guardian")
+	assert.Contains(t, output, "ScopeGuardian")
 	assert.Contains(t, output, "--projectName")
 	assert.Contains(t, output, "--branch")
 	assert.Contains(t, output, "--sync")

@@ -2,7 +2,7 @@ package defectdojo
 
 import (
 	"net/http"
-	"scope-guardian/connectors/defectdojo/client"
+	"ScopeGuardian/connectors/defectdojo/client"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

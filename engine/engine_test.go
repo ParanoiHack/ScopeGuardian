@@ -2,10 +2,10 @@ package engine
 
 import (
 	"errors"
-	"scope-guardian/connectors/defectdojo"
-	"scope-guardian/domains/interfaces"
-	"scope-guardian/domains/models"
-	"scope-guardian/loader"
+	"ScopeGuardian/connectors/defectdojo"
+	"ScopeGuardian/domains/interfaces"
+	"ScopeGuardian/domains/models"
+	"ScopeGuardian/loader"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

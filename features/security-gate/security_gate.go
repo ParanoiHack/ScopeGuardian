@@ -1,4 +1,4 @@
-// Package securitygate implements the security-gate feature for scope-guardian.
+// Package securitygate implements the security-gate feature for ScopeGuardian.
 // It evaluates a set of scan findings against a configurable severity threshold
 // and signals whether the build should be blocked (gate failed) or allowed to
 // continue (gate passed).
@@ -6,9 +6,9 @@ package securitygate
 
 import (
 	"fmt"
-	"scope-guardian/domains/models"
-	"scope-guardian/logger"
-	"scope-guardian/parser"
+	"ScopeGuardian/domains/models"
+	"ScopeGuardian/logger"
+	"ScopeGuardian/parser"
 	"strings"
 )
 
