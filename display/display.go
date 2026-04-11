@@ -84,7 +84,7 @@ func DisplayCredit(w io.Writer) {
 	fmt.Fprintln(w, `
 		Open Source Software created and maintained by ParanoiHack
 				https://paranoihack.ch
-				contact@paranoihack.com
+				sg@paranoihack.com
 	`)
 }
 
