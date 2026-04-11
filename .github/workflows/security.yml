@@ -25,9 +25,6 @@ jobs:
       - name: Verify security config exists
         run: test -f "$GITHUB_WORKSPACE/.github/security-config.toml"
 
-      - name: Create results directory
-        run: mkdir -p "$GITHUB_WORKSPACE/results" && chmod 1777 "$GITHUB_WORKSPACE/results"
-
       - name: Run ScopeGuardian
         run: |
           docker run --rm \

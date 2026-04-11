@@ -95,10 +95,6 @@ COPY --from=syft_builder /tmp/syft/bin/syft /opt/syft/bin/syft
 COPY features/scans/syft/config/syft.yaml /opt/syft/config/syft.yaml
 COPY features/scans/grype/config/grype.yaml /opt/grype/config/grype.yaml
 
-RUN addgroup -S scopeguardian && adduser -S -G scopeguardian scopeguardian
-
-USER scopeguardian
-
 HEALTHCHECK NONE
 
 ENTRYPOINT ["/opt/ScopeGuardian/bin/ScopeGuardian"]
