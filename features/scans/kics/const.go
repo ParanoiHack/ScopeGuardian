@@ -18,15 +18,16 @@ const (
 )
 
 const (
-	scanArgument          = "scan"
-	ciArgument            = "--ci"
-	librariesPathArgument = "--libraries-path"
-	queriesPathArgument   = "--queries-path"
-	outputPathArgument    = "--output-path"
-	outputNameArgument    = "--output-name"
-	pathArgument          = "--path"
-	typeArgument          = "--type"
-	ignoreOnExitArgument  = "--ignore-on-exit"
+	scanArgument            = "scan"
+	ciArgument              = "--ci"
+	librariesPathArgument   = "--libraries-path"
+	queriesPathArgument     = "--queries-path"
+	outputPathArgument      = "--output-path"
+	outputNameArgument      = "--output-name"
+	pathArgument            = "--path"
+	typeArgument            = "--type"
+	ignoreOnExitArgument    = "--ignore-on-exit"
+	excludeQueriesArgument  = "--exclude-queries"
 )
 
 const (

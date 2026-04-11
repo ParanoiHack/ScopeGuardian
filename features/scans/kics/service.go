@@ -19,18 +19,20 @@ import (
 
 // KicsServiceImpl implements ScanServiceImpl for the KICS infrastructure-as-code scanner.
 type KicsServiceImpl struct {
-	path     string
-	platform string
-	output   string
+	path           string
+	platform       string
+	output         string
+	excludeQueries []string
 }
 
 // newKicsService builds a KicsServiceImpl from the scan path and loader configuration,
 // resolving the scan path and output file path relative to the SCAN_DIR environment variable.
 func newKicsService(path string, config loader.Kics) interfaces.ScanServiceImpl {
 	return &KicsServiceImpl{
-		path:     fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], path),
-		output:   fmt.Sprintf("%s/%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], outputFolder, outputNameParameter),
-		platform: config.Platform,
+		path:           fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], path),
+		output:         fmt.Sprintf("%s/%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], outputFolder, outputNameParameter),
+		platform:       config.Platform,
+		excludeQueries: config.ExcludeQueries,
 	}
 }
 
@@ -73,6 +75,10 @@ func (s *KicsServiceImpl) Start() (bool, error) {
 
 	if s.platform != "" {
 		args = append(args, []string{typeArgument, s.platform}...)
+	}
+
+	for _, q := range s.excludeQueries {
+		args = append(args, excludeQueriesArgument, q)
 	}
 
 	logger.Info(fmt.Sprintf(logInfoCommandLine, strings.Join(args, " ")))

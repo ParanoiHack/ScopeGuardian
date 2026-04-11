@@ -3,3 +3,4 @@ path = "./"
 
 [kics]
 platform = "terraform"
+exclude_queries = ["a227ec01-f97a-4084-91a4-47b350c1db54"]

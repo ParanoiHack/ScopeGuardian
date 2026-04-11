@@ -13,7 +13,8 @@ type (
 
 	// Kics contains the configuration for the KICS infrastructure-as-code scanner.
 	Kics struct {
-		Platform string
+		Platform       string
+		ExcludeQueries []string `toml:"exclude_queries"`
 	}
 
 	// Grype contains the configuration for the Grype vulnerability scanner.
