@@ -1,0 +1,14 @@
+title = "ScopeGuardian CI Security Scan"
+
+protected_branches = ["main", "master"]
+path = "."
+
+[kics]
+platform = "Dockerfile"
+
+[grype]
+ignore_states = "not-fixed,unknown,wont-fix"
+transitive_libraries = false
+
+[opengrep]
+exclude = []

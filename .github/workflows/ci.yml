@@ -21,3 +21,10 @@ jobs:
 
       - name: Run unit tests
         run: go test ./...
+
+  security:
+    name: Security
+    needs: test
+    uses: ./.github/workflows/security.yml
+    permissions:
+      contents: read

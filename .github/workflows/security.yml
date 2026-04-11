@@ -1,0 +1,28 @@
+name: Security
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify security config exists
+        run: test -f "$GITHUB_WORKSPACE/.github/security-config.toml"
+
+      - name: Run ScopeGuardian
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/tmp/data" \
+            -e SCAN_DIR=/tmp/data \
+            ghcr.io/paranoihack/scopeguardian:0.0.1 \
+            --projectName ScopeGuardian \
+            --branch "${{ github.ref_name }}" \
+            /tmp/data/.github/security-config.toml
