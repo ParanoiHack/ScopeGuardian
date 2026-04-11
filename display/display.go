@@ -23,6 +23,12 @@ const (
 	rowSinkFile       = "Sink File"
 	rowSinkLine       = "Sink Line"
 	rowRecommendation = "Recommendation"
+
+	// CSV column headers use compact names (no spaces) to be machine-readable.
+	csvColSinkFile = "SinkFile"
+	csvColSinkLine = "SinkLine"
+
+	errUnsupportedFormat = "unsupported format: %s"
 )
 
 // DisplayBanner prints the ASCII art banner for ScopeGuardian to w.
@@ -140,7 +146,7 @@ func DumpFindings(w io.Writer, findings []models.Finding, format string) error {
 		dumpFindingsRaw(w, findings)
 		return nil
 	default:
-		return fmt.Errorf("unsupported format: %s", format)
+		return fmt.Errorf(errUnsupportedFormat, format)
 	}
 }
 
@@ -152,7 +158,7 @@ func dumpFindingsJSON(w io.Writer, findings []models.Finding) error {
 
 func dumpFindingsCSV(w io.Writer, findings []models.Finding) error {
 	cw := csv.NewWriter(w)
-	if err := cw.Write([]string{"Engine", "Severity", "Name", "CWE", "Description", "SinkFile", "SinkLine", "Recommendation"}); err != nil {
+	if err := cw.Write([]string{rowEngine, rowSeverity, rowName, rowCwe, rowDescription, csvColSinkFile, csvColSinkLine, rowRecommendation}); err != nil {
 		return err
 	}
 	for _, f := range findings {
