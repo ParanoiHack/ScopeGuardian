@@ -33,5 +33,5 @@ jobs:
             ghcr.io/paranoihack/scopeguardian:v0.0.1 \
             --projectName ScopeGuardian \
             --branch "${{ github.ref_name }}" \
-            --threshold "critical=1,high=1,medium=1,low=1"
+            --threshold "critical=1,high=1,medium=1,low=1" \
             /tmp/data/.github/security-config.toml
