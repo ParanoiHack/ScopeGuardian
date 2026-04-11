@@ -1,0 +1,37 @@
+name: Security
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  security:
+    name: ScopeGuardian
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify security config exists
+        run: test -f "$GITHUB_WORKSPACE/.github/security-config.toml"
+
+      - name: Run ScopeGuardian
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/tmp/data" \
+            -e SCAN_DIR=/tmp/data \
+            ghcr.io/paranoihack/scopeguardian:v0.0.1 \
+            --projectName ScopeGuardian \
+            --branch "${{ github.ref_name }}" \
+            --threshold "critical=1,high=1,medium=1,low=1" \
+            /tmp/data/.github/security-config.toml

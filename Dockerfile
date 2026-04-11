@@ -15,7 +15,7 @@ ARG KICS_VERSION=v2.1.17
 
 WORKDIR /tmp
 
-RUN apk add --no-cache git make
+RUN apk add --no-cache git=2.52.0-r0 make=4.4.1-r3
 
 RUN git clone --depth 1 --branch ${KICS_VERSION} https://github.com/Checkmarx/kics.git
 
@@ -31,7 +31,7 @@ ARG OPENGREP_VERSION=v1.13.1
 
 WORKDIR /tmp
 
-RUN apk add --no-cache git bash curl
+RUN apk add --no-cache git=2.52.0-r0 bash=5.3.3-r1 curl=8.17.0-r1
 
 RUN git clone --depth 1 --branch ${OPENGREP_VERSION} https://github.com/opengrep/opengrep.git
 
@@ -53,7 +53,7 @@ ARG GRYPE_VERSION=v0.104.2
 
 WORKDIR /tmp
 
-RUN apk add --no-cache git
+RUN apk add --no-cache git=2.52.0-r0
 
 RUN git clone --depth 1 --branch ${GRYPE_VERSION} https://github.com/anchore/grype.git
 
@@ -69,7 +69,7 @@ ARG SYFT_VERSION=v1.38.2
 
 WORKDIR /tmp
 
-RUN apk add --no-cache git
+RUN apk add --no-cache git=2.52.0-r0
 
 RUN git clone --depth 1 --branch ${SYFT_VERSION} https://github.com/anchore/syft.git
 
@@ -94,5 +94,11 @@ COPY --from=syft_builder /tmp/syft/bin/syft /opt/syft/bin/syft
 
 COPY features/scans/syft/config/syft.yaml /opt/syft/config/syft.yaml
 COPY features/scans/grype/config/grype.yaml /opt/grype/config/grype.yaml
+
+RUN addgroup -S scopeguardian && adduser -S -G scopeguardian scopeguardian
+
+USER scopeguardian
+
+HEALTHCHECK NONE
 
 ENTRYPOINT ["/opt/ScopeGuardian/bin/ScopeGuardian"]
