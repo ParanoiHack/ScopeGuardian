@@ -55,13 +55,13 @@ func main() {
 	findings := eng.LoadFindings()
 
 	if args.Sync {
-		eng.SyncResults(args.ProjectName, args.Branch, config.ProtectedBranches)
 		filtered, err := eng.FilterFindingsByDD(findings, args.ProjectName, args.Branch, config.ProtectedBranches)
 		if err != nil {
 			logger.Error(logErrFilterByDD, logger.Err(err))
 		} else {
 			findings = filtered
 		}
+		eng.SyncResults(args.ProjectName, args.Branch, config.ProtectedBranches)
 	}
 
 	display.DisplayFindings(os.Stdout, findings)

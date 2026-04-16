@@ -254,7 +254,7 @@ func TestGetActiveFindings(t *testing.T) {
 		assert.Empty(t, findings)
 	})
 
-	t.Run("Should return error when GetEngagementId fails", func(t *testing.T) {
+	t.Run("Should return error when GetProductByName fails", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mockService := defectdojo.NewMockDefectDojoService(ctrl)
 
@@ -263,6 +263,20 @@ func TestGetActiveFindings(t *testing.T) {
 		findings, err := GetActiveFindings(mockService, testProjectName, testBranch, noProtectedBranches)
 
 		assert.NotNil(t, err)
+		assert.Nil(t, findings)
+	})
+
+	t.Run("Should return error when no matching engagement exists for branch", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockService := defectdojo.NewMockDefectDojoService(ctrl)
+
+		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
+		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{}, nil)
+
+		findings, err := GetActiveFindings(mockService, testProjectName, testBranch, noProtectedBranches)
+
+		assert.NotNil(t, err)
+		assert.Equal(t, errEngagementNotFound, err.Error())
 		assert.Nil(t, findings)
 	})
 

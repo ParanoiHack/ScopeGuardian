@@ -71,21 +71,37 @@ func isProtectedBranch(branch string, protectedBranches []string) bool {
 }
 
 // GetActiveFindings fetches the active (non-suppressed) findings for the given project and
-// branch from DefectDojo. These are the findings that survived deduplication and have not
-// been marked as false positive or accepted risk in DefectDojo.
+// branch from DefectDojo. Unlike GetEngagementId it never creates an engagement: if no
+// matching engagement exists for the branch it returns an error so the caller can fall back
+// to displaying all local findings unfiltered. This read-only behaviour is intentional —
+// GetActiveFindings is called before SyncResults so it must not mutate DD state.
 func GetActiveFindings(ddService defectdojo.DefectDojoService, projectName string, branch string, protectedBranches []string) ([]defectdojo.Finding, error) {
-	engagementId, err := GetEngagementId(ddService, projectName, branch, protectedBranches)
+	product, err := ddService.GetProductByName(projectName)
 	if err != nil {
-		return nil, err
+		logger.Error(fmt.Sprintf(logErrorGetProduct, projectName))
+		return nil, errors.New(errGetProduct)
 	}
 
-	findings, err := ddService.GetFindings(engagementId, 0, 100, []defectdojo.Finding{})
+	engagements, err := ddService.GetEngagements(uint(product.Id), 0, 100, []defectdojo.Engagement{})
 	if err != nil {
-		logger.Error(fmt.Sprintf(logErrorGetFindings, engagementId))
-		return nil, errors.New(errGetFindings)
+		logger.Error(fmt.Sprintf(logErrorGetEngagements, product.Id))
+		return nil, errors.New(errGetEngagements)
 	}
 
-	return findings, nil
+	expectedName := fmt.Sprintf("%s-%s", projectName, branch)
+	for _, engagement := range engagements {
+		if engagement.Name == expectedName {
+			findings, err := ddService.GetFindings(engagement.Id, 0, 100, []defectdojo.Finding{})
+			if err != nil {
+				logger.Error(fmt.Sprintf(logErrorGetFindings, engagement.Id))
+				return nil, errors.New(errGetFindings)
+			}
+			return findings, nil
+		}
+	}
+
+	logger.Info(fmt.Sprintf(logInfoNoEngagementFound, branch))
+	return nil, errors.New(errEngagementNotFound)
 }
 
 // FilterByActiveFindings returns only the local findings that have a matching active finding
