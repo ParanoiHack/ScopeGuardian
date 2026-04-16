@@ -13,11 +13,12 @@ import (
 )
 
 const (
-	logInfoLoadConfigFile = "Loading configuration file"
-	logInfoDumpFindings   = "Findings successfully written to output file"
-	logErrOutputFile      = "Failed to create output file"
-	logErrCloseOutputFile = "Failed to close output file"
-	logErrDumpFindings    = "Failed to write findings to output file"
+	logInfoLoadConfigFile        = "Loading configuration file"
+	logInfoDumpFindings          = "Findings successfully written to output file"
+	logErrOutputFile             = "Failed to create output file"
+	logErrCloseOutputFile        = "Failed to close output file"
+	logErrDumpFindings           = "Failed to write findings to output file"
+	logWarnFallbackLocalFindings = "Failed to retrieve findings from DefectDojo; displaying local findings instead"
 )
 
 func main() {
@@ -56,6 +57,13 @@ func main() {
 
 	if args.Sync {
 		eng.SyncResults(args.ProjectName, args.Branch, config.ProtectedBranches)
+		remoteFindings, err := eng.GetDefectDojoFindings(args.ProjectName, args.Branch, config.ProtectedBranches)
+		if err != nil {
+			logger.Error(err.Error())
+			logger.Error(logWarnFallbackLocalFindings)
+		} else {
+			findings = remoteFindings
+		}
 	}
 
 	display.DisplayFindings(os.Stdout, findings)
@@ -79,16 +87,7 @@ func main() {
 	}
 
 	if len(args.Thresholds) > 0 {
-		findingsToEvaluate := findings
-		if args.Sync {
-			remoteFindings, err := eng.GetDefectDojoFindings(args.ProjectName, args.Branch, config.ProtectedBranches)
-			if err != nil {
-				logger.Error(err.Error())
-			} else {
-				findingsToEvaluate = remoteFindings
-			}
-		}
-		if !securitygate.Evaluate(findingsToEvaluate, args.Thresholds) {
+		if !securitygate.Evaluate(findings, args.Thresholds) {
 			os.Exit(-1)
 		}
 	}
