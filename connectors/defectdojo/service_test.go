@@ -527,7 +527,8 @@ func TestGetFindings(t *testing.T) {
 						"description": "SQL injection via user input",
 						"file_path": "src/db.go",
 						"line": 42,
-						"mitigation": "Use parameterized queries"
+						"mitigation": "Use parameterized queries",
+						"tags": ["SAST"]
 					}
 				]
 			}
@@ -560,6 +561,7 @@ func TestGetFindings(t *testing.T) {
 		assert.EqualValues(t, "src/db.go", findings[0].FilePath)
 		assert.EqualValues(t, 42, findings[0].Line)
 		assert.EqualValues(t, "Use parameterized queries", findings[0].Mitigation)
+		assert.EqualValues(t, []string{"SAST"}, findings[0].Tags)
 	})
 
 	t.Run("Should not retrieve findings due to wrong HTTP status code", func(t *testing.T) {

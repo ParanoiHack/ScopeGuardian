@@ -40,14 +40,15 @@ type EngagementPayload struct {
 }
 
 type Finding struct {
-	Id          int    `json:"id"`
-	Title       string `json:"title"`
-	Severity    string `json:"severity"`
-	Cwe         int    `json:"cwe"`
-	Description string `json:"description"`
-	FilePath    string `json:"file_path"`
-	Line        int    `json:"line"`
-	Mitigation  string `json:"mitigation"`
+	Id          int      `json:"id"`
+	Title       string   `json:"title"`
+	Severity    string   `json:"severity"`
+	Cwe         int      `json:"cwe"`
+	Description string   `json:"description"`
+	FilePath    string   `json:"file_path"`
+	Line        int      `json:"line"`
+	Mitigation  string   `json:"mitigation"`
+	Tags        []string `json:"tags"`
 }
 
 type GetFindingsResponse struct {

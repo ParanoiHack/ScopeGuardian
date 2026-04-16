@@ -220,14 +220,15 @@ func TestGetDefectDojoFindings(t *testing.T) {
 		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
 		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{existingEngagement}, nil)
 		mockService.EXPECT().GetFindings(testEngagementId, 0, 100, []defectdojo.Finding{}).Return([]defectdojo.Finding{
-			{Id: 1, Title: "SQL Injection", Severity: "Critical", Cwe: 89, Description: "SQL injection via user input", FilePath: "src/db.go", Line: 42, Mitigation: "Use parameterized queries"},
-			{Id: 2, Title: "XSS", Severity: "High", Cwe: 79, Description: "Cross-site scripting", FilePath: "src/handler.go", Line: 17, Mitigation: "Escape output"},
+			{Id: 1, Title: "SQL Injection", Severity: "Critical", Cwe: 89, Description: "SQL injection via user input", FilePath: "src/db.go", Line: 42, Mitigation: "Use parameterized queries", Tags: []string{"SAST"}},
+			{Id: 2, Title: "XSS", Severity: "High", Cwe: 79, Description: "Cross-site scripting", FilePath: "src/handler.go", Line: 17, Mitigation: "Escape output", Tags: []string{"IACST"}},
 		}, nil)
 
 		findings, err := GetDefectDojoFindings(mockService, testProjectName, testBranch, noProtectedBranches)
 
 		assert.Nil(t, err)
 		assert.Len(t, findings, 2)
+		assert.Equal(t, "SAST", findings[0].Engine)
 		assert.Equal(t, "SQL Injection", findings[0].Name)
 		assert.Equal(t, "Critical", findings[0].Severity)
 		assert.Equal(t, "89", findings[0].Cwe)
@@ -235,6 +236,7 @@ func TestGetDefectDojoFindings(t *testing.T) {
 		assert.Equal(t, "src/db.go", findings[0].SinkFile)
 		assert.Equal(t, 42, findings[0].SinkLine)
 		assert.Equal(t, "Use parameterized queries", findings[0].Recommendation)
+		assert.Equal(t, "IACST", findings[1].Engine)
 		assert.Equal(t, "XSS", findings[1].Name)
 		assert.Equal(t, "High", findings[1].Severity)
 		assert.Equal(t, "79", findings[1].Cwe)
@@ -318,5 +320,27 @@ func TestGetDefectDojoFindings(t *testing.T) {
 		assert.NotNil(t, err)
 		assert.Equal(t, errGetFindings, err.Error())
 		assert.Nil(t, findings)
+	})
+}
+
+func TestEngineFromTags(t *testing.T) {
+	t.Run("Should return IACST when tag is present", func(t *testing.T) {
+		assert.Equal(t, "IACST", engineFromTags([]string{"SCOPE-GUARDIAN", "main", "IACST"}))
+	})
+
+	t.Run("Should return SAST when tag is present", func(t *testing.T) {
+		assert.Equal(t, "SAST", engineFromTags([]string{"SAST"}))
+	})
+
+	t.Run("Should return SCA when tag is present", func(t *testing.T) {
+		assert.Equal(t, "SCA", engineFromTags([]string{"SCOPE-GUARDIAN", "SCA"}))
+	})
+
+	t.Run("Should return empty string when no known engine tag", func(t *testing.T) {
+		assert.Equal(t, "", engineFromTags([]string{"SCOPE-GUARDIAN", "main"}))
+	})
+
+	t.Run("Should return empty string for nil tags", func(t *testing.T) {
+		assert.Equal(t, "", engineFromTags(nil))
 	})
 }

@@ -94,6 +94,7 @@ func GetDefectDojoFindings(ddService defectdojo.DefectDojoService, projectName s
 			cwe = strconv.Itoa(f.Cwe)
 		}
 		findings = append(findings, models.Finding{
+			Engine:         engineFromTags(f.Tags),
 			Severity:       f.Severity,
 			Name:           f.Title,
 			Cwe:            cwe,
@@ -105,5 +106,16 @@ func GetDefectDojoFindings(ddService defectdojo.DefectDojoService, projectName s
 	}
 
 	return findings, nil
+}
+
+// engineFromTags returns the first engine tag found in tags, or an empty string if none match.
+// Engine tags are applied to DefectDojo findings by each scanner during import.
+func engineFromTags(tags []string) string {
+	for _, tag := range tags {
+		if _, ok := knownEngineTags[tag]; ok {
+			return tag
+		}
+	}
+	return ""
 }
 

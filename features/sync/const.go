@@ -18,3 +18,11 @@ const (
 	errCreateEngagement = "cannot create engagement"
 	errGetFindings      = "cannot retrieve findings"
 )
+
+// knownEngineTags is the set of tag values that identify the scanner engine for a finding.
+// Each scanner applies its engine tag to every finding via apply_tags_to_findings during import.
+var knownEngineTags = map[string]struct{}{
+	"IACST": {},
+	"SAST":  {},
+	"SCA":   {},
+}
