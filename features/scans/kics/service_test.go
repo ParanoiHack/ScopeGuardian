@@ -45,17 +45,23 @@ func (m *mockDefectDojoService) GetFindings(_ int, _ int, _ int, _ []defectdojo.
 	return []defectdojo.Finding{}, nil
 }
 
+func (m *mockDefectDojoService) GetAllEngagementFindings(_ int, _ int, _ int, _ []defectdojo.Finding) ([]defectdojo.Finding, error) {
+	return []defectdojo.Finding{}, nil
+}
+
 var _ defectdojo.DefectDojoService = &mockDefectDojoService{}
 
-func TestNewKicsService(t *testing.T) {
+// TestNewKicsServiceImplementsInterface verifies that newKicsService returns a
+// value that satisfies the interfaces.ScanServiceImpl contract, enforcing that
+// all required scanner methods are present at compile and test time.
+func TestNewKicsServiceImplementsInterface(t *testing.T) {
 	service := newKicsService("./test", loader.Kics{})
 
 	_, ok := service.(interfaces.ScanServiceImpl)
-	assert.NotNil(t, service)
 	assert.True(t, ok)
 }
 
-func TestNewKicsServiceWithExcludeQueries(t *testing.T) {
+func TestNewKicsService(t *testing.T) {
 	service := newKicsService("./test", loader.Kics{ExcludeQueries: []string{"a227ec01-f97a-4084-91a4-47b350c1db54"}})
 
 	impl, ok := service.(*KicsServiceImpl)

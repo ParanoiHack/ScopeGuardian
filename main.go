@@ -16,11 +16,12 @@ import (
 const (
 	logInfoLoadConfigFile = "Loading configuration file"
 	logInfoDumpFindings   = "Findings successfully written to output file"
-	logInfoNoPreSyncDD    = "No previous DefectDojo state found; all findings treated as new"
 	logErrOutputFile      = "Failed to create output file"
 	logErrCloseOutputFile = "Failed to close output file"
 	logErrDumpFindings    = "Failed to write findings to output file"
+	logErrMarkByDD        = "Failed to retrieve finding statuses from DefectDojo; all findings treated as active"
 )
+
 func main() {
 	logger.SetGlobalLogger(
 		logger.NewSlogLogger(
@@ -55,13 +56,22 @@ func main() {
 
 	findings := eng.LoadFindings()
 
+	// Mark all findings ACTIVE by default (no DefectDojo context available).
+	for i := range findings {
+		findings[i].Status = models.FindingStatusActive
+	}
+
 	if args.Sync {
+		// Upload current scan results to DefectDojo first.
 		eng.SyncResults(args.ProjectName, args.Branch, config.ProtectedBranches)
-		filtered, err := eng.FilterFindingsByDD(findings, args.ProjectName, args.Branch, config.ProtectedBranches)
+		// Then fetch all findings from DD (including duplicates and inactive) and
+		// mark each local finding with the status derived from DD's active/duplicate
+		// fields. On error all findings remain ACTIVE (safe default).
+		marked, err := eng.MarkFindingsByDD(findings, args.ProjectName, args.Branch, config.ProtectedBranches)
 		if err != nil {
-			logger.Error(logErrFilterByDD, logger.Err(err))
+			logger.Error(logErrMarkByDD, logger.Err(err))
 		} else {
-			findings = filtered
+			findings = marked
 		}
 	}
 

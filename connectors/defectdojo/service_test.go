@@ -472,6 +472,102 @@ func TestImportScan(t *testing.T) {
 	})
 }
 
+func TestGetAllEngagementFindings(t *testing.T) {
+	gomockController := gomock.NewController(t)
+
+	t.Run("Should retrieve all findings (active, inactive and duplicate) for an engagement", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
+
+		responseReturnMock := []byte(`
+			{
+				"count": 2,
+				"results": [
+					{
+						"id": 1,
+						"title": "SQL Injection",
+						"severity": "High",
+						"file_path": "src/db.go",
+						"line": 42,
+						"mitigation": "Use parameterized queries",
+						"active": true,
+						"duplicate": false
+					},
+					{
+						"id": 2,
+						"title": "XSS",
+						"severity": "Medium",
+						"file_path": "src/handler.go",
+						"line": 17,
+						"mitigation": "Sanitize output",
+						"active": false,
+						"duplicate": true
+					}
+				]
+			}
+		`)
+
+		responseEndMock := []byte(`
+			{
+				"count": 2,
+				"results": []
+			}
+		`)
+
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+		gomock.InOrder(
+			clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseReturnMock, 200),
+			clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseEndMock, 200),
+		)
+
+		service := newDefectDojoService(clientMock, URL, TOKEN)
+
+		findings, err := service.GetAllEngagementFindings(42, 0, 2, []Finding{})
+
+		assert.Nil(t, err)
+		assert.Len(t, findings, 2)
+		assert.True(t, findings[0].Active)
+		assert.False(t, findings[0].Duplicate)
+		assert.False(t, findings[1].Active)
+		assert.True(t, findings[1].Duplicate)
+	})
+
+	t.Run("Should not retrieve all findings due to wrong HTTP status code", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
+
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+		clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return([]byte(`{}`), 403)
+
+		service := newDefectDojoService(clientMock, URL, TOKEN)
+
+		findings, err := service.GetAllEngagementFindings(42, 0, 100, []Finding{})
+
+		assert.NotNil(t, err)
+		assert.Equal(t, errRetrieveFindings, err.Error())
+		assert.EqualValues(t, 0, len(findings))
+	})
+
+	t.Run("Should return empty slice when no findings exist", func(t *testing.T) {
+		clientMock := client.NewMockClient(gomockController)
+
+		responseReturnMock := []byte(`
+			{
+				"count": 0,
+				"results": []
+			}
+		`)
+
+		clientMock.EXPECT().GetHeaders(gomock.Any()).Return(http.Header{}).AnyTimes()
+		clientMock.EXPECT().Get(gomock.Any(), gomock.Any()).Return(responseReturnMock, 200)
+
+		service := newDefectDojoService(clientMock, URL, TOKEN)
+
+		findings, err := service.GetAllEngagementFindings(42, 0, 100, []Finding{})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, 0, len(findings))
+	})
+}
+
 func TestCreateMultipartFromScanPayload(t *testing.T) {
 	t.Run("Should generate expected multipart body", func(t *testing.T) {
 		var payload ScanPayload

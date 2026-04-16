@@ -21,7 +21,12 @@ type DefectDojoService interface {
 	GetEngagements(productId uint, offset int, limit int, engagements []Engagement) ([]Engagement, error)
 	UpdateEngagementEndDate(engagementId, productId int, protected bool) (bool, error)
 	ImportScan(payload ScanPayload, filename string) (bool, error)
+	// GetFindings retrieves active (non-duplicate) findings for an engagement. It is
+	// used internally for polling until the post-import count stabilises.
 	GetFindings(engagementId int, offset int, limit int, findings []Finding) ([]Finding, error)
+	// GetAllEngagementFindings retrieves all findings for an engagement regardless of
+	// their active/duplicate status, allowing callers to inspect those fields directly.
+	GetAllEngagementFindings(engagementId int, offset int, limit int, findings []Finding) ([]Finding, error)
 	SetAccessToken(token string)
 	SetURL(url string)
 }
@@ -284,9 +289,39 @@ func createMultipartFromScanPayload(payload ScanPayload, filename string) ([]byt
 	return body.Bytes(), writer.FormDataContentType(), nil
 }
 
-// GetFindings retrieves all findings for the given engagement and product using
-// cursor-based pagination (offset/limit). It accumulates results recursively until
-// all pages have been fetched and returns the complete slice.
+// GetAllEngagementFindings retrieves all findings for the given engagement using
+// cursor-based pagination (offset/limit), with no filter on active or duplicate
+// status. It accumulates results recursively until all pages have been fetched
+// and returns the complete slice. Each returned Finding carries the "active" and
+// "duplicate" fields set by DefectDojo so callers can derive the finding status.
+func (s *DefectDojoServiceImpl) GetAllEngagementFindings(engagementId int, offset int, limit int, findings []Finding) ([]Finding, error) {
+	var res GetFindingsResponse
+
+	body, code := s.client.Get(fmt.Sprintf(
+		"%s%s%s", s.url, APIPrefix, fmt.Sprintf(GetAllEngagementFindingsPath, engagementId, offset, limit)), s.client.GetHeaders(s.accessToken))
+	if code != http.StatusOK {
+		logger.Error(fmt.Sprintf(logErrorRetrieveFindings, engagementId))
+		return []Finding{}, errors.New(errRetrieveFindings)
+	}
+
+	err := json.Unmarshal(body, &res)
+	if err != nil {
+		logger.Error(fmt.Sprintf(logErrorDecodingToken, err.Error()))
+		return []Finding{}, errors.New(errUnmarshal)
+	}
+
+	findings = append(findings, res.Results...)
+	if res.Count-(offset+limit) >= 0 {
+		return s.GetAllEngagementFindings(engagementId, offset+limit, limit, findings)
+	}
+
+	return findings, nil
+}
+
+// GetFindings retrieves active (non-duplicate) findings for the given engagement
+// using cursor-based pagination (offset/limit). It accumulates results recursively
+// until all pages have been fetched and returns the complete slice. This method is
+// used for polling until the post-import count stabilises.
 func (s *DefectDojoServiceImpl) GetFindings(engagementId int, offset int, limit int, findings []Finding) ([]Finding, error) {
 	var res GetFindingsResponse
 

@@ -58,6 +58,13 @@ type Finding struct {
 	Mitigation       string            `json:"mitigation"`
 	UniqueIdFromTool string            `json:"unique_id_from_tool"`
 	VulnerabilityIds []VulnerabilityId `json:"vulnerability_ids"`
+	// Active is true when the finding is currently open and not suppressed in
+	// DefectDojo. Corresponds to the "active" field returned by the findings API.
+	Active bool `json:"active"`
+	// Duplicate is true when DefectDojo's deduplication engine has identified this
+	// finding as a duplicate of another finding in the product. Corresponds to the
+	// "duplicate" field returned by the findings API.
+	Duplicate bool `json:"duplicate"`
 }
 
 type GetFindingsResponse struct {

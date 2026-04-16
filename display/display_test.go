@@ -73,6 +73,7 @@ var testFindings = []models.Finding{
 		SinkFile:       "Dockerfile",
 		SinkLine:       10,
 		Recommendation: "Do not run containers as privileged",
+		Status:         models.FindingStatusActive,
 	},
 }
 
@@ -137,5 +138,26 @@ func TestDumpFindings_CSV_ContainsHeaders(t *testing.T) {
 
 	assert.Nil(t, err)
 	output := buf.String()
-	assert.True(t, strings.HasPrefix(output, "Engine,Severity,Name,CWE,Description,SinkFile,SinkLine,Recommendation"))
+	assert.True(t, strings.HasPrefix(output, "Engine,Severity,Name,CWE,Description,SinkFile,SinkLine,Recommendation,Status"))
+}
+
+func TestDumpFindings_CSV_ContainsStatus(t *testing.T) {
+	var buf bytes.Buffer
+	err := DumpFindings(&buf, testFindings, "csv")
+
+	assert.Nil(t, err)
+	output := buf.String()
+	assert.Contains(t, output, models.FindingStatusActive)
+}
+
+func TestDumpFindings_JSON_ContainsStatus(t *testing.T) {
+	var buf bytes.Buffer
+	err := DumpFindings(&buf, testFindings, "json")
+
+	assert.Nil(t, err)
+
+	var result []models.Finding
+	assert.Nil(t, json.Unmarshal(buf.Bytes(), &result))
+	assert.Len(t, result, 1)
+	assert.Equal(t, models.FindingStatusActive, result[0].Status)
 }

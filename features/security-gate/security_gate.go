@@ -30,6 +30,10 @@ func Evaluate(findings []models.Finding, thresholds []parser.Threshold) bool {
 // evaluateSingle evaluates a single threshold against the findings.
 // It returns true when the gate passes (count < threshold.Value) and false when
 // the gate fails (count >= threshold.Value). It only logs on failure.
+// Findings with status INACTIVE or DUPLICATE are excluded from the count: INACTIVE
+// findings have been suppressed in DefectDojo (false positive, accepted risk, etc.)
+// and DUPLICATE findings are already tracked elsewhere in the product — neither
+// should block a build.
 func evaluateSingle(findings []models.Finding, threshold parser.Threshold) bool {
 	thresholdRank, ok := severityRank[strings.ToUpper(threshold.Severity)]
 	if !ok {
@@ -38,6 +42,9 @@ func evaluateSingle(findings []models.Finding, threshold parser.Threshold) bool 
 
 	count := 0
 	for _, f := range findings {
+		if f.Status == models.FindingStatusInactive || f.Status == models.FindingStatusDuplicate {
+			continue
+		}
 		rank, ok := severityRank[strings.ToUpper(f.Severity)]
 		if ok && rank >= thresholdRank {
 			count++

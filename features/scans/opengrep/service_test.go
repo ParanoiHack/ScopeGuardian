@@ -47,17 +47,23 @@ func (m *mockDefectDojoService) GetFindings(_ int, _ int, _ int, _ []defectdojo.
 	return []defectdojo.Finding{}, nil
 }
 
+func (m *mockDefectDojoService) GetAllEngagementFindings(_ int, _ int, _ int, _ []defectdojo.Finding) ([]defectdojo.Finding, error) {
+	return []defectdojo.Finding{}, nil
+}
+
 var _ defectdojo.DefectDojoService = &mockDefectDojoService{}
 
-func TestNewOpenGrepService(t *testing.T) {
+// TestNewOpenGrepServiceImplementsInterface verifies that newOpenGrepService returns
+// a value that satisfies the interfaces.ScanServiceImpl contract, enforcing that
+// all required scanner methods are present at compile and test time.
+func TestNewOpenGrepServiceImplementsInterface(t *testing.T) {
 	service := newOpenGrepService("./test", loader.Opengrep{})
 
 	_, ok := service.(interfaces.ScanServiceImpl)
-	assert.NotNil(t, service)
 	assert.True(t, ok)
 }
 
-func TestVerifyConfig(t *testing.T) {
+func TestNewOpenGrepService(t *testing.T) {
 	t.Run("Config should be OK", func(t *testing.T) {
 		ok, err := verifyConfig(fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks"))
 		assert.Nil(t, err)
