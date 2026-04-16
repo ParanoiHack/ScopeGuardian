@@ -15,8 +15,8 @@ const (
 	SASTEngineTag        = "SAST"
 	scanType             = "Semgrep JSON Report"
 	closeOldFinding      = true
+	doNotReactivate      = true
 )
-
 const (
 	outputNameParameter = "opengrep-result.json"
 )

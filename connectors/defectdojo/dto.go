@@ -94,5 +94,6 @@ type ScanPayload struct {
 	ScanType          string   `json:"scan_type" form:"scan_type"`
 	EngagementId      int      `json:"engagement" form:"engagement"`
 	CloseOldFinding   bool     `json:"close_old_findings_product_scope" form:"close_old_findings_product_scope"`
+	DoNotReactivate   bool     `json:"do_not_reactivate" form:"do_not_reactivate"`
 	TestId            int      `json:"test,omitempty" form:"test"`
 }

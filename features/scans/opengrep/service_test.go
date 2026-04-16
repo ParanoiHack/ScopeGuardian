@@ -290,6 +290,7 @@ func TestOpenGrepSync(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.EqualValues(t, 7, ddMock.reimportedPayload.TestId)
+		assert.True(t, ddMock.reimportedPayload.DoNotReactivate)
 	})
 
 	t.Run("Should return error when import scan fails", func(t *testing.T) {
