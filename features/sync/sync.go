@@ -3,6 +3,7 @@ package sync
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"ScopeGuardian/connectors/defectdojo"
 	"ScopeGuardian/domains/models"
 	"ScopeGuardian/logger"
@@ -163,12 +164,22 @@ func pollFindings(ddService defectdojo.DefectDojoService, engagementId int) ([]d
 // For Grype findings the VulnId (CVE/GHSA) is used as the title key since DD stores the
 // vulnerability ID — not the artifact name — as the finding title; for all other scanners
 // the Name field is used directly.
+// DefectDojo may also prefix KICS finding titles with the rule category separated by ": "
+// (e.g. "Build Process: Missing User Instruction"). To handle this, each DD title is also
+// indexed under the substring after the last ": " separator, so a bare local name such as
+// "Missing User Instruction" still matches the prefixed DD title.
 // This filtering respects suppressions applied in DefectDojo: any finding marked as false
 // positive or accepted risk will be absent from the active set and therefore dropped locally.
 func FilterByActiveFindings(local []models.Finding, active []defectdojo.Finding) []models.Finding {
 	activeSet := make(map[string]struct{}, len(active))
 	for _, f := range active {
 		activeSet[f.Title] = struct{}{}
+		// DD may prefix the finding name with a category (e.g. "Build Process: Missing User
+		// Instruction"). Also index the part after the last ": " so local findings that only
+		// store the bare name still match.
+		if idx := strings.LastIndex(f.Title, ": "); idx >= 0 {
+			activeSet[f.Title[idx+2:]] = struct{}{}
+		}
 	}
 
 	filtered := make([]models.Finding, 0, len(local))

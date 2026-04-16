@@ -405,6 +405,33 @@ func TestFilterByActiveFindings(t *testing.T) {
 		assert.Len(t, filtered, 1)
 	})
 
+	t.Run("Should match KICS findings when DD title has category prefix", func(t *testing.T) {
+		local := []models.Finding{
+			{Name: "Missing User Instruction", Engine: "IACST", Severity: "High"},
+		}
+		active := []defectdojo.Finding{
+			{Title: "Build Process: Missing User Instruction"},
+		}
+
+		filtered := FilterByActiveFindings(local, active)
+
+		assert.Len(t, filtered, 1)
+		assert.Equal(t, "Missing User Instruction", filtered[0].Name)
+	})
+
+	t.Run("Should not match when only category prefix is shared but names differ", func(t *testing.T) {
+		local := []models.Finding{
+			{Name: "Healthcheck Not Set", Engine: "IACST", Severity: "Low"},
+		}
+		active := []defectdojo.Finding{
+			{Title: "Build Process: Missing User Instruction"},
+		}
+
+		filtered := FilterByActiveFindings(local, active)
+
+		assert.Empty(t, filtered)
+	})
+
 	t.Run("Should match even when line differs, using title-only matching", func(t *testing.T) {
 		local := []models.Finding{
 			{Name: "SQL Injection", SinkFile: "src/db.go", SinkLine: 42},
