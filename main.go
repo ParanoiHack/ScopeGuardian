@@ -18,9 +18,8 @@ const (
 	logErrOutputFile             = "Failed to create output file"
 	logErrCloseOutputFile        = "Failed to close output file"
 	logErrDumpFindings           = "Failed to write findings to output file"
-	logWarnFallbackLocalFindings = "Failed to retrieve findings from DefectDojo; displaying local findings instead"
+	logErrFallbackLocalFindings  = "Failed to retrieve findings from DefectDojo; displaying local findings instead"
 )
-
 func main() {
 	logger.SetGlobalLogger(
 		logger.NewSlogLogger(
@@ -60,7 +59,7 @@ func main() {
 		remoteFindings, err := eng.GetDefectDojoFindings(args.ProjectName, args.Branch, config.ProtectedBranches)
 		if err != nil {
 			logger.Error(err.Error())
-			logger.Error(logWarnFallbackLocalFindings)
+			logger.Error(logErrFallbackLocalFindings)
 		} else {
 			findings = remoteFindings
 		}

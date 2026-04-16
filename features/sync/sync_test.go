@@ -220,8 +220,8 @@ func TestGetDefectDojoFindings(t *testing.T) {
 		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
 		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{existingEngagement}, nil)
 		mockService.EXPECT().GetFindings(testEngagementId, 0, 100, []defectdojo.Finding{}).Return([]defectdojo.Finding{
-			{Id: 1, Title: "SQL Injection", Severity: "Critical"},
-			{Id: 2, Title: "XSS", Severity: "High"},
+			{Id: 1, Title: "SQL Injection", Severity: "Critical", Cwe: 89, Description: "SQL injection via user input", FilePath: "src/db.go", Line: 42, Mitigation: "Use parameterized queries"},
+			{Id: 2, Title: "XSS", Severity: "High", Cwe: 79, Description: "Cross-site scripting", FilePath: "src/handler.go", Line: 17, Mitigation: "Escape output"},
 		}, nil)
 
 		findings, err := GetDefectDojoFindings(mockService, testProjectName, testBranch, noProtectedBranches)
@@ -230,8 +230,41 @@ func TestGetDefectDojoFindings(t *testing.T) {
 		assert.Len(t, findings, 2)
 		assert.Equal(t, "SQL Injection", findings[0].Name)
 		assert.Equal(t, "Critical", findings[0].Severity)
+		assert.Equal(t, "89", findings[0].Cwe)
+		assert.Equal(t, "SQL injection via user input", findings[0].Description)
+		assert.Equal(t, "src/db.go", findings[0].SinkFile)
+		assert.Equal(t, 42, findings[0].SinkLine)
+		assert.Equal(t, "Use parameterized queries", findings[0].Recommendation)
 		assert.Equal(t, "XSS", findings[1].Name)
 		assert.Equal(t, "High", findings[1].Severity)
+		assert.Equal(t, "79", findings[1].Cwe)
+		assert.Equal(t, "Cross-site scripting", findings[1].Description)
+		assert.Equal(t, "src/handler.go", findings[1].SinkFile)
+		assert.Equal(t, 17, findings[1].SinkLine)
+		assert.Equal(t, "Escape output", findings[1].Recommendation)
+	})
+
+	t.Run("Should map CWE to empty string when not set", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockService := defectdojo.NewMockDefectDojoService(ctrl)
+
+		existingEngagement := defectdojo.Engagement{
+			Id:        testEngagementId,
+			Name:      expectedEngagementName(),
+			TargetEnd: futureDate(),
+		}
+
+		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
+		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{existingEngagement}, nil)
+		mockService.EXPECT().GetFindings(testEngagementId, 0, 100, []defectdojo.Finding{}).Return([]defectdojo.Finding{
+			{Id: 1, Title: "No CWE Finding", Severity: "Low"},
+		}, nil)
+
+		findings, err := GetDefectDojoFindings(mockService, testProjectName, testBranch, noProtectedBranches)
+
+		assert.Nil(t, err)
+		assert.Len(t, findings, 1)
+		assert.Equal(t, "", findings[0].Cwe)
 	})
 
 	t.Run("Should return empty slice when no findings exist", func(t *testing.T) {

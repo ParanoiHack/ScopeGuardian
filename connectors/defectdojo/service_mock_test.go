@@ -141,7 +141,7 @@ func TestMockDefectDojoService_GetFindings_Succeeds(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mock := NewMockDefectDojoService(ctrl)
 
-	expected := []Finding{{Id: 1, Title: "SQL Injection", Severity: "High"}}
+	expected := []Finding{{Id: 1, Title: "SQL Injection", Severity: "High", Cwe: 89, Description: "desc", FilePath: "src/db.go", Line: 10, Mitigation: "fix it"}}
 	mock.EXPECT().GetFindings(42, 0, 100, gomock.Any()).Return(expected, nil)
 
 	findings, err := mock.GetFindings(42, 0, 100, []Finding{})

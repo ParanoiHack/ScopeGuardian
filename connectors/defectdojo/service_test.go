@@ -522,7 +522,12 @@ func TestGetFindings(t *testing.T) {
 					{
 						"id": 1,
 						"title": "SQL Injection",
-						"severity": "High"
+						"severity": "High",
+						"cwe": 89,
+						"description": "SQL injection via user input",
+						"file_path": "src/db.go",
+						"line": 42,
+						"mitigation": "Use parameterized queries"
 					}
 				]
 			}
@@ -550,6 +555,11 @@ func TestGetFindings(t *testing.T) {
 		assert.EqualValues(t, 1, findings[0].Id)
 		assert.EqualValues(t, "SQL Injection", findings[0].Title)
 		assert.EqualValues(t, "High", findings[0].Severity)
+		assert.EqualValues(t, 89, findings[0].Cwe)
+		assert.EqualValues(t, "SQL injection via user input", findings[0].Description)
+		assert.EqualValues(t, "src/db.go", findings[0].FilePath)
+		assert.EqualValues(t, 42, findings[0].Line)
+		assert.EqualValues(t, "Use parameterized queries", findings[0].Mitigation)
 	})
 
 	t.Run("Should not retrieve findings due to wrong HTTP status code", func(t *testing.T) {

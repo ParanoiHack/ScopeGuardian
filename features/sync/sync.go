@@ -3,6 +3,7 @@ package sync
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"ScopeGuardian/connectors/defectdojo"
 	"ScopeGuardian/domains/models"
 	"ScopeGuardian/logger"
@@ -88,9 +89,18 @@ func GetDefectDojoFindings(ddService defectdojo.DefectDojoService, projectName s
 
 	var findings []models.Finding
 	for _, f := range ddFindings {
+		cwe := ""
+		if f.Cwe != 0 {
+			cwe = strconv.Itoa(f.Cwe)
+		}
 		findings = append(findings, models.Finding{
-			Severity: f.Severity,
-			Name:     f.Title,
+			Severity:       f.Severity,
+			Name:           f.Title,
+			Cwe:            cwe,
+			Description:    f.Description,
+			SinkFile:       f.FilePath,
+			SinkLine:       f.Line,
+			Recommendation: f.Mitigation,
 		})
 	}
 
