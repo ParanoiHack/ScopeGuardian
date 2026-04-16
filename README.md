@@ -251,9 +251,33 @@ Passing `--sync` on the command line uploads the scan results from every registe
 2. The engagement ID is resolved (see [Engagements](#how-engagements-are-handled)).
 3. For each registered scanner, the scanner's `Sync` method is called with the engagement ID and branch.
 
+### Import vs Reimport
+
+On the **first run** for a given engagement, each scanner calls the `/api/v2/import-scan/` endpoint. DefectDojo creates a new test and populates it with findings.
+
+On **every subsequent run**, each scanner checks whether a test of the same scan type already exists in the engagement (via `GET /api/v2/tests/`). If one is found, it calls `/api/v2/reimport-scan/` instead. DefectDojo then:
+
+- **Closes** findings that were present in the previous scan but are absent from the new one (`close_old_findings_product_scope=true`).
+- **Creates** genuinely new findings as Active.
+- **Does not reactivate** findings that a human previously suppressed (inactive, false-positive, accepted risk), even if they still appear in the scan (`do_not_reactivate=true`).
+
+This means intentional triage decisions made in DefectDojo are preserved across pipeline runs.
+
+### Finding Statuses
+
+After uploading, ScopeGuardian fetches all findings for the engagement from DefectDojo and assigns each one a local status:
+
+| Status | Condition | Meaning |
+|--------|-----------|---------|
+| `ACTIVE` | `active=true`, `duplicate=false` | Open, confirmed finding |
+| `DUPLICATE` | `duplicate=true` | DefectDojo's deduplication engine identified an earlier occurrence |
+| `INACTIVE` | `active=false` | Suppressed by a human (false-positive, accepted risk, manually closed) |
+
+`INACTIVE` findings are **filtered out** before findings are displayed or written to a file. They are not visible in the CLI output and do not count toward security-gate thresholds. `DUPLICATE` findings are kept and displayed so that you can see the full scope of an issue.
+
 ### KICS Sync Behaviour
 
-The KICS scanner uploads its JSON output file to DefectDojo via the `/api/v2/import-scan/` endpoint as a `multipart/form-data` request. The following options are set on every import:
+The KICS scanner uploads its JSON output file to DefectDojo as a `multipart/form-data` request. The endpoint used is `/api/v2/import-scan/` on the first run and `/api/v2/reimport-scan/` on subsequent runs. The following options are set on every upload:
 
 | Option | Value | Effect |
 |--------|-------|--------|
@@ -263,11 +287,12 @@ The KICS scanner uploads its JSON output file to DefectDojo via the `/api/v2/imp
 | Create finding groups | `true` | Group related findings together |
 | Apply tags to findings | `true` | Tag each finding with `IACST` |
 | Close old findings | `true` | Findings absent from the new scan are closed automatically |
+| Do not reactivate | `true` | Previously suppressed findings are not reactivated on reimport |
 | Branch tag | `<branch>` | Associates the results with the scanned branch |
 
 ### Grype Sync Behaviour
 
-The Grype scanner uploads its JSON output file to DefectDojo via the `/api/v2/import-scan/` endpoint as a `multipart/form-data` request. The following options are set on every import:
+The Grype scanner uploads its JSON output file to DefectDojo as a `multipart/form-data` request. The endpoint used is `/api/v2/import-scan/` on the first run and `/api/v2/reimport-scan/` on subsequent runs. The following options are set on every upload:
 
 | Option | Value | Effect |
 |--------|-------|--------|
@@ -277,11 +302,12 @@ The Grype scanner uploads its JSON output file to DefectDojo via the `/api/v2/im
 | Create finding groups | `true` | Group related findings together |
 | Apply tags to findings | `true` | Tag each finding with `SCA` |
 | Close old findings | `true` | Findings absent from the new scan are closed automatically |
+| Do not reactivate | `true` | Previously suppressed findings are not reactivated on reimport |
 | Branch tag | `<branch>` | Associates the results with the scanned branch |
 
 ### OpenGrep Sync Behaviour
 
-The OpenGrep scanner uploads its JSON output file to DefectDojo via the `/api/v2/import-scan/` endpoint as a `multipart/form-data` request. Before uploading, the file is enriched so that each result contains an `extra.severity` field required by DefectDojo's Semgrep JSON Report parser (the value is copied from `extra.metadata.impact`). The following options are set on every import:
+The OpenGrep scanner uploads its JSON output file to DefectDojo as a `multipart/form-data` request. Before uploading, the file is enriched so that each result contains an `extra.severity` field required by DefectDojo's Semgrep JSON Report parser (the value is copied from `extra.metadata.impact`). The endpoint used is `/api/v2/import-scan/` on the first run and `/api/v2/reimport-scan/` on subsequent runs. The following options are set on every upload:
 
 | Option | Value | Effect |
 |--------|-------|--------|
@@ -291,14 +317,16 @@ The OpenGrep scanner uploads its JSON output file to DefectDojo via the `/api/v2
 | Create finding groups | `true` | Group related findings together |
 | Apply tags to findings | `true` | Tag each finding with `SAST` |
 | Close old findings | `true` | Findings absent from the new scan are closed automatically |
+| Do not reactivate | `true` | Previously suppressed findings are not reactivated on reimport |
 | Branch tag | `<branch>` | Associates the results with the scanned branch |
 
 ### Security Gate with Sync
 
 When both `--sync` and `--threshold` are set, the gate is evaluated against **DefectDojo's deduplicated findings** rather than the raw local scan output. This means:
 
-- Duplicate or previously-closed findings do not inflate the count.
-- Only active findings surviving DefectDojo's deduplication logic are counted.
+- `INACTIVE` findings (suppressed, false-positive, accepted risk) are excluded from the count regardless of whether they appear in the latest scan.
+- `DUPLICATE` findings do not inflate the count.
+- Only `ACTIVE` findings surviving DefectDojo's deduplication and suppression logic are counted.
 
 ---
 
@@ -340,8 +368,8 @@ For each threshold rule:
 
 | Flags used | Findings evaluated |
 |-----------|-------------------|
-| `--threshold` only | Local scan output from all scanners |
-| `--threshold` + `--sync` | Active findings fetched from DefectDojo |
+| `--threshold` only | Local scan output from all scanners (`INACTIVE` findings are still filtered out) |
+| `--threshold` + `--sync` | `ACTIVE` findings fetched from DefectDojo (post-deduplication, after INACTIVE suppression) |
 
 ---
 
