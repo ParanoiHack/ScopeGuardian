@@ -3,14 +3,23 @@ package sync
 import (
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
 	"ScopeGuardian/connectors/defectdojo"
+	"ScopeGuardian/domains/models"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
+
+// TestMain disables real sleeps for all tests in this package so that polling
+// in GetActiveFindings/pollFindings completes instantly.
+func TestMain(m *testing.M) {
+	sleepFunc = func(_ time.Duration) {}
+	os.Exit(m.Run())
+}
 
 const (
 	testProjectName  = "my-project"
@@ -206,8 +215,8 @@ func TestGetEngagementId(t *testing.T) {
 	})
 }
 
-func TestGetDefectDojoFindings(t *testing.T) {
-	t.Run("Should return findings mapped to internal model", func(t *testing.T) {
+func TestGetActiveFindings(t *testing.T) {
+	t.Run("Should return active findings for an existing engagement", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mockService := defectdojo.NewMockDefectDojoService(ctrl)
 
@@ -217,24 +226,23 @@ func TestGetDefectDojoFindings(t *testing.T) {
 			TargetEnd: futureDate(),
 		}
 
+		ddFindings := []defectdojo.Finding{
+			{Id: 1, Title: "SQL Injection", Severity: "High", FilePath: "src/db.go", Line: 42},
+			{Id: 2, Title: "CVE-2021-1234", Severity: "Critical", FilePath: "/app/package.json", Line: 0},
+		}
+
 		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
 		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{existingEngagement}, nil)
-		mockService.EXPECT().GetFindings(testEngagementId, 0, 100, []defectdojo.Finding{}).Return([]defectdojo.Finding{
-			{Id: 1, Title: "SQL Injection", Severity: "Critical"},
-			{Id: 2, Title: "XSS", Severity: "High"},
-		}, nil)
+		mockService.EXPECT().GetFindings(testEngagementId, 0, 100, []defectdojo.Finding{}).Return(ddFindings, nil).AnyTimes()
 
-		findings, err := GetDefectDojoFindings(mockService, testProjectName, testBranch, noProtectedBranches)
+		findings, err := GetActiveFindings(mockService, testProjectName, testBranch, noProtectedBranches)
 
 		assert.Nil(t, err)
 		assert.Len(t, findings, 2)
-		assert.Equal(t, "SQL Injection", findings[0].Name)
-		assert.Equal(t, "Critical", findings[0].Severity)
-		assert.Equal(t, "XSS", findings[1].Name)
-		assert.Equal(t, "High", findings[1].Severity)
+		assert.Equal(t, ddFindings, findings)
 	})
 
-	t.Run("Should return empty slice when no findings exist", func(t *testing.T) {
+	t.Run("Should return empty slice when no active findings exist", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mockService := defectdojo.NewMockDefectDojoService(ctrl)
 
@@ -246,23 +254,37 @@ func TestGetDefectDojoFindings(t *testing.T) {
 
 		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
 		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{existingEngagement}, nil)
-		mockService.EXPECT().GetFindings(testEngagementId, 0, 100, []defectdojo.Finding{}).Return([]defectdojo.Finding{}, nil)
+		mockService.EXPECT().GetFindings(testEngagementId, 0, 100, []defectdojo.Finding{}).Return([]defectdojo.Finding{}, nil).AnyTimes()
 
-		findings, err := GetDefectDojoFindings(mockService, testProjectName, testBranch, noProtectedBranches)
+		findings, err := GetActiveFindings(mockService, testProjectName, testBranch, noProtectedBranches)
 
 		assert.Nil(t, err)
 		assert.Empty(t, findings)
 	})
 
-	t.Run("Should return error when GetEngagementId fails", func(t *testing.T) {
+	t.Run("Should return error when GetProductByName fails", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mockService := defectdojo.NewMockDefectDojoService(ctrl)
 
 		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{}, errors.New("product not found"))
 
-		findings, err := GetDefectDojoFindings(mockService, testProjectName, testBranch, noProtectedBranches)
+		findings, err := GetActiveFindings(mockService, testProjectName, testBranch, noProtectedBranches)
 
 		assert.NotNil(t, err)
+		assert.Nil(t, findings)
+	})
+
+	t.Run("Should return error when no matching engagement exists for branch", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockService := defectdojo.NewMockDefectDojoService(ctrl)
+
+		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
+		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{}, nil)
+
+		findings, err := GetActiveFindings(mockService, testProjectName, testBranch, noProtectedBranches)
+
+		assert.NotNil(t, err)
+		assert.Equal(t, errEngagementNotFound, err.Error())
 		assert.Nil(t, findings)
 	})
 
@@ -280,10 +302,212 @@ func TestGetDefectDojoFindings(t *testing.T) {
 		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{existingEngagement}, nil)
 		mockService.EXPECT().GetFindings(testEngagementId, 0, 100, []defectdojo.Finding{}).Return(nil, errors.New("api error"))
 
-		findings, err := GetDefectDojoFindings(mockService, testProjectName, testBranch, noProtectedBranches)
+		findings, err := GetActiveFindings(mockService, testProjectName, testBranch, noProtectedBranches)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, errGetFindings, err.Error())
 		assert.Nil(t, findings)
+	})
+}
+
+func TestFilterByActiveFindings(t *testing.T) {
+	// localFinding is a helper that builds a models.Finding with its Hash pre-computed,
+	// matching what a scanner's LoadFindings would produce.
+	localFinding := func(severity, name, sinkFile string, sinkLine int, recommendation string) models.Finding {
+		f := models.Finding{
+			Name:           name,
+			Severity:       severity,
+			SinkFile:       sinkFile,
+			SinkLine:       sinkLine,
+			Recommendation: recommendation,
+		}
+		f.Hash = models.ComputeFindingHash(severity, sinkFile, sinkLine, recommendation)
+		return f
+	}
+
+	t.Run("Should keep local findings whose hash matches a DD active finding", func(t *testing.T) {
+		local := []models.Finding{
+			localFinding("HIGH", "SQL Injection", "src/db.go", 42, "Use parameterized queries"),
+			localFinding("MEDIUM", "XSS", "src/handler.go", 17, "Sanitize output"),
+		}
+		active := []defectdojo.Finding{
+			{Title: "SQL Injection", Severity: "High", FilePath: "src/db.go", Line: 42, Mitigation: "Use parameterized queries"},
+			{Title: "XSS", Severity: "Medium", FilePath: "src/handler.go", Line: 17, Mitigation: "Sanitize output"},
+		}
+
+		filtered := FilterByActiveFindings(local, active)
+
+		assert.Len(t, filtered, 2)
+	})
+
+	t.Run("Should remove local findings whose hash has no DD counterpart", func(t *testing.T) {
+		local := []models.Finding{
+			localFinding("HIGH", "SQL Injection", "src/db.go", 42, "Use parameterized queries"),
+			localFinding("MEDIUM", "XSS", "src/handler.go", 17, "Sanitize output"),
+		}
+		active := []defectdojo.Finding{
+			{Title: "SQL Injection", Severity: "High", FilePath: "src/db.go", Line: 42, Mitigation: "Use parameterized queries"},
+		}
+
+		filtered := FilterByActiveFindings(local, active)
+
+		assert.Len(t, filtered, 1)
+		assert.Equal(t, "SQL Injection", filtered[0].Name)
+	})
+
+	t.Run("Should match Grype findings via severity+file+line+mitigation hash", func(t *testing.T) {
+		local := []models.Finding{
+			localFinding("HIGH", "test-package 1.0.0", "/app/package.json", 0, "Upgrade to 2.0.0"),
+			localFinding("HIGH", "another-package 2.0.0", "/app/package.json", 0, "Upgrade to 3.0.0"),
+		}
+		// DD suppressed the second finding (false positive), only the first is active.
+		active := []defectdojo.Finding{
+			{
+				Title:      "CVE-2021-1234",
+				Severity:   "High",
+				FilePath:   "/app/package.json",
+				Line:       0,
+				Mitigation: "Upgrade to 2.0.0",
+				VulnerabilityIds: []defectdojo.VulnerabilityId{
+					{VulnerabilityId: "CVE-2021-1234"},
+				},
+			},
+		}
+
+		filtered := FilterByActiveFindings(local, active)
+
+		assert.Len(t, filtered, 1)
+		assert.Equal(t, "test-package 1.0.0", filtered[0].Name)
+	})
+
+	t.Run("Should match Grype findings using hash from severity+file+line+mitigation", func(t *testing.T) {
+		// Grype matching relies on strategy 1 (hash from API fields). The VulnerabilityIds
+		// array in the DD finding is not used for hash computation; the four stable API
+		// fields are sufficient to uniquely identify the finding.
+		local := []models.Finding{
+			localFinding("CRITICAL", "vuln-pkg 3.0.0", "/app/go.sum", 0, "Upgrade to 4.0.0"),
+		}
+		active := []defectdojo.Finding{
+			{
+				Title:    "CVE-2021-9999",
+				Severity: "Critical",
+				FilePath: "/app/go.sum",
+				Line:     0,
+				Mitigation: "Upgrade to 4.0.0",
+				VulnerabilityIds: []defectdojo.VulnerabilityId{
+					{VulnerabilityId: "CVE-2021-9999", Url: "https://nvd.nist.gov/vuln/detail/CVE-2021-9999"},
+				},
+			},
+		}
+
+		filtered := FilterByActiveFindings(local, active)
+
+		assert.Len(t, filtered, 1)
+	})
+
+	t.Run("Should match OpenGrep findings via unique_id_from_tool after fingerprint injection", func(t *testing.T) {
+		// OpenGrep: enrichOpenGrepResults injects the content hash into extra.fingerprint
+		// before upload; DefectDojo's Semgrep parser stores it as unique_id_from_tool.
+		// FilterByActiveFindings matches via that field (strategy 2), which is collision-free
+		// even when multiple findings share the same check_id (rule ID).
+		local := []models.Finding{
+			localFinding("HIGH", "go.lang.security.injection.sql", "src/db.go", 10, ""),
+		}
+		active := []defectdojo.Finding{
+			{
+				Title:            "go.lang.security.injection.sql",
+				Severity:         "High",
+				FilePath:         "src/db.go",
+				Line:             10,
+				Mitigation:       "",
+				UniqueIdFromTool: local[0].Hash,
+			},
+		}
+
+		filtered := FilterByActiveFindings(local, active)
+
+		assert.Len(t, filtered, 1)
+	})
+
+	t.Run("Should match KICS findings despite category-prefixed DD title", func(t *testing.T) {
+		local := []models.Finding{
+			localFinding("HIGH", "Missing User Instruction", "../../go/src/ScopeGuardian/Dockerfile", 81, "The 'Dockerfile' should contain the 'USER' instruction"),
+		}
+		// DD prefixes KICS finding titles with the rule category; hash matching ignores the title.
+		active := []defectdojo.Finding{
+			{
+				Title:      "Build Process: Missing User Instruction",
+				Severity:   "High",
+				FilePath:   "../../go/src/ScopeGuardian/Dockerfile",
+				Line:       81,
+				Mitigation: "The 'Dockerfile' should contain the 'USER' instruction",
+			},
+		}
+
+		filtered := FilterByActiveFindings(local, active)
+
+		assert.Len(t, filtered, 1)
+		assert.Equal(t, "Missing User Instruction", filtered[0].Name)
+	})
+
+	t.Run("Should not match when hash attributes differ", func(t *testing.T) {
+		local := []models.Finding{
+			localFinding("LOW", "Healthcheck Not Set", "Dockerfile", 10, "Add HEALTHCHECK"),
+		}
+		active := []defectdojo.Finding{
+			{Title: "Build Process: Missing User Instruction", Severity: "High", FilePath: "Dockerfile", Line: 81, Mitigation: "Add USER instruction"},
+		}
+
+		filtered := FilterByActiveFindings(local, active)
+
+		assert.Empty(t, filtered)
+	})
+
+	t.Run("Should be case-insensitive for severity when matching", func(t *testing.T) {
+		local := []models.Finding{
+			// Scanner emits severity in all-caps; DD returns title-case.
+			localFinding("HIGH", "Vuln", "src/main.go", 5, "Fix it"),
+		}
+		active := []defectdojo.Finding{
+			{Title: "Vuln", Severity: "High", FilePath: "src/main.go", Line: 5, Mitigation: "Fix it"},
+		}
+
+		filtered := FilterByActiveFindings(local, active)
+
+		assert.Len(t, filtered, 1)
+	})
+
+	t.Run("Should return empty slice when active findings list is empty", func(t *testing.T) {
+		local := []models.Finding{
+			localFinding("HIGH", "SQL Injection", "src/db.go", 42, "Use parameterized queries"),
+		}
+
+		filtered := FilterByActiveFindings(local, []defectdojo.Finding{})
+
+		assert.Empty(t, filtered)
+	})
+
+	t.Run("Should return empty slice when local findings list is empty", func(t *testing.T) {
+		active := []defectdojo.Finding{
+			{Title: "SQL Injection", Severity: "High", FilePath: "src/db.go", Line: 42, Mitigation: "Use parameterized queries"},
+		}
+
+		filtered := FilterByActiveFindings([]models.Finding{}, active)
+
+		assert.Empty(t, filtered)
+	})
+
+	t.Run("Should not match when local finding has no hash set (unhashed finding)", func(t *testing.T) {
+		// A finding that was never passed through LoadFindings (no Hash) should never match.
+		local := []models.Finding{
+			{Name: "Orphan Finding", Severity: "HIGH", SinkFile: "src/db.go", SinkLine: 1},
+		}
+		active := []defectdojo.Finding{
+			{Title: "Orphan Finding", Severity: "High", FilePath: "src/db.go", Line: 1, Mitigation: ""},
+		}
+
+		filtered := FilterByActiveFindings(local, active)
+
+		assert.Empty(t, filtered)
 	})
 }

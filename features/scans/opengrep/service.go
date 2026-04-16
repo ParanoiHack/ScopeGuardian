@@ -104,26 +104,40 @@ func (s *OpenGrepServiceImpl) LoadFindings() ([]models.Finding, error) {
 
 		description := strings.Join(item.Extra.Metadata.Owasp, ", ")
 
-		findings = append(findings, models.Finding{
+		f := models.Finding{
 			Engine:         scannerType,
 			Severity:       severity,
 			Name:           item.CheckId,
+			VulnId:         item.CheckId,
 			Cwe:            cwe,
 			Description:    description,
+			// Message is kept for display but intentionally excluded from the hash:
+			// DefectDojo's Semgrep parser stores extra.message in description, not
+			// mitigation, so f.Mitigation from the DD API will be empty for these findings.
 			Recommendation: item.Extra.Message,
 			SinkFile:       item.Path,
 			SinkLine:       item.Start.Line,
-		})
+		}
+		f.Hash = models.ComputeFindingHash(f.Severity, f.SinkFile, f.SinkLine, "")
+		findings = append(findings, f)
 	}
 
 	return findings, nil
 }
 
-// enrichOpenGrepResults ensures each result in the OpenGrep JSON output carries an
-// extra.severity field, which DefectDojo's Semgrep JSON Report parser requires.
-// OpenGrep stores severity as extra.metadata.impact; this function copies that value
-// into extra.severity when the field is absent. The original bytes are returned
-// unchanged if the JSON cannot be parsed.
+// enrichOpenGrepResults post-processes the OpenGrep JSON output before it is uploaded
+// to DefectDojo. It performs two enrichments per result entry:
+//
+//  1. extra.severity — copied from extra.metadata.impact when absent. DefectDojo's
+//     Semgrep JSON Report parser requires this field to determine the finding severity.
+//
+//  2. extra.fingerprint — set to the content hash computed by models.ComputeFindingHash.
+//     DefectDojo's Semgrep parser maps extra.fingerprint to unique_id_from_tool, which
+//     is returned by the findings API. This lets FilterByActiveFindings match local
+//     findings directly via UniqueIdFromTool without fragile multi-field heuristics and
+//     without collision risk from multiple findings sharing the same rule ID (check_id).
+//
+// The original bytes are returned unchanged if the JSON cannot be parsed.
 func enrichOpenGrepResults(data []byte) []byte {
 	var wrapper map[string]interface{}
 	if err := json.Unmarshal(data, &wrapper); err != nil {
@@ -144,18 +158,36 @@ func enrichOpenGrepResults(data []byte) []byte {
 		if !ok {
 			continue
 		}
-		if _, hasSeverity := extra["severity"]; hasSeverity {
-			continue
-		}
 		metadata, ok := extra["metadata"].(map[string]interface{})
 		if !ok {
 			continue
 		}
-		impact, ok := metadata["impact"].(string)
-		if !ok || impact == "" {
-			continue
+
+		// 1. Inject extra.severity from extra.metadata.impact when absent.
+		if _, hasSeverity := extra["severity"]; !hasSeverity {
+			if impact, ok := metadata["impact"].(string); ok && impact != "" {
+				extra["severity"] = strings.ToUpper(impact)
+			}
 		}
-		extra["severity"] = strings.ToUpper(impact)
+
+		// 2. Inject a pre-computed content hash into extra.fingerprint. DefectDojo's
+		// Semgrep parser maps extra.fingerprint to unique_id_from_tool, which is
+		// returned by the findings API. FilterByActiveFindings can then match local
+		// findings directly via that field using the same hash formula, giving a
+		// per-finding identifier that is stable even when multiple findings share
+		// the same rule ID (check_id).
+		fingerSeverity := ""
+		if impact, ok := metadata["impact"].(string); ok {
+			fingerSeverity = strings.ToUpper(impact)
+		}
+		fingerPath, _ := result["path"].(string)
+		var fingerLine int
+		if start, ok := result["start"].(map[string]interface{}); ok {
+			if lineFloat, ok := start["line"].(float64); ok {
+				fingerLine = int(lineFloat)
+			}
+		}
+		extra["fingerprint"] = models.ComputeFindingHash(fingerSeverity, fingerPath, fingerLine, "")
 	}
 
 	enriched, err := json.Marshal(wrapper)

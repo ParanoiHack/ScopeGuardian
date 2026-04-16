@@ -18,8 +18,8 @@ const (
 	logErrOutputFile      = "Failed to create output file"
 	logErrCloseOutputFile = "Failed to close output file"
 	logErrDumpFindings    = "Failed to write findings to output file"
+	logErrFilterByDD      = "Failed to filter findings against DefectDojo; displaying all local findings instead"
 )
-
 func main() {
 	logger.SetGlobalLogger(
 		logger.NewSlogLogger(
@@ -56,6 +56,12 @@ func main() {
 
 	if args.Sync {
 		eng.SyncResults(args.ProjectName, args.Branch, config.ProtectedBranches)
+		filtered, err := eng.FilterFindingsByDD(findings, args.ProjectName, args.Branch, config.ProtectedBranches)
+		if err != nil {
+			logger.Error(logErrFilterByDD, logger.Err(err))
+		} else {
+			findings = filtered
+		}
 	}
 
 	display.DisplayFindings(os.Stdout, findings)
@@ -79,16 +85,7 @@ func main() {
 	}
 
 	if len(args.Thresholds) > 0 {
-		findingsToEvaluate := findings
-		if args.Sync {
-			remoteFindings, err := eng.GetDefectDojoFindings(args.ProjectName, args.Branch, config.ProtectedBranches)
-			if err != nil {
-				logger.Error(err.Error())
-			} else {
-				findingsToEvaluate = remoteFindings
-			}
-		}
-		if !securitygate.Evaluate(findingsToEvaluate, args.Thresholds) {
+		if !securitygate.Evaluate(findings, args.Thresholds) {
 			os.Exit(-1)
 		}
 	}
