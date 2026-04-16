@@ -241,7 +241,7 @@ func (s *DefectDojoServiceImpl) ReimportScan(payload ScanPayload, filename strin
 		"%s%s%s", s.url, APIPrefix, ReimportScanPath), body, headers)
 
 	if code < http.StatusOK || code >= http.StatusMultipleChoices {
-		logger.Error(fmt.Sprintf(logErrorImportScan, ReimportScanPath, code))
+		logger.Error(fmt.Sprintf(logErrorReimportScan, ReimportScanPath, code))
 		return false, errors.New(errReimportScan)
 	}
 

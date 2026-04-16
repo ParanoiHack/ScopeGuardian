@@ -230,7 +230,7 @@ func (s *OpenGrepServiceImpl) Sync(engagementId int, branch string, service defe
 
 	if len(tests) > 0 {
 		if ok, err := service.ReimportScan(payload, s.output); !ok || err != nil {
-			logger.Error(fmt.Sprintf(logErrorImportScan, engagementId))
+			logger.Error(fmt.Sprintf(logErrorReimportScan, engagementId))
 			return err
 		}
 	} else {

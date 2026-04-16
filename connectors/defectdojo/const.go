@@ -39,6 +39,7 @@ const (
 	logErrorAddFile                 = "Cannot attach file to request"
 	logErrorCreateMultipartRequest  = "Cannot create multipart request"
 	logErrorImportScan              = "Cannot import scan via %s (HTTP %d)"
+	logErrorReimportScan            = "Cannot reimport scan via %s (HTTP %d)"
 	logErrorRetrieveTests           = "Cannot retrieve tests for engagement ID %d"
 	logErrorRetrieveFindings        = "Cannot retrieve findings for engagement ID %d"
 )

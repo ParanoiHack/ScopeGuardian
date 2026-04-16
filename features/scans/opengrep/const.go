@@ -35,6 +35,7 @@ const (
 	logErrorFileNotFound      = "Cannot find file [%s]"
 	logErrorParseResults      = "Cannot parse opengrep results"
 	logErrorImportScan        = "Cannot import scan into engagement [%d]"
+	logErrorReimportScan      = "Cannot reimport scan into engagement [%d]"
 	logErrorGetTests          = "Cannot get tests for engagement [%d]"
 )
 
