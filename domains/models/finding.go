@@ -31,14 +31,15 @@ type Finding struct {
 // both the local (scanner) side and the DefectDojo API side and used as the primary
 // matching key in FilterByActiveFindings.
 //
-// vulnId is the vulnerability identifier (e.g. CVE-2021-1234 for Grype findings).
-// For scanners that do not emit a per-finding vulnerability ID (KICS, Opengrep) it
-// should be passed as an empty string. On the DefectDojo side, the finding Title is
-// used as the vulnId because DefectDojo stores the CVE ID as the title for Grype
-// findings, while storing a category-prefixed rule name for KICS findings. By
-// computing two hashes per DD finding — one with the title as vulnId and one with an
-// empty vulnId — both Grype findings and KICS/Opengrep findings are matched correctly
-// without any title-parsing logic.
+// vulnId is the vulnerability identifier stored in DefectDojo's vulnerability_ids
+// array for this finding. Each scanner populates it differently:
+//   - Grype:    the CVE or GHSA identifier (e.g. "CVE-2021-1234"), which DefectDojo's
+//               Anchore Grype parser reads directly from vulnerability.id.
+//   - OpenGrep: the Semgrep check_id (e.g. "go.lang.security.injection.sql"), injected
+//               into extra.metadata.cve before upload so DefectDojo's Semgrep parser
+//               stores it in vulnerability_ids.
+//   - KICS:     an empty string, because DefectDojo's KICS parser does not populate
+//               vulnerability_ids; KICS findings are matched via the empty-vulnId hash.
 func ComputeFindingHash(vulnId, severity, sinkFile string, sinkLine int, recommendation string) string {
 	input := strings.ToLower(strings.TrimSpace(vulnId)) + "|" +
 		strings.ToLower(strings.TrimSpace(severity)) + "|" +

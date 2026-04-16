@@ -128,11 +128,19 @@ func (s *OpenGrepServiceImpl) LoadFindings() ([]models.Finding, error) {
 	return findings, nil
 }
 
-// enrichOpenGrepResults ensures each result in the OpenGrep JSON output carries an
-// extra.severity field, which DefectDojo's Semgrep JSON Report parser requires.
-// OpenGrep stores severity as extra.metadata.impact; this function copies that value
-// into extra.severity when the field is absent. The original bytes are returned
-// unchanged if the JSON cannot be parsed.
+// enrichOpenGrepResults post-processes the OpenGrep JSON output before it is uploaded
+// to DefectDojo. It performs two enrichments per result entry:
+//
+//  1. extra.severity — copied from extra.metadata.impact when absent. DefectDojo's
+//     Semgrep JSON Report parser requires this field to determine the finding severity.
+//
+//  2. extra.metadata.cve — set to the result's check_id. DefectDojo's Semgrep parser
+//     maps this field to the finding's vulnerability_ids array. Storing check_id there
+//     means FilterByActiveFindings can recompute the local hash from
+//     vulnerability_ids[i].vulnerability_id and compare it directly to f.Hash, giving
+//     a single, deterministic equality check instead of a fragile multi-field heuristic.
+//
+// The original bytes are returned unchanged if the JSON cannot be parsed.
 func enrichOpenGrepResults(data []byte) []byte {
 	var wrapper map[string]interface{}
 	if err := json.Unmarshal(data, &wrapper); err != nil {
@@ -153,18 +161,24 @@ func enrichOpenGrepResults(data []byte) []byte {
 		if !ok {
 			continue
 		}
-		if _, hasSeverity := extra["severity"]; hasSeverity {
-			continue
-		}
 		metadata, ok := extra["metadata"].(map[string]interface{})
 		if !ok {
 			continue
 		}
-		impact, ok := metadata["impact"].(string)
-		if !ok || impact == "" {
-			continue
+
+		// 1. Inject extra.severity from extra.metadata.impact when absent.
+		if _, hasSeverity := extra["severity"]; !hasSeverity {
+			if impact, ok := metadata["impact"].(string); ok && impact != "" {
+				extra["severity"] = strings.ToUpper(impact)
+			}
 		}
-		extra["severity"] = strings.ToUpper(impact)
+
+		// 2. Inject check_id into extra.metadata.cve so DefectDojo stores it as
+		// vulnerability_ids. This is the canonical vulnerability identifier used by
+		// FilterByActiveFindings for OpenGrep findings.
+		if checkId, ok := result["check_id"].(string); ok && checkId != "" {
+			metadata["cve"] = []interface{}{checkId}
+		}
 	}
 
 	enriched, err := json.Marshal(wrapper)

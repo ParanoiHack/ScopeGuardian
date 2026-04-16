@@ -356,14 +356,24 @@ func TestFilterByActiveFindings(t *testing.T) {
 		assert.Equal(t, "SQL Injection", filtered[0].Name)
 	})
 
-	t.Run("Should match Grype findings using VulnId matched against DD title", func(t *testing.T) {
+	t.Run("Should match Grype findings via CVE in vulnerability_ids", func(t *testing.T) {
 		local := []models.Finding{
 			localFinding("CVE-2021-1234", "HIGH", "test-package 1.0.0", "/app/package.json", 0, "Upgrade to 2.0.0"),
 			localFinding("CVE-2021-5678", "HIGH", "another-package 2.0.0", "/app/package.json", 0, "Upgrade to 3.0.0"),
 		}
 		// DD suppressed CVE-2021-5678 (false positive), only CVE-2021-1234 is active.
+		// DefectDojo's Anchore Grype parser stores vulnerability.id in vulnerability_ids.
 		active := []defectdojo.Finding{
-			{Title: "CVE-2021-1234", Severity: "High", FilePath: "/app/package.json", Line: 0, Mitigation: "Upgrade to 2.0.0"},
+			{
+				Title:      "CVE-2021-1234",
+				Severity:   "High",
+				FilePath:   "/app/package.json",
+				Line:       0,
+				Mitigation: "Upgrade to 2.0.0",
+				VulnerabilityIds: []defectdojo.VulnerabilityId{
+					{VulnerabilityId: "CVE-2021-1234"},
+				},
+			},
 		}
 
 		filtered := FilterByActiveFindings(local, active)
@@ -399,16 +409,25 @@ func TestFilterByActiveFindings(t *testing.T) {
 		assert.Equal(t, "CVE-2021-9999", filtered[0].VulnId)
 	})
 
-	t.Run("Should match Opengrep findings using checkId as VulnId against DD title", func(t *testing.T) {
-		// Opengrep: check_id is set as VulnId; hash uses checkId + severity + file + line with
-		// empty recommendation because DefectDojo stores extra.message in description, not
-		// mitigation, for Semgrep-format findings. The Recommendation field is still populated
-		// for display but must not be part of the hash.
+	t.Run("Should match OpenGrep findings via check_id in vulnerability_ids after injection", func(t *testing.T) {
+		// OpenGrep: enrichOpenGrepResults injects check_id into extra.metadata.cve before
+		// upload; DefectDojo's Semgrep parser stores it in vulnerability_ids. Hash uses
+		// check_id + severity + file + line with empty recommendation because DD stores
+		// extra.message in description, not mitigation, for Semgrep-format findings.
 		local := []models.Finding{
 			localFinding("go.lang.security.injection.sql", "HIGH", "go.lang.security.injection.sql", "src/db.go", 10, ""),
 		}
 		active := []defectdojo.Finding{
-			{Title: "go.lang.security.injection.sql", Severity: "High", FilePath: "src/db.go", Line: 10, Mitigation: ""},
+			{
+				Title:      "go.lang.security.injection.sql",
+				Severity:   "High",
+				FilePath:   "src/db.go",
+				Line:       10,
+				Mitigation: "",
+				VulnerabilityIds: []defectdojo.VulnerabilityId{
+					{VulnerabilityId: "go.lang.security.injection.sql"},
+				},
+			},
 		}
 
 		filtered := FilterByActiveFindings(local, active)
