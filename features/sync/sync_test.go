@@ -370,7 +370,7 @@ func TestFilterByActiveFindings(t *testing.T) {
 		assert.Empty(t, filtered)
 	})
 
-	t.Run("Should not match when file path differs", func(t *testing.T) {
+	t.Run("Should match even when file path differs, using title-only matching", func(t *testing.T) {
 		local := []models.Finding{
 			{Name: "SQL Injection", SinkFile: "src/db.go", SinkLine: 42},
 		}
@@ -380,10 +380,10 @@ func TestFilterByActiveFindings(t *testing.T) {
 
 		filtered := FilterByActiveFindings(local, active)
 
-		assert.Empty(t, filtered)
+		assert.Len(t, filtered, 1)
 	})
 
-	t.Run("Should not match when line differs", func(t *testing.T) {
+	t.Run("Should match even when line differs, using title-only matching", func(t *testing.T) {
 		local := []models.Finding{
 			{Name: "SQL Injection", SinkFile: "src/db.go", SinkLine: 42},
 		}
@@ -393,6 +393,6 @@ func TestFilterByActiveFindings(t *testing.T) {
 
 		filtered := FilterByActiveFindings(local, active)
 
-		assert.Empty(t, filtered)
+		assert.Len(t, filtered, 1)
 	})
 }

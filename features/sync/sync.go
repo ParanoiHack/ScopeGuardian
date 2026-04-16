@@ -89,22 +89,19 @@ func GetActiveFindings(ddService defectdojo.DefectDojoService, projectName strin
 }
 
 // FilterByActiveFindings returns only the local findings that have a matching active finding
-// in DefectDojo. A local finding matches a DD finding when their title, file path, and line
-// number are equal. For Grype findings the VulnId (CVE/GHSA) is used as the title key since
-// DD stores the vulnerability ID — not the artifact name — as the finding title; for all
-// other scanners the Name field is used directly.
+// in DefectDojo. A local finding matches a DD finding when their titles are equal. File path
+// and line number are intentionally excluded from the match key because scanners (e.g. KICS)
+// may emit relative paths that DefectDojo normalises differently when storing, which would
+// cause false mismatches and incorrectly drop active findings.
+// For Grype findings the VulnId (CVE/GHSA) is used as the title key since DD stores the
+// vulnerability ID — not the artifact name — as the finding title; for all other scanners
+// the Name field is used directly.
 // This filtering respects suppressions applied in DefectDojo: any finding marked as false
 // positive or accepted risk will be absent from the active set and therefore dropped locally.
 func FilterByActiveFindings(local []models.Finding, active []defectdojo.Finding) []models.Finding {
-	type matchKey struct {
-		title    string
-		filePath string
-		line     int
-	}
-
-	activeSet := make(map[matchKey]struct{}, len(active))
+	activeSet := make(map[string]struct{}, len(active))
 	for _, f := range active {
-		activeSet[matchKey{f.Title, f.FilePath, f.Line}] = struct{}{}
+		activeSet[f.Title] = struct{}{}
 	}
 
 	filtered := make([]models.Finding, 0, len(local))
@@ -113,7 +110,7 @@ func FilterByActiveFindings(local []models.Finding, active []defectdojo.Finding)
 		if title == "" {
 			title = f.Name
 		}
-		if _, ok := activeSet[matchKey{title, f.SinkFile, f.SinkLine}]; ok {
+		if _, ok := activeSet[title]; ok {
 			filtered = append(filtered, f)
 		}
 	}
