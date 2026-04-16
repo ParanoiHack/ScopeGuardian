@@ -300,6 +300,9 @@ func createMultipartFromScanPayload(payload ScanPayload, filename string) ([]byt
 				logger.Error(fmt.Sprintf(logErrorReflection, formKey))
 			}
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			if value.Int() == 0 {
+				continue
+			}
 			valStr := strconv.FormatInt(value.Int(), 10)
 			if err := writer.WriteField(formKey, valStr); err != nil {
 				logger.Error(fmt.Sprintf(logErrorReflection, formKey))

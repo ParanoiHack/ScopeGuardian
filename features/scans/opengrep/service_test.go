@@ -15,12 +15,13 @@ import (
 )
 
 type mockDefectDojoService struct {
-	importScanOk    bool
-	importScanErr   error
-	reimportScanOk  bool
-	reimportScanErr error
-	testsToReturn   []defectdojo.Test
-	getTestsErr     error
+	importScanOk      bool
+	importScanErr     error
+	reimportScanOk    bool
+	reimportScanErr   error
+	reimportedPayload defectdojo.ScanPayload
+	testsToReturn     []defectdojo.Test
+	getTestsErr       error
 }
 
 func (m *mockDefectDojoService) GetProductByName(_ string) (defectdojo.Product, error) {
@@ -43,7 +44,8 @@ func (m *mockDefectDojoService) ImportScan(_ defectdojo.ScanPayload, _ string) (
 	return m.importScanOk, m.importScanErr
 }
 
-func (m *mockDefectDojoService) ReimportScan(_ defectdojo.ScanPayload, _ string) (bool, error) {
+func (m *mockDefectDojoService) ReimportScan(payload defectdojo.ScanPayload, _ string) (bool, error) {
+	m.reimportedPayload = payload
 	return m.reimportScanOk, m.reimportScanErr
 }
 
@@ -281,6 +283,7 @@ func TestOpenGrepSync(t *testing.T) {
 		err := service.Sync(1, "main", ddMock)
 
 		assert.Nil(t, err)
+		assert.EqualValues(t, 7, ddMock.reimportedPayload.TestId)
 	})
 
 	t.Run("Should return error when import scan fails", func(t *testing.T) {

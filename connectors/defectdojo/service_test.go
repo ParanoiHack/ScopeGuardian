@@ -491,6 +491,30 @@ func TestCreateMultipartFromScanPayload(t *testing.T) {
 
 		assert.Nil(t, err)
 	})
+
+	t.Run("Should omit test field when TestId is zero", func(t *testing.T) {
+		var payload ScanPayload
+		payload.EngagementId = 12
+		payload.File, _ = os.ReadFile("../../features/scans/kics/mocks/working_results/results/kics-results.json")
+		// TestId left at zero
+
+		body, _, err := createMultipartFromScanPayload(payload, "test.json")
+
+		assert.Nil(t, err)
+		assert.NotContains(t, string(body), "name=\"test\"")
+	})
+
+	t.Run("Should include test field when TestId is non-zero", func(t *testing.T) {
+		var payload ScanPayload
+		payload.EngagementId = 12
+		payload.TestId = 42
+		payload.File, _ = os.ReadFile("../../features/scans/kics/mocks/working_results/results/kics-results.json")
+
+		body, _, err := createMultipartFromScanPayload(payload, "test.json")
+
+		assert.Nil(t, err)
+		assert.Contains(t, string(body), "name=\"test\"")
+	})
 }
 
 func TestSetURL(t *testing.T) {
