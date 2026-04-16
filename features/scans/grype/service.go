@@ -107,7 +107,7 @@ func (s *GrypeServiceImpl) LoadFindings() ([]models.Finding, error) {
 			SinkFile:       sinkFile,
 			Recommendation: recommendation,
 		}
-		f.Hash = models.ComputeFindingHash(f.VulnId, f.Severity, f.SinkFile, f.SinkLine, f.Recommendation)
+		f.Hash = models.ComputeFindingHash(f.Severity, f.SinkFile, f.SinkLine, f.Recommendation)
 		findings = append(findings, f)
 	}
 

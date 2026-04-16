@@ -56,6 +56,7 @@ type Finding struct {
 	FilePath         string            `json:"file_path"`
 	Line             int               `json:"line"`
 	Mitigation       string            `json:"mitigation"`
+	UniqueIdFromTool string            `json:"unique_id_from_tool"`
 	VulnerabilityIds []VulnerabilityId `json:"vulnerability_ids"`
 }
 

@@ -107,9 +107,6 @@ func (s *OpenGrepServiceImpl) LoadFindings() ([]models.Finding, error) {
 		f := models.Finding{
 			Engine:         scannerType,
 			Severity:       severity,
-			// CheckId is the unique rule identifier stored by DefectDojo as the finding
-			// title (e.g. "go.lang.security.injection.sql"). It is treated as VulnId so
-			// that FilterByActiveFindings can match it against the DD title-based hash.
 			Name:           item.CheckId,
 			VulnId:         item.CheckId,
 			Cwe:            cwe,
@@ -121,7 +118,7 @@ func (s *OpenGrepServiceImpl) LoadFindings() ([]models.Finding, error) {
 			SinkFile:       item.Path,
 			SinkLine:       item.Start.Line,
 		}
-		f.Hash = models.ComputeFindingHash(f.VulnId, f.Severity, f.SinkFile, f.SinkLine, "")
+		f.Hash = models.ComputeFindingHash(f.Severity, f.SinkFile, f.SinkLine, "")
 		findings = append(findings, f)
 	}
 
@@ -134,11 +131,11 @@ func (s *OpenGrepServiceImpl) LoadFindings() ([]models.Finding, error) {
 //  1. extra.severity — copied from extra.metadata.impact when absent. DefectDojo's
 //     Semgrep JSON Report parser requires this field to determine the finding severity.
 //
-//  2. extra.metadata.cve — set to the result's check_id. DefectDojo's Semgrep parser
-//     maps this field to the finding's vulnerability_ids array. Storing check_id there
-//     means FilterByActiveFindings can recompute the local hash from
-//     vulnerability_ids[i].vulnerability_id and compare it directly to f.Hash, giving
-//     a single, deterministic equality check instead of a fragile multi-field heuristic.
+//  2. extra.fingerprint — set to the content hash computed by models.ComputeFindingHash.
+//     DefectDojo's Semgrep parser maps extra.fingerprint to unique_id_from_tool, which
+//     is returned by the findings API. This lets FilterByActiveFindings match local
+//     findings directly via UniqueIdFromTool without fragile multi-field heuristics and
+//     without collision risk from multiple findings sharing the same rule ID (check_id).
 //
 // The original bytes are returned unchanged if the JSON cannot be parsed.
 func enrichOpenGrepResults(data []byte) []byte {
@@ -173,12 +170,24 @@ func enrichOpenGrepResults(data []byte) []byte {
 			}
 		}
 
-		// 2. Inject check_id into extra.metadata.cve so DefectDojo stores it as
-		// vulnerability_ids. This is the canonical vulnerability identifier used by
-		// FilterByActiveFindings for OpenGrep findings.
-		if checkId, ok := result["check_id"].(string); ok && checkId != "" {
-			metadata["cve"] = []interface{}{checkId}
+		// 2. Inject a pre-computed content hash into extra.fingerprint. DefectDojo's
+		// Semgrep parser maps extra.fingerprint to unique_id_from_tool, which is
+		// returned by the findings API. FilterByActiveFindings can then match local
+		// findings directly via that field using the same hash formula, giving a
+		// per-finding identifier that is stable even when multiple findings share
+		// the same rule ID (check_id).
+		fingerSeverity := ""
+		if impact, ok := metadata["impact"].(string); ok {
+			fingerSeverity = strings.ToUpper(impact)
 		}
+		fingerPath, _ := result["path"].(string)
+		var fingerLine int
+		if start, ok := result["start"].(map[string]interface{}); ok {
+			if lineFloat, ok := start["line"].(float64); ok {
+				fingerLine = int(lineFloat)
+			}
+		}
+		extra["fingerprint"] = models.ComputeFindingHash(fingerSeverity, fingerPath, fingerLine, "")
 	}
 
 	enriched, err := json.Marshal(wrapper)

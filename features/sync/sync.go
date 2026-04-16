@@ -156,38 +156,33 @@ func pollFindings(ddService defectdojo.DefectDojoService, engagementId int) ([]d
 }
 
 // FilterByActiveFindings returns only the local findings that have a matching active finding
-// in DefectDojo, using a content hash as the match key. The hash is computed by
-// models.ComputeFindingHash from fields that are preserved without transformation when a
-// scan result is imported into DefectDojo and read back via its API.
+// in DefectDojo, using a uniform content hash as the match key.
 //
-// Before uploading, each scanner's Sync method enriches its output file so that
-// DefectDojo stores our computed hash as vulnerability_ids[0].vulnerability_id:
-//   - Grype:    vulnerability.id already carries the CVE/GHSA id; DD stores it verbatim.
-//   - OpenGrep: check_id is injected into extra.metadata.cve by enrichOpenGrepResults;
-//               DD's Semgrep parser maps that field to vulnerability_ids.
-//   - KICS:     DD's KICS parser does not populate vulnerability_ids, so a second
-//               strategy covers KICS findings using an empty vulnId.
+// Two complementary strategies are applied per DefectDojo finding:
 //
-// Two hash strategies are therefore computed per DD finding:
-//   - hash(""|severity|filePath|line|mitigation): covers KICS findings (no vulnId).
-//   - hash(vid|severity|filePath|line|mitigation) for each entry in VulnerabilityIds:
-//     covers Grype (CVE/GHSA) and OpenGrep (check_id) findings.
+//  1. Hash from API fields — hash(severity|filePath|line|mitigation) — covers all
+//     scanners because these four fields are reliably preserved by every DefectDojo
+//     parser. This is the primary path for Grype and KICS findings.
 //
-// Because the same hash function is used on both sides, a match means the findings are
-// identical — no fragile title-parsing or multi-field heuristics are required.
+//  2. UniqueIdFromTool direct lookup — covers OpenGrep findings. Before upload,
+//     enrichOpenGrepResults injects the pre-computed hash into extra.fingerprint;
+//     DefectDojo's Semgrep parser stores that as unique_id_from_tool, which is
+//     returned by the findings API. A direct match on that field is collision-free
+//     even when multiple findings share the same rule ID (check_id).
 //
-// This filtering respects suppressions applied in DefectDojo: any finding marked as false
-// positive or accepted risk will be absent from the active set and therefore dropped locally.
+// Because the same hash formula (models.ComputeFindingHash) is used on both sides,
+// a match means the findings are identical. This filtering respects suppressions
+// applied in DefectDojo: any finding marked as false positive or accepted risk will
+// be absent from the active set and therefore dropped locally.
 func FilterByActiveFindings(local []models.Finding, active []defectdojo.Finding) []models.Finding {
 	activeSet := make(map[string]struct{}, len(active)*2)
 	for _, f := range active {
-		// Hash without vuln-id covers KICS (DD does not populate vulnerability_ids for
-		// KICS findings; the recommendation is stored as mitigation).
-		activeSet[models.ComputeFindingHash("", f.Severity, f.FilePath, f.Line, f.Mitigation)] = struct{}{}
-		// Hash with each vulnerability_id covers Grype (CVE/GHSA) and OpenGrep (check_id
-		// injected into extra.metadata.cve before upload).
-		for _, vid := range f.VulnerabilityIds {
-			activeSet[models.ComputeFindingHash(vid.VulnerabilityId, f.Severity, f.FilePath, f.Line, f.Mitigation)] = struct{}{}
+		// Strategy 1: hash from API fields — covers Grype and KICS.
+		activeSet[models.ComputeFindingHash(f.Severity, f.FilePath, f.Line, f.Mitigation)] = struct{}{}
+		// Strategy 2: UniqueIdFromTool — covers OpenGrep (hash injected into
+		// extra.fingerprint by enrichOpenGrepResults before upload).
+		if f.UniqueIdFromTool != "" {
+			activeSet[f.UniqueIdFromTool] = struct{}{}
 		}
 	}
 

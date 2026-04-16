@@ -6,6 +6,7 @@ import (
 	"os"
 	"ScopeGuardian/connectors/defectdojo"
 	"ScopeGuardian/domains/interfaces"
+	"ScopeGuardian/domains/models"
 	environment_variable "ScopeGuardian/environnement_variable"
 	"ScopeGuardian/loader"
 	"testing"
@@ -201,6 +202,44 @@ func TestEnrichOpenGrepResults(t *testing.T) {
 
 		extra := result["extra"].(map[string]interface{})
 		assert.EqualValues(t, "MEDIUM", extra["severity"])
+	})
+
+	t.Run("Should inject fingerprint hash into extra.fingerprint", func(t *testing.T) {
+		// enrichOpenGrepResults must inject the content hash into extra.fingerprint so
+		// that DefectDojo's Semgrep parser stores it as unique_id_from_tool. The hash
+		// must equal models.ComputeFindingHash(severity, path, line, "") — the same
+		// formula used by LoadFindings — so both sides produce identical values.
+		input := []byte(`{"results":[{"check_id":"go.lang.sql","path":"/app/db.go","start":{"line":10,"col":1},"extra":{"message":"msg","metadata":{"impact":"HIGH"}}}]}`)
+		output := enrichOpenGrepResults(input)
+
+		var wrapper map[string]interface{}
+		err := json.Unmarshal(output, &wrapper)
+		assert.Nil(t, err)
+
+		results := wrapper["results"].([]interface{})
+		extra := results[0].(map[string]interface{})["extra"].(map[string]interface{})
+
+		wantHash := models.ComputeFindingHash("HIGH", "/app/db.go", 10, "")
+		assert.EqualValues(t, wantHash, extra["fingerprint"])
+	})
+
+	t.Run("Should produce matching fingerprint for two findings with same rule but different locations", func(t *testing.T) {
+		// Two findings with the same check_id but different file/line must get different
+		// fingerprints — this is the core correctness property of the hash approach.
+		input := []byte(`{"results":[` +
+			`{"check_id":"rule.x","path":"/a.py","start":{"line":1},"extra":{"metadata":{"impact":"HIGH"}}},` +
+			`{"check_id":"rule.x","path":"/b.py","start":{"line":2},"extra":{"metadata":{"impact":"HIGH"}}}` +
+			`]}`)
+		output := enrichOpenGrepResults(input)
+
+		var wrapper map[string]interface{}
+		err := json.Unmarshal(output, &wrapper)
+		assert.Nil(t, err)
+
+		results := wrapper["results"].([]interface{})
+		fp1 := results[0].(map[string]interface{})["extra"].(map[string]interface{})["fingerprint"].(string)
+		fp2 := results[1].(map[string]interface{})["extra"].(map[string]interface{})["fingerprint"].(string)
+		assert.NotEqual(t, fp1, fp2)
 	})
 }
 

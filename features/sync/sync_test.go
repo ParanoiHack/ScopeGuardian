@@ -313,23 +313,22 @@ func TestGetActiveFindings(t *testing.T) {
 func TestFilterByActiveFindings(t *testing.T) {
 	// localFinding is a helper that builds a models.Finding with its Hash pre-computed,
 	// matching what a scanner's LoadFindings would produce.
-	localFinding := func(vulnId, severity, name, sinkFile string, sinkLine int, recommendation string) models.Finding {
+	localFinding := func(severity, name, sinkFile string, sinkLine int, recommendation string) models.Finding {
 		f := models.Finding{
 			Name:           name,
-			VulnId:         vulnId,
 			Severity:       severity,
 			SinkFile:       sinkFile,
 			SinkLine:       sinkLine,
 			Recommendation: recommendation,
 		}
-		f.Hash = models.ComputeFindingHash(vulnId, severity, sinkFile, sinkLine, recommendation)
+		f.Hash = models.ComputeFindingHash(severity, sinkFile, sinkLine, recommendation)
 		return f
 	}
 
 	t.Run("Should keep local findings whose hash matches a DD active finding", func(t *testing.T) {
 		local := []models.Finding{
-			localFinding("", "HIGH", "SQL Injection", "src/db.go", 42, "Use parameterized queries"),
-			localFinding("", "MEDIUM", "XSS", "src/handler.go", 17, "Sanitize output"),
+			localFinding("HIGH", "SQL Injection", "src/db.go", 42, "Use parameterized queries"),
+			localFinding("MEDIUM", "XSS", "src/handler.go", 17, "Sanitize output"),
 		}
 		active := []defectdojo.Finding{
 			{Title: "SQL Injection", Severity: "High", FilePath: "src/db.go", Line: 42, Mitigation: "Use parameterized queries"},
@@ -343,8 +342,8 @@ func TestFilterByActiveFindings(t *testing.T) {
 
 	t.Run("Should remove local findings whose hash has no DD counterpart", func(t *testing.T) {
 		local := []models.Finding{
-			localFinding("", "HIGH", "SQL Injection", "src/db.go", 42, "Use parameterized queries"),
-			localFinding("", "MEDIUM", "XSS", "src/handler.go", 17, "Sanitize output"),
+			localFinding("HIGH", "SQL Injection", "src/db.go", 42, "Use parameterized queries"),
+			localFinding("MEDIUM", "XSS", "src/handler.go", 17, "Sanitize output"),
 		}
 		active := []defectdojo.Finding{
 			{Title: "SQL Injection", Severity: "High", FilePath: "src/db.go", Line: 42, Mitigation: "Use parameterized queries"},
@@ -356,13 +355,12 @@ func TestFilterByActiveFindings(t *testing.T) {
 		assert.Equal(t, "SQL Injection", filtered[0].Name)
 	})
 
-	t.Run("Should match Grype findings via CVE in vulnerability_ids", func(t *testing.T) {
+	t.Run("Should match Grype findings via severity+file+line+mitigation hash", func(t *testing.T) {
 		local := []models.Finding{
-			localFinding("CVE-2021-1234", "HIGH", "test-package 1.0.0", "/app/package.json", 0, "Upgrade to 2.0.0"),
-			localFinding("CVE-2021-5678", "HIGH", "another-package 2.0.0", "/app/package.json", 0, "Upgrade to 3.0.0"),
+			localFinding("HIGH", "test-package 1.0.0", "/app/package.json", 0, "Upgrade to 2.0.0"),
+			localFinding("HIGH", "another-package 2.0.0", "/app/package.json", 0, "Upgrade to 3.0.0"),
 		}
-		// DD suppressed CVE-2021-5678 (false positive), only CVE-2021-1234 is active.
-		// DefectDojo's Anchore Grype parser stores vulnerability.id in vulnerability_ids.
+		// DD suppressed the second finding (false positive), only the first is active.
 		active := []defectdojo.Finding{
 			{
 				Title:      "CVE-2021-1234",
@@ -380,15 +378,14 @@ func TestFilterByActiveFindings(t *testing.T) {
 
 		assert.Len(t, filtered, 1)
 		assert.Equal(t, "test-package 1.0.0", filtered[0].Name)
-		assert.Equal(t, "CVE-2021-1234", filtered[0].VulnId)
 	})
 
-	t.Run("Should match Grype findings using VulnerabilityIds array from DD", func(t *testing.T) {
-		// DefectDojo also stores the CVE ID in the vulnerability_ids array; the hash must
-		// be computable from that field alone so matching works regardless of how DD formats
-		// the title vs the vulnerability_ids entries.
+	t.Run("Should match Grype findings using hash from severity+file+line+mitigation", func(t *testing.T) {
+		// Grype matching relies on strategy 1 (hash from API fields). The VulnerabilityIds
+		// array in the DD finding is not used for hash computation; the four stable API
+		// fields are sufficient to uniquely identify the finding.
 		local := []models.Finding{
-			localFinding("CVE-2021-9999", "CRITICAL", "vuln-pkg 3.0.0", "/app/go.sum", 0, "Upgrade to 4.0.0"),
+			localFinding("CRITICAL", "vuln-pkg 3.0.0", "/app/go.sum", 0, "Upgrade to 4.0.0"),
 		}
 		active := []defectdojo.Finding{
 			{
@@ -406,27 +403,24 @@ func TestFilterByActiveFindings(t *testing.T) {
 		filtered := FilterByActiveFindings(local, active)
 
 		assert.Len(t, filtered, 1)
-		assert.Equal(t, "CVE-2021-9999", filtered[0].VulnId)
 	})
 
-	t.Run("Should match OpenGrep findings via check_id in vulnerability_ids after injection", func(t *testing.T) {
-		// OpenGrep: enrichOpenGrepResults injects check_id into extra.metadata.cve before
-		// upload; DefectDojo's Semgrep parser stores it in vulnerability_ids. Hash uses
-		// check_id + severity + file + line with empty recommendation because DD stores
-		// extra.message in description, not mitigation, for Semgrep-format findings.
+	t.Run("Should match OpenGrep findings via unique_id_from_tool after fingerprint injection", func(t *testing.T) {
+		// OpenGrep: enrichOpenGrepResults injects the content hash into extra.fingerprint
+		// before upload; DefectDojo's Semgrep parser stores it as unique_id_from_tool.
+		// FilterByActiveFindings matches via that field (strategy 2), which is collision-free
+		// even when multiple findings share the same check_id (rule ID).
 		local := []models.Finding{
-			localFinding("go.lang.security.injection.sql", "HIGH", "go.lang.security.injection.sql", "src/db.go", 10, ""),
+			localFinding("HIGH", "go.lang.security.injection.sql", "src/db.go", 10, ""),
 		}
 		active := []defectdojo.Finding{
 			{
-				Title:      "go.lang.security.injection.sql",
-				Severity:   "High",
-				FilePath:   "src/db.go",
-				Line:       10,
-				Mitigation: "",
-				VulnerabilityIds: []defectdojo.VulnerabilityId{
-					{VulnerabilityId: "go.lang.security.injection.sql"},
-				},
+				Title:            "go.lang.security.injection.sql",
+				Severity:         "High",
+				FilePath:         "src/db.go",
+				Line:             10,
+				Mitigation:       "",
+				UniqueIdFromTool: local[0].Hash,
 			},
 		}
 
@@ -437,7 +431,7 @@ func TestFilterByActiveFindings(t *testing.T) {
 
 	t.Run("Should match KICS findings despite category-prefixed DD title", func(t *testing.T) {
 		local := []models.Finding{
-			localFinding("", "HIGH", "Missing User Instruction", "../../go/src/ScopeGuardian/Dockerfile", 81, "The 'Dockerfile' should contain the 'USER' instruction"),
+			localFinding("HIGH", "Missing User Instruction", "../../go/src/ScopeGuardian/Dockerfile", 81, "The 'Dockerfile' should contain the 'USER' instruction"),
 		}
 		// DD prefixes KICS finding titles with the rule category; hash matching ignores the title.
 		active := []defectdojo.Finding{
@@ -458,7 +452,7 @@ func TestFilterByActiveFindings(t *testing.T) {
 
 	t.Run("Should not match when hash attributes differ", func(t *testing.T) {
 		local := []models.Finding{
-			localFinding("", "LOW", "Healthcheck Not Set", "Dockerfile", 10, "Add HEALTHCHECK"),
+			localFinding("LOW", "Healthcheck Not Set", "Dockerfile", 10, "Add HEALTHCHECK"),
 		}
 		active := []defectdojo.Finding{
 			{Title: "Build Process: Missing User Instruction", Severity: "High", FilePath: "Dockerfile", Line: 81, Mitigation: "Add USER instruction"},
@@ -472,7 +466,7 @@ func TestFilterByActiveFindings(t *testing.T) {
 	t.Run("Should be case-insensitive for severity when matching", func(t *testing.T) {
 		local := []models.Finding{
 			// Scanner emits severity in all-caps; DD returns title-case.
-			localFinding("", "HIGH", "Vuln", "src/main.go", 5, "Fix it"),
+			localFinding("HIGH", "Vuln", "src/main.go", 5, "Fix it"),
 		}
 		active := []defectdojo.Finding{
 			{Title: "Vuln", Severity: "High", FilePath: "src/main.go", Line: 5, Mitigation: "Fix it"},
@@ -485,7 +479,7 @@ func TestFilterByActiveFindings(t *testing.T) {
 
 	t.Run("Should return empty slice when active findings list is empty", func(t *testing.T) {
 		local := []models.Finding{
-			localFinding("", "HIGH", "SQL Injection", "src/db.go", 42, "Use parameterized queries"),
+			localFinding("HIGH", "SQL Injection", "src/db.go", 42, "Use parameterized queries"),
 		}
 
 		filtered := FilterByActiveFindings(local, []defectdojo.Finding{})

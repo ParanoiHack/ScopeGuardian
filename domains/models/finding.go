@@ -31,18 +31,19 @@ type Finding struct {
 // both the local (scanner) side and the DefectDojo API side and used as the primary
 // matching key in FilterByActiveFindings.
 //
-// vulnId is the vulnerability identifier stored in DefectDojo's vulnerability_ids
-// array for this finding. Each scanner populates it differently:
-//   - Grype:    the CVE or GHSA identifier (e.g. "CVE-2021-1234"), which DefectDojo's
-//               Anchore Grype parser reads directly from vulnerability.id.
-//   - OpenGrep: the Semgrep check_id (e.g. "go.lang.security.injection.sql"), injected
-//               into extra.metadata.cve before upload so DefectDojo's Semgrep parser
-//               stores it in vulnerability_ids.
-//   - KICS:     an empty string, because DefectDojo's KICS parser does not populate
-//               vulnerability_ids; KICS findings are matched via the empty-vulnId hash.
-func ComputeFindingHash(vulnId, severity, sinkFile string, sinkLine int, recommendation string) string {
-	input := strings.ToLower(strings.TrimSpace(vulnId)) + "|" +
-		strings.ToLower(strings.TrimSpace(severity)) + "|" +
+// The same formula is used for all scanners:
+//
+//	hash(lower(severity) | lower(sinkFile) | sinkLine | lower(recommendation))
+//
+// Scanner-specific notes:
+//   - Grype:    recommendation is the "Upgrade to X" string derived from fix.versions.
+//   - OpenGrep: recommendation is always "" because DefectDojo's Semgrep parser stores
+//               extra.message in description, not mitigation. The hash is additionally
+//               injected into extra.fingerprint before upload so that DefectDojo stores
+//               it as unique_id_from_tool, enabling a direct lookup without recomputation.
+//   - KICS:     recommendation is the expected_value from each file entry.
+func ComputeFindingHash(severity, sinkFile string, sinkLine int, recommendation string) string {
+	input := strings.ToLower(strings.TrimSpace(severity)) + "|" +
 		strings.ToLower(strings.TrimSpace(sinkFile)) + "|" +
 		strconv.Itoa(sinkLine) + "|" +
 		strings.ToLower(strings.TrimSpace(recommendation))

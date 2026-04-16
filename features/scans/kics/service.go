@@ -115,7 +115,7 @@ func (s *KicsServiceImpl) LoadFindings() ([]models.Finding, error) {
 				SinkLine:       sink.Line,
 				Recommendation: sink.Recommendation,
 			}
-			f.Hash = models.ComputeFindingHash("", f.Severity, f.SinkFile, f.SinkLine, f.Recommendation)
+			f.Hash = models.ComputeFindingHash(f.Severity, f.SinkFile, f.SinkLine, f.Recommendation)
 			findings = append(findings, f)
 		}
 
