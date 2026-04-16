@@ -26,12 +26,20 @@ jobs:
         run: test -f "$GITHUB_WORKSPACE/.github/security-config.toml"
 
       - name: Run ScopeGuardian
+        env:
+          DD_URL: ${{ secrets.DD_URL }}
+          DD_ACCESS_TOKEN: ${{ secrets.DD_ACCESS_TOKEN }}
+          SG_VERSION: ${{ vars.SG_VERSION }}
+          BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
           docker run --rm \
             -v "$GITHUB_WORKSPACE:/tmp/data" \
             -e SCAN_DIR=/tmp/data \
-            ghcr.io/paranoihack/scopeguardian:${{ vars.SG_VERSION }} \
+            -e DD_URL="$DD_URL" \
+            -e DD_ACCESS_TOKEN="$DD_ACCESS_TOKEN" \
+            "ghcr.io/paranoihack/scopeguardian:$SG_VERSION" \
             --projectName ScopeGuardian \
-            --branch "${{ github.ref_name }}" \
+            --branch "$BRANCH" \
             --threshold "critical=1,high=1,medium=1,low=1" \
+            --sync \
             /tmp/data/.github/security-config.toml

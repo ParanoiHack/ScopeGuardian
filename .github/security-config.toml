@@ -5,7 +5,6 @@ path = "."
 
 [kics]
 platform = "Dockerfile"
-exclude_queries = ["fd54f200-402c-4333-a5a4-36ef6709af2f"]
 
 [grype]
 ignore_states = "not-fixed,unknown,wont-fix"
@@ -13,4 +12,3 @@ transitive_libraries = false
 
 [opengrep]
 exclude = ["*_test.go", "docker-compose.yml", "Dockerfile"]
-exclude_rule = ["go.lang.security.audit.dangerous-exec-command.dangerous-exec-command"]
