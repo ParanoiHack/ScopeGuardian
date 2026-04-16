@@ -65,6 +65,16 @@ type GetFindingsResponse struct {
 	Results []Finding `json:"results"`
 }
 
+type Test struct {
+	Id       int    `json:"id"`
+	ScanType string `json:"scan_type"`
+}
+
+type GetTestsResponse struct {
+	Count   int    `json:"count"`
+	Results []Test `json:"results"`
+}
+
 type ScanPayload struct {
 	Timestamp         string   `json:"scan_date" form:"scan_date"`
 	SeverityThreshold string   `json:"minimum_severity" form:"minimum_severity"`

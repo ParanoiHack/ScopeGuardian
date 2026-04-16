@@ -7,6 +7,8 @@ const (
 	CreateEngagementPath = "/engagements/"
 	UpdateEngagementPath = "/engagements/%d/"
 	ImportScanPath       = "/import-scan/"
+	ReimportScanPath     = "/reimport-scan/"
+	GetTestsPath         = "/tests/?engagement=%d&scan_type=%s"
 	GetFindingsPath      = "/findings/?test__engagement=%d&active=true&offset=%d&limit=%d"
 )
 
@@ -36,7 +38,8 @@ const (
 	logErrorUnknownType             = "Unknow type [%s]"
 	logErrorAddFile                 = "Cannot attach file to request"
 	logErrorCreateMultipartRequest  = "Cannot create multipart request"
-	logErrorImportScan         = "Cannot import scan via %s (HTTP %d)"
+	logErrorImportScan              = "Cannot import scan via %s (HTTP %d)"
+	logErrorRetrieveTests           = "Cannot retrieve tests for engagement ID %d"
 	logErrorRetrieveFindings        = "Cannot retrieve findings for engagement ID %d"
 )
 
@@ -51,5 +54,7 @@ const (
 	errUpdateEngagementEndDate = "cannot update engagement end date"
 	errWritingFile             = "cannot write file to request"
 	errImportScan              = "cannot import scan"
+	errReimportScan            = "cannot reimport scan"
+	errRetrieveTests           = "cannot retrieve tests"
 	errRetrieveFindings        = "cannot retrieve findings"
 )

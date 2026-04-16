@@ -126,7 +126,8 @@ func (s *KicsServiceImpl) LoadFindings() ([]models.Finding, error) {
 
 // Sync uploads the KICS scan output to DefectDojo via the given service.
 // It constructs a ScanPayload from the stored output file and the provided
-// engagement ID and branch, then calls ImportScan.
+// engagement ID and branch, then calls ReimportScan if a test with this scan
+// type already exists for the engagement, or ImportScan otherwise.
 func (s *KicsServiceImpl) Sync(engagementId int, branch string, service defectdojo.DefectDojoService) error {
 	var payload defectdojo.ScanPayload
 
@@ -147,9 +148,22 @@ func (s *KicsServiceImpl) Sync(engagementId int, branch string, service defectdo
 	}
 	payload.File = fileContent
 
-	if ok, err := service.ImportScan(payload, s.output); !ok || err != nil {
-		logger.Error(fmt.Sprintf(logErrorImportScan, engagementId))
+	tests, err := service.GetTests(engagementId, scanType)
+	if err != nil {
+		logger.Error(fmt.Sprintf(logErrorGetTests, engagementId))
 		return err
+	}
+
+	if len(tests) > 0 {
+		if ok, err := service.ReimportScan(payload, s.output); !ok || err != nil {
+			logger.Error(fmt.Sprintf(logErrorImportScan, engagementId))
+			return err
+		}
+	} else {
+		if ok, err := service.ImportScan(payload, s.output); !ok || err != nil {
+			logger.Error(fmt.Sprintf(logErrorImportScan, engagementId))
+			return err
+		}
 	}
 
 	return nil

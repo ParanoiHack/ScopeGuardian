@@ -13,8 +13,12 @@ import (
 )
 
 type mockDefectDojoService struct {
-	importScanOk  bool
-	importScanErr error
+	importScanOk    bool
+	importScanErr   error
+	reimportScanOk  bool
+	reimportScanErr error
+	testsToReturn   []defectdojo.Test
+	getTestsErr     error
 }
 
 func (m *mockDefectDojoService) GetProductByName(_ string) (defectdojo.Product, error) {
@@ -35,6 +39,14 @@ func (m *mockDefectDojoService) UpdateEngagementEndDate(_, _ int, _ bool) (bool,
 
 func (m *mockDefectDojoService) ImportScan(_ defectdojo.ScanPayload, _ string) (bool, error) {
 	return m.importScanOk, m.importScanErr
+}
+
+func (m *mockDefectDojoService) ReimportScan(_ defectdojo.ScanPayload, _ string) (bool, error) {
+	return m.reimportScanOk, m.reimportScanErr
+}
+
+func (m *mockDefectDojoService) GetTests(_ int, _ string) ([]defectdojo.Test, error) {
+	return m.testsToReturn, m.getTestsErr
 }
 
 func (m *mockDefectDojoService) SetAccessToken(_ string) {}
@@ -119,12 +131,27 @@ func TestLoadFindings(t *testing.T) {
 }
 
 func TestSync(t *testing.T) {
-	t.Run("Should sync successfully", func(t *testing.T) {
+	t.Run("Should sync successfully using import when no tests exist", func(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
 		service := newGrypeService(loader.Grype{})
 		ddMock := &mockDefectDojoService{importScanOk: true, importScanErr: nil}
+
+		err := service.Sync(1, "main", ddMock)
+
+		assert.Nil(t, err)
+	})
+
+	t.Run("Should sync successfully using reimport when tests exist", func(t *testing.T) {
+		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
+		environment_variable.ReloadEnv()
+
+		service := newGrypeService(loader.Grype{})
+		ddMock := &mockDefectDojoService{
+			testsToReturn:  []defectdojo.Test{{Id: 3, ScanType: "Anchore Grype"}},
+			reimportScanOk: true,
+		}
 
 		err := service.Sync(1, "main", ddMock)
 
@@ -137,6 +164,34 @@ func TestSync(t *testing.T) {
 
 		service := newGrypeService(loader.Grype{})
 		ddMock := &mockDefectDojoService{importScanOk: false, importScanErr: fmt.Errorf("import failed")}
+
+		err := service.Sync(1, "main", ddMock)
+
+		assert.NotNil(t, err)
+	})
+
+	t.Run("Should return error when reimport scan fails", func(t *testing.T) {
+		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
+		environment_variable.ReloadEnv()
+
+		service := newGrypeService(loader.Grype{})
+		ddMock := &mockDefectDojoService{
+			testsToReturn:   []defectdojo.Test{{Id: 3, ScanType: "Anchore Grype"}},
+			reimportScanOk:  false,
+			reimportScanErr: fmt.Errorf("reimport failed"),
+		}
+
+		err := service.Sync(1, "main", ddMock)
+
+		assert.NotNil(t, err)
+	})
+
+	t.Run("Should return error when GetTests fails", func(t *testing.T) {
+		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
+		environment_variable.ReloadEnv()
+
+		service := newGrypeService(loader.Grype{})
+		ddMock := &mockDefectDojoService{getTestsErr: fmt.Errorf("cannot retrieve tests")}
 
 		err := service.Sync(1, "main", ddMock)
 

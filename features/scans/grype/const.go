@@ -39,6 +39,7 @@ const (
 	logErrorFileNotFound = "Cannot find file [%s]"
 	logErrorParseResults = "Cannot parse grype results"
 	logErrorImportScan   = "Cannot import scan into engagement [%d]"
+	logErrorGetTests     = "Cannot get tests for engagement [%d]"
 )
 
 const (
