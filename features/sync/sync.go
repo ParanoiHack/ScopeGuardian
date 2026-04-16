@@ -155,8 +155,11 @@ func pollFindings(ddService defectdojo.DefectDojoService, engagementId int) ([]d
 	return lastFindings, nil
 }
 
-// FilterByActiveFindings returns only the local findings that have a matching active finding
-// in DefectDojo, using a uniform content hash as the match key.
+// MarkFindingsByActiveFindings sets the Status field on every local finding based on
+// whether it has a matching active finding in DefectDojo. A local finding whose hash
+// matches an active DD finding is a previously known vulnerability and is marked
+// DUPLICATED; all others are marked NEW (newly discovered). All local findings are
+// returned regardless of their status — nothing is filtered out.
 //
 // Two complementary strategies are applied per DefectDojo finding:
 //
@@ -169,12 +172,7 @@ func pollFindings(ddService defectdojo.DefectDojoService, engagementId int) ([]d
 //     DefectDojo's Semgrep parser stores that as unique_id_from_tool, which is
 //     returned by the findings API. A direct match on that field is collision-free
 //     even when multiple findings share the same rule ID (check_id).
-//
-// Because the same hash formula (models.ComputeFindingHash) is used on both sides,
-// a match means the findings are identical. This filtering respects suppressions
-// applied in DefectDojo: any finding marked as false positive or accepted risk will
-// be absent from the active set and therefore dropped locally.
-func FilterByActiveFindings(local []models.Finding, active []defectdojo.Finding) []models.Finding {
+func MarkFindingsByActiveFindings(local []models.Finding, active []defectdojo.Finding) []models.Finding {
 	activeSet := make(map[string]struct{}, len(active)*2)
 	for _, f := range active {
 		// Strategy 1: hash from API fields — covers Grype and KICS.
@@ -186,12 +184,15 @@ func FilterByActiveFindings(local []models.Finding, active []defectdojo.Finding)
 		}
 	}
 
-	filtered := make([]models.Finding, 0, len(local))
-	for _, f := range local {
+	result := make([]models.Finding, len(local))
+	for i, f := range local {
+		result[i] = f
 		if _, ok := activeSet[f.Hash]; ok {
-			filtered = append(filtered, f)
+			result[i].Status = models.FindingStatusDuplicated
+		} else {
+			result[i].Status = models.FindingStatusNew
 		}
 	}
-	return filtered
+	return result
 }
 

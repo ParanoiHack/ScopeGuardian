@@ -7,6 +7,15 @@ import (
 	"strings"
 )
 
+const (
+	// FindingStatusNew indicates a finding that has not been seen in DefectDojo
+	// before and is therefore newly discovered in the current scan run.
+	FindingStatusNew = "NEW"
+	// FindingStatusDuplicated indicates a finding that already exists as an active
+	// finding in DefectDojo from a previous scan run (a known vulnerability).
+	FindingStatusDuplicated = "DUPLICATED"
+)
+
 // Finding represents a single security finding produced by a scanner.
 type Finding struct {
 	Engine         string
@@ -21,15 +30,19 @@ type Finding struct {
 	// Hash is a deterministic content hash used for stable cross-scanner matching
 	// against DefectDojo findings. It is computed by ComputeFindingHash when the
 	// finding is loaded from a scanner output and compared against the equivalent
-	// hash derived from the DefectDojo finding fields in FilterByActiveFindings.
+	// hash derived from the DefectDojo finding fields in MarkFindingsByActiveFindings.
 	Hash string
+	// Status classifies the finding as either NEW (not previously seen in DefectDojo)
+	// or DUPLICATED (already tracked as an active finding in DefectDojo). Without
+	// --sync all findings default to NEW.
+	Status string
 }
 
 // ComputeFindingHash returns a deterministic SHA-256 hex hash over the finding
 // fields that are reliably preserved when a scan result is imported into and then
 // read back from DefectDojo. The hash is therefore computable independently from
 // both the local (scanner) side and the DefectDojo API side and used as the primary
-// matching key in FilterByActiveFindings.
+// matching key in MarkFindingsByActiveFindings.
 //
 // The same formula is used for all scanners:
 //

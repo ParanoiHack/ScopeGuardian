@@ -168,13 +168,17 @@ func (e *Engine) SyncResults(projectName string, branch string, protectedBranche
 	}
 }
 
-// FilterFindingsByDD fetches the active findings from DefectDojo for the given project and
-// branch and returns the subset of local findings that are still active (i.e. not suppressed)
-// in DefectDojo. This lets DD suppressions (false positive, accepted risk, etc.) propagate back
-// to the local display and security-gate evaluation.
-// If the DD fetch fails the original findings slice is returned unchanged together with the error
-// so the caller can decide whether to proceed or abort.
-func (e *Engine) FilterFindingsByDD(findings []models.Finding, projectName string, branch string, protectedBranches []string) ([]models.Finding, error) {
+// MarkFindingsByDD fetches the pre-sync active findings from DefectDojo for the
+// given project and branch and marks each local finding as NEW or DUPLICATED.
+// A finding is DUPLICATED when it matches an existing active finding in DefectDojo
+// (previously known vulnerability); otherwise it is NEW (newly discovered this run).
+// All local findings are returned — nothing is filtered out.
+// This method is intended to be called BEFORE SyncResults so that the comparison
+// reflects the state of DefectDojo prior to the current scan upload.
+// If the DD fetch fails (e.g. first scan run with no engagement yet), the original
+// findings slice is returned unchanged together with the error so the caller can
+// keep all findings at their default NEW status.
+func (e *Engine) MarkFindingsByDD(findings []models.Finding, projectName string, branch string, protectedBranches []string) ([]models.Finding, error) {
 	ddService := defectdojo.GetDefectDojoService(
 		client.NewClient(&http.Client{}),
 		environment_variable.EnvironmentVariable["DD_URL"],
@@ -185,7 +189,7 @@ func (e *Engine) FilterFindingsByDD(findings []models.Finding, projectName strin
 		return findings, err
 	}
 
-	return featuresync.FilterByActiveFindings(findings, active), nil
+	return featuresync.MarkFindingsByActiveFindings(findings, active), nil
 }
 
 // registerPrerequisite adds a scanner that must run and finish before any dependent

@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"ScopeGuardian/display"
+	"ScopeGuardian/domains/models"
 	"ScopeGuardian/engine"
 	"ScopeGuardian/loader"
 	"ScopeGuardian/logger"
@@ -15,10 +16,10 @@ import (
 const (
 	logInfoLoadConfigFile = "Loading configuration file"
 	logInfoDumpFindings   = "Findings successfully written to output file"
+	logInfoNoPreSyncDD    = "No previous DefectDojo state found; all findings treated as new"
 	logErrOutputFile      = "Failed to create output file"
 	logErrCloseOutputFile = "Failed to close output file"
 	logErrDumpFindings    = "Failed to write findings to output file"
-	logErrFilterByDD      = "Failed to filter findings against DefectDojo; displaying all local findings instead"
 )
 func main() {
 	logger.SetGlobalLogger(
