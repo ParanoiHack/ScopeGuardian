@@ -34,7 +34,7 @@ jobs:
             -e DD_ACCESS_TOKEN=${{ secrets.DD_ACCESS_TOKEN }} \
             ghcr.io/paranoihack/scopeguardian:${{ vars.SG_VERSION }} \
             --projectName ScopeGuardian \
-            --branch "${{ github.ref_name }}" \
+            --branch "${{ github.head_ref || github.ref_name }}" \
             --threshold "critical=1,high=1,medium=1,low=1" \
             --sync \
             /tmp/data/.github/security-config.toml
