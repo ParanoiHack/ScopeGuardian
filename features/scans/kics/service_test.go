@@ -13,8 +13,13 @@ import (
 )
 
 type mockDefectDojoService struct {
-	importScanOk  bool
-	importScanErr error
+	importScanOk      bool
+	importScanErr     error
+	reimportScanOk    bool
+	reimportScanErr   error
+	reimportedPayload defectdojo.ScanPayload
+	testsToReturn     []defectdojo.Test
+	getTestsErr       error
 }
 
 func (m *mockDefectDojoService) GetProductByName(_ string) (defectdojo.Product, error) {
@@ -35,6 +40,15 @@ func (m *mockDefectDojoService) UpdateEngagementEndDate(_, _ int, _ bool) (bool,
 
 func (m *mockDefectDojoService) ImportScan(_ defectdojo.ScanPayload, _ string) (bool, error) {
 	return m.importScanOk, m.importScanErr
+}
+
+func (m *mockDefectDojoService) ReimportScan(payload defectdojo.ScanPayload, _ string) (bool, error) {
+	m.reimportedPayload = payload
+	return m.reimportScanOk, m.reimportScanErr
+}
+
+func (m *mockDefectDojoService) GetTests(_ int, _ string) ([]defectdojo.Test, error) {
+	return m.testsToReturn, m.getTestsErr
 }
 
 func (m *mockDefectDojoService) SetAccessToken(_ string) {}
@@ -124,7 +138,7 @@ func TestLoadFinding(t *testing.T) {
 // }
 
 func TestSync(t *testing.T) {
-	t.Run("Should sync successfully", func(t *testing.T) {
+	t.Run("Should sync successfully using import when no tests exist", func(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
@@ -136,12 +150,56 @@ func TestSync(t *testing.T) {
 		assert.Nil(t, err)
 	})
 
+	t.Run("Should sync successfully using reimport when tests exist", func(t *testing.T) {
+		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
+		environment_variable.ReloadEnv()
+
+		service := newKicsService("./test", loader.Kics{})
+		ddMock := &mockDefectDojoService{
+			testsToReturn:  []defectdojo.Test{{Id: 5, ScanType: "KICS Scan"}},
+			reimportScanOk: true,
+		}
+
+		err := service.Sync(1, "main", ddMock)
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, 5, ddMock.reimportedPayload.TestId)
+	})
+
 	t.Run("Should return error when import scan fails", func(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
 		service := newKicsService("./test", loader.Kics{})
 		ddMock := &mockDefectDojoService{importScanOk: false, importScanErr: fmt.Errorf("import failed")}
+
+		err := service.Sync(1, "main", ddMock)
+
+		assert.NotNil(t, err)
+	})
+
+	t.Run("Should return error when reimport scan fails", func(t *testing.T) {
+		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
+		environment_variable.ReloadEnv()
+
+		service := newKicsService("./test", loader.Kics{})
+		ddMock := &mockDefectDojoService{
+			testsToReturn:   []defectdojo.Test{{Id: 5, ScanType: "KICS Scan"}},
+			reimportScanOk:  false,
+			reimportScanErr: fmt.Errorf("reimport failed"),
+		}
+
+		err := service.Sync(1, "main", ddMock)
+
+		assert.NotNil(t, err)
+	})
+
+	t.Run("Should return error when GetTests fails", func(t *testing.T) {
+		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
+		environment_variable.ReloadEnv()
+
+		service := newKicsService("./test", loader.Kics{})
+		ddMock := &mockDefectDojoService{getTestsErr: fmt.Errorf("cannot retrieve tests")}
 
 		err := service.Sync(1, "main", ddMock)
 

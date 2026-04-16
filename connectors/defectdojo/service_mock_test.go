@@ -121,6 +121,52 @@ func TestMockDefectDojoService_ImportScan_ReturnsError(t *testing.T) {
 	assert.False(t, ok)
 }
 
+func TestMockDefectDojoService_ReimportScan_Succeeds(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mock := NewMockDefectDojoService(ctrl)
+
+	mock.EXPECT().ReimportScan(gomock.Any(), "results.json").Return(true, nil)
+
+	ok, err := mock.ReimportScan(ScanPayload{}, "results.json")
+	assert.Nil(t, err)
+	assert.True(t, ok)
+}
+
+func TestMockDefectDojoService_ReimportScan_ReturnsError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mock := NewMockDefectDojoService(ctrl)
+
+	mock.EXPECT().ReimportScan(gomock.Any(), gomock.Any()).Return(false, errors.New(errReimportScan))
+
+	ok, err := mock.ReimportScan(ScanPayload{}, "results.json")
+	assert.NotNil(t, err)
+	assert.False(t, ok)
+}
+
+func TestMockDefectDojoService_GetTests_Succeeds(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mock := NewMockDefectDojoService(ctrl)
+
+	expected := []Test{{Id: 5, ScanType: "KICS Scan"}}
+	mock.EXPECT().GetTests(42, "KICS Scan").Return(expected, nil)
+
+	tests, err := mock.GetTests(42, "KICS Scan")
+	assert.Nil(t, err)
+	assert.Len(t, tests, 1)
+	assert.Equal(t, 5, tests[0].Id)
+}
+
+func TestMockDefectDojoService_GetTests_ReturnsError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mock := NewMockDefectDojoService(ctrl)
+
+	mock.EXPECT().GetTests(gomock.Any(), gomock.Any()).Return([]Test{}, errors.New(errRetrieveTests))
+
+	tests, err := mock.GetTests(42, "KICS Scan")
+	assert.NotNil(t, err)
+	assert.Empty(t, tests)
+}
+
 func TestMockDefectDojoService_SetAccessToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mock := NewMockDefectDojoService(ctrl)

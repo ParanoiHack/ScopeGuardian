@@ -108,6 +108,36 @@ func (mr *MockDefectDojoServiceMockRecorder) ImportScan(payload, filename interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImportScan", reflect.TypeOf((*MockDefectDojoService)(nil).ImportScan), payload, filename)
 }
 
+// ReimportScan mocks base method.
+func (m *MockDefectDojoService) ReimportScan(payload ScanPayload, filename string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReimportScan", payload, filename)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ReimportScan indicates an expected call of ReimportScan.
+func (mr *MockDefectDojoServiceMockRecorder) ReimportScan(payload, filename interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReimportScan", reflect.TypeOf((*MockDefectDojoService)(nil).ReimportScan), payload, filename)
+}
+
+// GetTests mocks base method.
+func (m *MockDefectDojoService) GetTests(engagementId int, scanType string) ([]Test, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTests", engagementId, scanType)
+	ret0, _ := ret[0].([]Test)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTests indicates an expected call of GetTests.
+func (mr *MockDefectDojoServiceMockRecorder) GetTests(engagementId, scanType interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTests", reflect.TypeOf((*MockDefectDojoService)(nil).GetTests), engagementId, scanType)
+}
+
 // SetAccessToken mocks base method.
 func (m *MockDefectDojoService) SetAccessToken(token string) {
 	m.ctrl.T.Helper()
