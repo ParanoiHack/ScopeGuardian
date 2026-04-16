@@ -39,15 +39,24 @@ type EngagementPayload struct {
 	Product                   int      `json:"product,omitempty"`
 }
 
+// VulnerabilityId represents a single entry in the vulnerability_ids array returned
+// by the DefectDojo findings API. For Grype findings the vulnerability_id field holds
+// the CVE or GHSA identifier (e.g. "CVE-2021-1234").
+type VulnerabilityId struct {
+	VulnerabilityId string `json:"vulnerability_id"`
+	Url             string `json:"url"`
+}
+
 type Finding struct {
-	Id          int    `json:"id"`
-	Title       string `json:"title"`
-	Severity    string `json:"severity"`
-	Cwe         int    `json:"cwe"`
-	Description string `json:"description"`
-	FilePath    string `json:"file_path"`
-	Line        int    `json:"line"`
-	Mitigation  string `json:"mitigation"`
+	Id               int               `json:"id"`
+	Title            string            `json:"title"`
+	Severity         string            `json:"severity"`
+	Cwe              int               `json:"cwe"`
+	Description      string            `json:"description"`
+	FilePath         string            `json:"file_path"`
+	Line             int               `json:"line"`
+	Mitigation       string            `json:"mitigation"`
+	VulnerabilityIds []VulnerabilityId `json:"vulnerability_ids"`
 }
 
 type GetFindingsResponse struct {

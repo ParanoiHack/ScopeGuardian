@@ -107,14 +107,21 @@ func (s *OpenGrepServiceImpl) LoadFindings() ([]models.Finding, error) {
 		f := models.Finding{
 			Engine:         scannerType,
 			Severity:       severity,
+			// CheckId is the unique rule identifier stored by DefectDojo as the finding
+			// title (e.g. "go.lang.security.injection.sql"). It is treated as VulnId so
+			// that FilterByActiveFindings can match it against the DD title-based hash.
 			Name:           item.CheckId,
+			VulnId:         item.CheckId,
 			Cwe:            cwe,
 			Description:    description,
+			// Message is kept for display but intentionally excluded from the hash:
+			// DefectDojo's Semgrep parser stores extra.message in description, not
+			// mitigation, so f.Mitigation from the DD API will be empty for these findings.
 			Recommendation: item.Extra.Message,
 			SinkFile:       item.Path,
 			SinkLine:       item.Start.Line,
 		}
-		f.Hash = models.ComputeFindingHash("", f.Severity, f.SinkFile, f.SinkLine, f.Recommendation)
+		f.Hash = models.ComputeFindingHash(f.VulnId, f.Severity, f.SinkFile, f.SinkLine, "")
 		findings = append(findings, f)
 	}
 

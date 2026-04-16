@@ -158,27 +158,30 @@ func pollFindings(ddService defectdojo.DefectDojoService, engagementId int) ([]d
 // FilterByActiveFindings returns only the local findings that have a matching active finding
 // in DefectDojo, using a content hash as the match key. The hash is computed by
 // models.ComputeFindingHash from fields that are preserved without transformation when a
-// scan result is imported into DefectDojo and read back via its API
-// (Severity, FilePath/SinkFile, Line/SinkLine, Mitigation/Recommendation). This makes the
-// filter completely independent of how DefectDojo formats finding titles (e.g. KICS prefixes
-// the rule category to the name), what engine produced the finding, and whether a VulnId
-// is present.
+// scan result is imported into DefectDojo and read back via its API.
 //
-// Two hashes are computed per DD finding:
-//   - hash(""|severity|filePath|line|mitigation): matches KICS and Opengrep local findings,
-//     which pass an empty vulnId to ComputeFindingHash.
-//   - hash(title|severity|filePath|line|mitigation): matches Grype local findings, where
-//     the VulnId (CVE/GHSA) equals the DD finding title.
+// Three sets of hashes are computed per DD finding and added to the active set:
+//   - hash(""|severity|filePath|line|mitigation): matches KICS local findings that pass
+//     an empty vulnId and store their recommendation as mitigation in DD.
+//   - hash(title|severity|filePath|line|mitigation): matches Grype findings (DD title ==
+//     CVE/GHSA id) and Opengrep findings (DD title == check_id).
+//   - hash(vulnId|severity|filePath|line|mitigation) for each entry in VulnerabilityIds:
+//     matches Grype findings where DD also stores the CVE ID in the vulnerability_ids array.
 //
 // This filtering respects suppressions applied in DefectDojo: any finding marked as false
 // positive or accepted risk will be absent from the active set and therefore dropped locally.
 func FilterByActiveFindings(local []models.Finding, active []defectdojo.Finding) []models.Finding {
-	activeSet := make(map[string]struct{}, len(active)*2)
+	activeSet := make(map[string]struct{}, len(active)*3)
 	for _, f := range active {
-		// Hash without vuln-id covers KICS and Opengrep.
+		// Hash without vuln-id covers KICS (recommendation == mitigation for KICS in DD).
 		activeSet[models.ComputeFindingHash("", f.Severity, f.FilePath, f.Line, f.Mitigation)] = struct{}{}
-		// Hash with title as vuln-id covers Grype (DD title == CVE/GHSA id).
+		// Hash with title covers Grype (title == CVE id) and Opengrep (title == check_id).
 		activeSet[models.ComputeFindingHash(f.Title, f.Severity, f.FilePath, f.Line, f.Mitigation)] = struct{}{}
+		// Hash with each explicit vulnerability_id covers Grype findings where DD also
+		// stores the CVE/GHSA id in the vulnerability_ids array.
+		for _, vid := range f.VulnerabilityIds {
+			activeSet[models.ComputeFindingHash(vid.VulnerabilityId, f.Severity, f.FilePath, f.Line, f.Mitigation)] = struct{}{}
+		}
 	}
 
 	filtered := make([]models.Finding, 0, len(local))

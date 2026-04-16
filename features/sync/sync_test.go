@@ -373,12 +373,42 @@ func TestFilterByActiveFindings(t *testing.T) {
 		assert.Equal(t, "CVE-2021-1234", filtered[0].VulnId)
 	})
 
-	t.Run("Should match Opengrep findings without VulnId using hash", func(t *testing.T) {
+	t.Run("Should match Grype findings using VulnerabilityIds array from DD", func(t *testing.T) {
+		// DefectDojo also stores the CVE ID in the vulnerability_ids array; the hash must
+		// be computable from that field alone so matching works regardless of how DD formats
+		// the title vs the vulnerability_ids entries.
 		local := []models.Finding{
-			localFinding("", "HIGH", "go.lang.security.injection.sql", "src/db.go", 10, "Use parameterized queries"),
+			localFinding("CVE-2021-9999", "CRITICAL", "vuln-pkg 3.0.0", "/app/go.sum", 0, "Upgrade to 4.0.0"),
 		}
 		active := []defectdojo.Finding{
-			{Title: "go.lang.security.injection.sql", Severity: "High", FilePath: "src/db.go", Line: 10, Mitigation: "Use parameterized queries"},
+			{
+				Title:    "CVE-2021-9999",
+				Severity: "Critical",
+				FilePath: "/app/go.sum",
+				Line:     0,
+				Mitigation: "Upgrade to 4.0.0",
+				VulnerabilityIds: []defectdojo.VulnerabilityId{
+					{VulnerabilityId: "CVE-2021-9999", Url: "https://nvd.nist.gov/vuln/detail/CVE-2021-9999"},
+				},
+			},
+		}
+
+		filtered := FilterByActiveFindings(local, active)
+
+		assert.Len(t, filtered, 1)
+		assert.Equal(t, "CVE-2021-9999", filtered[0].VulnId)
+	})
+
+	t.Run("Should match Opengrep findings using checkId as VulnId against DD title", func(t *testing.T) {
+		// Opengrep: check_id is set as VulnId; hash uses checkId + severity + file + line with
+		// empty recommendation because DefectDojo stores extra.message in description, not
+		// mitigation, for Semgrep-format findings. The Recommendation field is still populated
+		// for display but must not be part of the hash.
+		local := []models.Finding{
+			localFinding("go.lang.security.injection.sql", "HIGH", "go.lang.security.injection.sql", "src/db.go", 10, ""),
+		}
+		active := []defectdojo.Finding{
+			{Title: "go.lang.security.injection.sql", Severity: "High", FilePath: "src/db.go", Line: 10, Mitigation: ""},
 		}
 
 		filtered := FilterByActiveFindings(local, active)
