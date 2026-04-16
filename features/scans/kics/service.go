@@ -105,7 +105,7 @@ func (s *KicsServiceImpl) LoadFindings() ([]models.Finding, error) {
 	var findings []models.Finding
 	for _, item := range results.Queries {
 		for _, sink := range item.Files {
-			findings = append(findings, models.Finding{
+			f := models.Finding{
 				Engine:         scannerType,
 				Severity:       item.Severity,
 				Name:           item.QueryName,
@@ -114,7 +114,9 @@ func (s *KicsServiceImpl) LoadFindings() ([]models.Finding, error) {
 				SinkFile:       sink.FileName,
 				SinkLine:       sink.Line,
 				Recommendation: sink.Recommendation,
-			})
+			}
+			f.Hash = models.ComputeFindingHash("", f.Severity, f.SinkFile, f.SinkLine, f.Recommendation)
+			findings = append(findings, f)
 		}
 
 	}

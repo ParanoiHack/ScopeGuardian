@@ -14,9 +14,9 @@ type KicsFinding struct {
 
 type File struct {
 	FileName       string `json:"file_name"`
-	SimilarityId   string `json:"similarity_id`
+	SimilarityId   string `json:"similarity_id"`
 	Line           int    `json:"line"`
-	IssueType      string `json:"issue_type`
+	IssueType      string `json:"issue_type"`
 	Recommendation string `json:"expected_value"`
 }
 

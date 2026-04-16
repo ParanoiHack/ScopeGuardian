@@ -97,15 +97,18 @@ func (s *GrypeServiceImpl) LoadFindings() ([]models.Finding, error) {
 			recommendation = fmt.Sprintf(recommendationUpgradeMultiple, strings.Join(match.Vulnerability.Fix.Versions, ", "))
 		}
 
-		findings = append(findings, models.Finding{
+		severity := strings.ToUpper(match.Vulnerability.Severity)
+		f := models.Finding{
 			Engine:         scannerType,
-			Severity:       strings.ToUpper(match.Vulnerability.Severity),
+			Severity:       severity,
 			Name:           fmt.Sprintf("%s %s", match.Artifact.Name, match.Artifact.Version),
 			VulnId:         match.Vulnerability.ID,
 			Description:    match.Vulnerability.Description,
 			SinkFile:       sinkFile,
 			Recommendation: recommendation,
-		})
+		}
+		f.Hash = models.ComputeFindingHash(f.VulnId, f.Severity, f.SinkFile, f.SinkLine, f.Recommendation)
+		findings = append(findings, f)
 	}
 
 	return findings, nil

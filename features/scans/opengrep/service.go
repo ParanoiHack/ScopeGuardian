@@ -104,7 +104,7 @@ func (s *OpenGrepServiceImpl) LoadFindings() ([]models.Finding, error) {
 
 		description := strings.Join(item.Extra.Metadata.Owasp, ", ")
 
-		findings = append(findings, models.Finding{
+		f := models.Finding{
 			Engine:         scannerType,
 			Severity:       severity,
 			Name:           item.CheckId,
@@ -113,7 +113,9 @@ func (s *OpenGrepServiceImpl) LoadFindings() ([]models.Finding, error) {
 			Recommendation: item.Extra.Message,
 			SinkFile:       item.Path,
 			SinkLine:       item.Start.Line,
-		})
+		}
+		f.Hash = models.ComputeFindingHash("", f.Severity, f.SinkFile, f.SinkLine, f.Recommendation)
+		findings = append(findings, f)
 	}
 
 	return findings, nil

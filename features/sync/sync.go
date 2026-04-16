@@ -3,7 +3,6 @@ package sync
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"ScopeGuardian/connectors/defectdojo"
 	"ScopeGuardian/domains/models"
 	"ScopeGuardian/logger"
@@ -157,38 +156,34 @@ func pollFindings(ddService defectdojo.DefectDojoService, engagementId int) ([]d
 }
 
 // FilterByActiveFindings returns only the local findings that have a matching active finding
-// in DefectDojo. A local finding matches a DD finding when their titles are equal. File path
-// and line number are intentionally excluded from the match key because scanners (e.g. KICS)
-// may emit relative paths that DefectDojo normalises differently when storing, which would
-// cause false mismatches and incorrectly drop active findings.
-// For Grype findings the VulnId (CVE/GHSA) is used as the title key since DD stores the
-// vulnerability ID — not the artifact name — as the finding title; for all other scanners
-// the Name field is used directly.
-// DefectDojo may also prefix KICS finding titles with the rule category separated by ": "
-// (e.g. "Build Process: Missing User Instruction"). To handle this, each DD title is also
-// indexed under the substring after the last ": " separator, so a bare local name such as
-// "Missing User Instruction" still matches the prefixed DD title.
+// in DefectDojo, using a content hash as the match key. The hash is computed by
+// models.ComputeFindingHash from fields that are preserved without transformation when a
+// scan result is imported into DefectDojo and read back via its API
+// (Severity, FilePath/SinkFile, Line/SinkLine, Mitigation/Recommendation). This makes the
+// filter completely independent of how DefectDojo formats finding titles (e.g. KICS prefixes
+// the rule category to the name), what engine produced the finding, and whether a VulnId
+// is present.
+//
+// Two hashes are computed per DD finding:
+//   - hash(""|severity|filePath|line|mitigation): matches KICS and Opengrep local findings,
+//     which pass an empty vulnId to ComputeFindingHash.
+//   - hash(title|severity|filePath|line|mitigation): matches Grype local findings, where
+//     the VulnId (CVE/GHSA) equals the DD finding title.
+//
 // This filtering respects suppressions applied in DefectDojo: any finding marked as false
 // positive or accepted risk will be absent from the active set and therefore dropped locally.
 func FilterByActiveFindings(local []models.Finding, active []defectdojo.Finding) []models.Finding {
-	activeSet := make(map[string]struct{}, len(active))
+	activeSet := make(map[string]struct{}, len(active)*2)
 	for _, f := range active {
-		activeSet[f.Title] = struct{}{}
-		// DD may prefix the finding name with a category (e.g. "Build Process: Missing User
-		// Instruction"). Also index the part after the last ": " so local findings that only
-		// store the bare name still match.
-		if idx := strings.LastIndex(f.Title, ": "); idx >= 0 {
-			activeSet[f.Title[idx+2:]] = struct{}{}
-		}
+		// Hash without vuln-id covers KICS and Opengrep.
+		activeSet[models.ComputeFindingHash("", f.Severity, f.FilePath, f.Line, f.Mitigation)] = struct{}{}
+		// Hash with title as vuln-id covers Grype (DD title == CVE/GHSA id).
+		activeSet[models.ComputeFindingHash(f.Title, f.Severity, f.FilePath, f.Line, f.Mitigation)] = struct{}{}
 	}
 
 	filtered := make([]models.Finding, 0, len(local))
 	for _, f := range local {
-		title := f.VulnId
-		if title == "" {
-			title = f.Name
-		}
-		if _, ok := activeSet[title]; ok {
+		if _, ok := activeSet[f.Hash]; ok {
 			filtered = append(filtered, f)
 		}
 	}
