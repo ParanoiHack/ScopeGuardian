@@ -168,6 +168,26 @@ func (e *Engine) SyncResults(projectName string, branch string, protectedBranche
 	}
 }
 
+// FilterFindingsByDD fetches the active findings from DefectDojo for the given project and
+// branch and returns the subset of local findings that are still active (i.e. not suppressed)
+// in DefectDojo. This lets DD suppressions (false positive, accepted risk, etc.) propagate back
+// to the local display and security-gate evaluation.
+// If the DD fetch fails the original findings slice is returned unchanged together with the error
+// so the caller can decide whether to proceed or abort.
+func (e *Engine) FilterFindingsByDD(findings []models.Finding, projectName string, branch string, protectedBranches []string) ([]models.Finding, error) {
+	ddService := defectdojo.GetDefectDojoService(
+		client.NewClient(&http.Client{}),
+		environment_variable.EnvironmentVariable["DD_URL"],
+		environment_variable.EnvironmentVariable["DD_ACCESS_TOKEN"])
+
+	active, err := featuresync.GetActiveFindings(ddService, projectName, branch, protectedBranches)
+	if err != nil {
+		return findings, err
+	}
+
+	return featuresync.FilterByActiveFindings(findings, active), nil
+}
+
 // registerPrerequisite adds a scanner that must run and finish before any dependent
 // scanner in the regular registry is allowed to start. It returns false (and logs
 // an error) if the name is empty or already registered.

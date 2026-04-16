@@ -5,6 +5,7 @@ type Finding struct {
 	Engine         string
 	Severity       string
 	Name           string
+	VulnId         string
 	Cwe            string
 	Description    string
 	SinkFile       string

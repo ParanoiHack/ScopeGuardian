@@ -18,6 +18,7 @@ const (
 	logErrOutputFile      = "Failed to create output file"
 	logErrCloseOutputFile = "Failed to close output file"
 	logErrDumpFindings    = "Failed to write findings to output file"
+	logErrFilterByDD      = "Failed to filter findings against DefectDojo; displaying all local findings instead"
 )
 func main() {
 	logger.SetGlobalLogger(
@@ -55,6 +56,13 @@ func main() {
 
 	if args.Sync {
 		eng.SyncResults(args.ProjectName, args.Branch, config.ProtectedBranches)
+		filtered, err := eng.FilterFindingsByDD(findings, args.ProjectName, args.Branch, config.ProtectedBranches)
+		if err != nil {
+			logger.Error(err.Error())
+			logger.Error(logErrFilterByDD)
+		} else {
+			findings = filtered
+		}
 	}
 
 	display.DisplayFindings(os.Stdout, findings)

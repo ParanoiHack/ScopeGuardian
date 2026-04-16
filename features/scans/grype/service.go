@@ -101,6 +101,7 @@ func (s *GrypeServiceImpl) LoadFindings() ([]models.Finding, error) {
 			Engine:         scannerType,
 			Severity:       strings.ToUpper(match.Vulnerability.Severity),
 			Name:           fmt.Sprintf("%s %s", match.Artifact.Name, match.Artifact.Version),
+			VulnId:         match.Vulnerability.ID,
 			Description:    match.Vulnerability.Description,
 			SinkFile:       sinkFile,
 			Recommendation: recommendation,

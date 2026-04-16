@@ -8,6 +8,7 @@ const (
 	logErrorGetEngagements       = "Cannot retrieve engagements for product [%d]"
 	logErrorUpdateEndDate        = "Cannot update engagement end date [%d]"
 	logErrorCreateEngagement     = "Cannot create engagement for branch [%s]"
+	logErrorGetFindings          = "Cannot retrieve findings from DefectDojo for engagement [%d]"
 )
 
 const (
@@ -15,4 +16,5 @@ const (
 	errGetEngagements   = "cannot retrieve engagements"
 	errUpdateEndDate    = "cannot update engagement end date"
 	errCreateEngagement = "cannot create engagement"
+	errGetFindings      = "cannot retrieve findings"
 )

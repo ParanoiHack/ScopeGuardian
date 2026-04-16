@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"ScopeGuardian/connectors/defectdojo"
+	"ScopeGuardian/domains/models"
 	"ScopeGuardian/logger"
 	"time"
 )
@@ -67,5 +68,55 @@ func isProtectedBranch(branch string, protectedBranches []string) bool {
 		}
 	}
 	return false
+}
+
+// GetActiveFindings fetches the active (non-suppressed) findings for the given project and
+// branch from DefectDojo. These are the findings that survived deduplication and have not
+// been marked as false positive or accepted risk in DefectDojo.
+func GetActiveFindings(ddService defectdojo.DefectDojoService, projectName string, branch string, protectedBranches []string) ([]defectdojo.Finding, error) {
+	engagementId, err := GetEngagementId(ddService, projectName, branch, protectedBranches)
+	if err != nil {
+		return nil, err
+	}
+
+	findings, err := ddService.GetFindings(engagementId, 0, 100, []defectdojo.Finding{})
+	if err != nil {
+		logger.Error(fmt.Sprintf(logErrorGetFindings, engagementId))
+		return nil, errors.New(errGetFindings)
+	}
+
+	return findings, nil
+}
+
+// FilterByActiveFindings returns only the local findings that have a matching active finding
+// in DefectDojo. A local finding matches a DD finding when their title, file path, and line
+// number are equal. For Grype findings the VulnId (CVE/GHSA) is used as the title key since
+// DD stores the vulnerability ID — not the artifact name — as the finding title; for all
+// other scanners the Name field is used directly.
+// This filtering respects suppressions applied in DefectDojo: any finding marked as false
+// positive or accepted risk will be absent from the active set and therefore dropped locally.
+func FilterByActiveFindings(local []models.Finding, active []defectdojo.Finding) []models.Finding {
+	type matchKey struct {
+		title    string
+		filePath string
+		line     int
+	}
+
+	activeSet := make(map[matchKey]struct{}, len(active))
+	for _, f := range active {
+		activeSet[matchKey{f.Title, f.FilePath, f.Line}] = struct{}{}
+	}
+
+	var filtered []models.Finding
+	for _, f := range local {
+		title := f.VulnId
+		if title == "" {
+			title = f.Name
+		}
+		if _, ok := activeSet[matchKey{title, f.SinkFile, f.SinkLine}]; ok {
+			filtered = append(filtered, f)
+		}
+	}
+	return filtered
 }
 
