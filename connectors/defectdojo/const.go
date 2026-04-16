@@ -1,15 +1,17 @@
 package defectdojo
 
 const (
-	APIPrefix                   = "/api/v2"
-	GetProductsPath             = "/products?name_exact="
-	GetEngagementsPath          = "/engagements?product=%d&offset=%d&limit=%d"
-	CreateEngagementPath        = "/engagements/"
-	UpdateEngagementPath        = "/engagements/%d/"
-	ImportScanPath              = "/import-scan/"
+	APIPrefix            = "/api/v2"
+	GetProductsPath      = "/products?name_exact="
+	GetEngagementsPath   = "/engagements?product=%d&offset=%d&limit=%d"
+	CreateEngagementPath = "/engagements/"
+	UpdateEngagementPath = "/engagements/%d/"
+	ImportScanPath       = "/import-scan/"
+	ReimportScanPath     = "/reimport-scan/"
+	GetTestsPath         = "/tests/?engagement=%d&scan_type=%s"
 	// GetFindingsPath fetches only active (non-duplicate) findings and is used for
 	// polling until the post-import count stabilises.
-	GetFindingsPath             = "/findings/?test__engagement=%d&active=true&offset=%d&limit=%d"
+	GetFindingsPath = "/findings/?test__engagement=%d&active=true&offset=%d&limit=%d"
 	// GetAllEngagementFindingsPath fetches all findings for an engagement regardless
 	// of their active/duplicate status so that callers can read the "active" and
 	// "duplicate" fields directly and derive the correct local Status.
@@ -42,7 +44,9 @@ const (
 	logErrorUnknownType             = "Unknow type [%s]"
 	logErrorAddFile                 = "Cannot attach file to request"
 	logErrorCreateMultipartRequest  = "Cannot create multipart request"
-	logErrorImportScan         = "Cannot import scan via %s (HTTP %d)"
+	logErrorImportScan              = "Cannot import scan via %s (HTTP %d)"
+	logErrorReimportScan            = "Cannot reimport scan via %s (HTTP %d)"
+	logErrorRetrieveTests           = "Cannot retrieve tests for engagement ID %d"
 	logErrorRetrieveFindings        = "Cannot retrieve findings for engagement ID %d"
 )
 
@@ -57,5 +61,7 @@ const (
 	errUpdateEngagementEndDate = "cannot update engagement end date"
 	errWritingFile             = "cannot write file to request"
 	errImportScan              = "cannot import scan"
+	errReimportScan            = "cannot reimport scan"
+	errRetrieveTests           = "cannot retrieve tests"
 	errRetrieveFindings        = "cannot retrieve findings"
 )

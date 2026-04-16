@@ -72,6 +72,16 @@ type GetFindingsResponse struct {
 	Results []Finding `json:"results"`
 }
 
+type Test struct {
+	Id       int    `json:"id"`
+	ScanType string `json:"scan_type"`
+}
+
+type GetTestsResponse struct {
+	Count   int    `json:"count"`
+	Results []Test `json:"results"`
+}
+
 type ScanPayload struct {
 	Timestamp         string   `json:"scan_date" form:"scan_date"`
 	SeverityThreshold string   `json:"minimum_severity" form:"minimum_severity"`
@@ -84,4 +94,5 @@ type ScanPayload struct {
 	ScanType          string   `json:"scan_type" form:"scan_type"`
 	EngagementId      int      `json:"engagement" form:"engagement"`
 	CloseOldFinding   bool     `json:"close_old_findings_product_scope" form:"close_old_findings_product_scope"`
+	TestId            int      `json:"test,omitempty" form:"test"`
 }

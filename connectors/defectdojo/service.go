@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"reflect"
 	"ScopeGuardian/connectors/defectdojo/client"
 	"ScopeGuardian/logger"
@@ -21,6 +22,8 @@ type DefectDojoService interface {
 	GetEngagements(productId uint, offset int, limit int, engagements []Engagement) ([]Engagement, error)
 	UpdateEngagementEndDate(engagementId, productId int, protected bool) (bool, error)
 	ImportScan(payload ScanPayload, filename string) (bool, error)
+	ReimportScan(payload ScanPayload, filename string) (bool, error)
+	GetTests(engagementId int, scanType string) ([]Test, error)
 	// GetFindings retrieves active (non-duplicate) findings for an engagement. It is
 	// used internally for polling until the post-import count stabilises.
 	GetFindings(engagementId int, offset int, limit int, findings []Finding) ([]Finding, error)
@@ -226,6 +229,51 @@ func (s *DefectDojoServiceImpl) ImportScan(payload ScanPayload, filename string)
 	return true, nil
 }
 
+// ReimportScan reimports a scan result file into an existing test in DefectDojo using the
+// given ScanPayload. It finds the matching test by scan_type and engagement automatically.
+// filename is used as the multipart form file name. Returns true on success.
+func (s *DefectDojoServiceImpl) ReimportScan(payload ScanPayload, filename string) (bool, error) {
+	body, boundary, err := createMultipartFromScanPayload(payload, filename)
+	if err != nil {
+		logger.Error(logErrorCreateMultipartRequest)
+		return false, err
+	}
+
+	headers := s.client.GetHeaders(s.accessToken)
+	headers.Set(client.ContentTypeKey, boundary)
+
+	_, code := s.client.Post(fmt.Sprintf(
+		"%s%s%s", s.url, APIPrefix, ReimportScanPath), body, headers)
+
+	if code < http.StatusOK || code >= http.StatusMultipleChoices {
+		logger.Error(fmt.Sprintf(logErrorReimportScan, ReimportScanPath, code))
+		return false, errors.New(errReimportScan)
+	}
+
+	return true, nil
+}
+
+// GetTests retrieves all tests for the given engagement and scan type from DefectDojo.
+// It returns the list of matching tests or an error if the request fails.
+func (s *DefectDojoServiceImpl) GetTests(engagementId int, scanType string) ([]Test, error) {
+	var res GetTestsResponse
+
+	body, code := s.client.Get(fmt.Sprintf(
+		"%s%s%s", s.url, APIPrefix, fmt.Sprintf(GetTestsPath, engagementId, url.QueryEscape(scanType))), s.client.GetHeaders(s.accessToken))
+	if code != http.StatusOK {
+		logger.Error(fmt.Sprintf(logErrorRetrieveTests, engagementId))
+		return []Test{}, errors.New(errRetrieveTests)
+	}
+
+	err := json.Unmarshal(body, &res)
+	if err != nil {
+		logger.Error(fmt.Sprintf(logErrorDecodingToken, err.Error()))
+		return []Test{}, errors.New(errUnmarshal)
+	}
+
+	return res.Results, nil
+}
+
 // createMultipartFromScanPayload serialises a ScanPayload into a multipart/form-data
 // body. Struct fields are mapped to form keys via the "form" struct tag. The raw
 // scan file is appended under the "file" key using filename. It returns the body
@@ -257,6 +305,9 @@ func createMultipartFromScanPayload(payload ScanPayload, filename string) ([]byt
 				logger.Error(fmt.Sprintf(logErrorReflection, formKey))
 			}
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			if value.Int() == 0 {
+				continue
+			}
 			valStr := strconv.FormatInt(value.Int(), 10)
 			if err := writer.WriteField(formKey, valStr); err != nil {
 				logger.Error(fmt.Sprintf(logErrorReflection, formKey))
