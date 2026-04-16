@@ -5,6 +5,7 @@ const (
 	logInfoEngagementEndDatePast = "Engagement [%d] end date is in the past, updating"
 	logInfoEngagementNotFound    = "No engagement found for branch [%s], creating new one"
 	logInfoNoEngagementFound     = "No previous DefectDojo engagement found for branch [%s], skipping filter"
+	logInfoPollingFindings       = "Waiting for DefectDojo to finish processing imported scan for engagement [%d]"
 	logErrorGetProduct           = "Cannot retrieve product for project [%s]"
 	logErrorGetEngagements       = "Cannot retrieve engagements for product [%d]"
 	logErrorUpdateEndDate        = "Cannot update engagement end date [%d]"
@@ -13,10 +14,14 @@ const (
 )
 
 const (
-	errGetProduct          = "cannot retrieve product"
-	errGetEngagements      = "cannot retrieve engagements"
-	errUpdateEndDate       = "cannot update engagement end date"
-	errCreateEngagement    = "cannot create engagement"
-	errGetFindings         = "cannot retrieve findings"
-	errEngagementNotFound  = "no engagement found for this branch"
+	pollMaxRetries = 5
+)
+
+const (
+	errGetProduct         = "cannot retrieve product"
+	errGetEngagements     = "cannot retrieve engagements"
+	errUpdateEndDate      = "cannot update engagement end date"
+	errCreateEngagement   = "cannot create engagement"
+	errGetFindings        = "cannot retrieve findings"
+	errEngagementNotFound = "no engagement found for this branch"
 )

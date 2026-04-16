@@ -3,6 +3,7 @@ package sync
 import (
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -12,6 +13,13 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
+
+// TestMain disables real sleeps for all tests in this package so that polling
+// in GetActiveFindings/pollFindings completes instantly.
+func TestMain(m *testing.M) {
+	sleepFunc = func(_ time.Duration) {}
+	os.Exit(m.Run())
+}
 
 const (
 	testProjectName  = "my-project"
@@ -225,7 +233,7 @@ func TestGetActiveFindings(t *testing.T) {
 
 		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
 		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{existingEngagement}, nil)
-		mockService.EXPECT().GetFindings(testEngagementId, 0, 100, []defectdojo.Finding{}).Return(ddFindings, nil)
+		mockService.EXPECT().GetFindings(testEngagementId, 0, 100, []defectdojo.Finding{}).Return(ddFindings, nil).AnyTimes()
 
 		findings, err := GetActiveFindings(mockService, testProjectName, testBranch, noProtectedBranches)
 
@@ -246,7 +254,7 @@ func TestGetActiveFindings(t *testing.T) {
 
 		mockService.EXPECT().GetProductByName(testProjectName).Return(defectdojo.Product{Id: testProductId}, nil)
 		mockService.EXPECT().GetEngagements(uint(testProductId), 0, 100, []defectdojo.Engagement{}).Return([]defectdojo.Engagement{existingEngagement}, nil)
-		mockService.EXPECT().GetFindings(testEngagementId, 0, 100, []defectdojo.Finding{}).Return([]defectdojo.Finding{}, nil)
+		mockService.EXPECT().GetFindings(testEngagementId, 0, 100, []defectdojo.Finding{}).Return([]defectdojo.Finding{}, nil).AnyTimes()
 
 		findings, err := GetActiveFindings(mockService, testProjectName, testBranch, noProtectedBranches)
 
