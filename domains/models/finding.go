@@ -44,6 +44,19 @@ type Finding struct {
 	Status string
 }
 
+// FilterInactiveFindings returns a new slice containing only findings whose
+// Status is not FindingStatusInactive. ACTIVE and DUPLICATE findings are kept;
+// INACTIVE findings (suppressed, false-positive, accepted risk) are dropped.
+func FilterInactiveFindings(findings []Finding) []Finding {
+	result := make([]Finding, 0, len(findings))
+	for _, f := range findings {
+		if f.Status != FindingStatusInactive {
+			result = append(result, f)
+		}
+	}
+	return result
+}
+
 // ComputeFindingHash returns a deterministic SHA-256 hex hash over the finding
 // fields that are reliably preserved when a scan result is imported into and then
 // read back from DefectDojo. The hash is therefore computable independently from

@@ -75,6 +75,10 @@ func main() {
 		}
 	}
 
+	// Remove INACTIVE findings (suppressed, false-positive, accepted risk in DefectDojo).
+	// ACTIVE and DUPLICATE findings are kept — duplicates are still relevant to show.
+	findings = models.FilterInactiveFindings(findings)
+
 	display.DisplayFindings(os.Stdout, findings)
 
 	if args.Output != "" {
