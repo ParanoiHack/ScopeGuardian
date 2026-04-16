@@ -26,6 +26,7 @@ jobs:
     name: Security
     needs: test
     uses: ./.github/workflows/security.yml
+    secrets: inherit
     permissions:
       contents: read
       packages: read
