@@ -107,7 +107,7 @@ func FilterByActiveFindings(local []models.Finding, active []defectdojo.Finding)
 		activeSet[matchKey{f.Title, f.FilePath, f.Line}] = struct{}{}
 	}
 
-	var filtered []models.Finding
+	filtered := make([]models.Finding, 0, len(local))
 	for _, f := range local {
 		title := f.VulnId
 		if title == "" {

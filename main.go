@@ -58,8 +58,7 @@ func main() {
 		eng.SyncResults(args.ProjectName, args.Branch, config.ProtectedBranches)
 		filtered, err := eng.FilterFindingsByDD(findings, args.ProjectName, args.Branch, config.ProtectedBranches)
 		if err != nil {
-			logger.Error(err.Error())
-			logger.Error(logErrFilterByDD)
+			logger.Error(logErrFilterByDD, logger.Err(err))
 		} else {
 			findings = filtered
 		}
