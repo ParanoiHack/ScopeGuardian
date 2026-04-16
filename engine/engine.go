@@ -168,17 +168,6 @@ func (e *Engine) SyncResults(projectName string, branch string, protectedBranche
 	}
 }
 
-// GetDefectDojoFindings fetches findings from DefectDojo for the given project and branch.
-// It delegates to sync.GetDefectDojoFindings after building the DefectDojo service client.
-func (e *Engine) GetDefectDojoFindings(projectName string, branch string, protectedBranches []string) ([]models.Finding, error) {
-	ddService := defectdojo.GetDefectDojoService(
-		client.NewClient(&http.Client{}),
-		environment_variable.EnvironmentVariable["DD_URL"],
-		environment_variable.EnvironmentVariable["DD_ACCESS_TOKEN"])
-
-	return featuresync.GetDefectDojoFindings(ddService, projectName, branch, protectedBranches)
-}
-
 // registerPrerequisite adds a scanner that must run and finish before any dependent
 // scanner in the regular registry is allowed to start. It returns false (and logs
 // an error) if the name is empty or already registered.

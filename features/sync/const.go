@@ -8,7 +8,6 @@ const (
 	logErrorGetEngagements       = "Cannot retrieve engagements for product [%d]"
 	logErrorUpdateEndDate        = "Cannot update engagement end date [%d]"
 	logErrorCreateEngagement     = "Cannot create engagement for branch [%s]"
-	logErrorGetFindings          = "Cannot retrieve findings from DefectDojo for engagement [%d]"
 )
 
 const (
@@ -16,13 +15,4 @@ const (
 	errGetEngagements   = "cannot retrieve engagements"
 	errUpdateEndDate    = "cannot update engagement end date"
 	errCreateEngagement = "cannot create engagement"
-	errGetFindings      = "cannot retrieve findings"
 )
-
-// knownEngineTags is the set of tag values that identify the scanner engine for a finding.
-// Each scanner applies its engine tag to every finding via apply_tags_to_findings during import.
-var knownEngineTags = map[string]struct{}{
-	"IACST": {},
-	"SAST":  {},
-	"SCA":   {},
-}

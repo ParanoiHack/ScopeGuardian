@@ -3,9 +3,7 @@ package sync
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"ScopeGuardian/connectors/defectdojo"
-	"ScopeGuardian/domains/models"
 	"ScopeGuardian/logger"
 	"time"
 )
@@ -69,53 +67,5 @@ func isProtectedBranch(branch string, protectedBranches []string) bool {
 		}
 	}
 	return false
-}
-
-// GetDefectDojoFindings fetches the active findings for the given project and branch
-// from DefectDojo and converts them into the internal Finding model. It is used to
-// evaluate the security gate against findings already stored in DefectDojo when the
-// sync flag is active.
-func GetDefectDojoFindings(ddService defectdojo.DefectDojoService, projectName string, branch string, protectedBranches []string) ([]models.Finding, error) {
-	engagementId, err := GetEngagementId(ddService, projectName, branch, protectedBranches)
-	if err != nil {
-		return nil, err
-	}
-
-	ddFindings, err := ddService.GetFindings(engagementId, 0, 100, []defectdojo.Finding{})
-	if err != nil {
-		logger.Error(fmt.Sprintf(logErrorGetFindings, engagementId))
-		return nil, errors.New(errGetFindings)
-	}
-
-	var findings []models.Finding
-	for _, f := range ddFindings {
-		cwe := ""
-		if f.Cwe != 0 {
-			cwe = strconv.Itoa(f.Cwe)
-		}
-		findings = append(findings, models.Finding{
-			Engine:         engineFromTags(f.Tags),
-			Severity:       f.Severity,
-			Name:           f.Title,
-			Cwe:            cwe,
-			Description:    f.Description,
-			SinkFile:       f.FilePath,
-			SinkLine:       f.Line,
-			Recommendation: f.Mitigation,
-		})
-	}
-
-	return findings, nil
-}
-
-// engineFromTags returns the first engine tag found in tags, or an empty string if none match.
-// Engine tags are applied to DefectDojo findings by each scanner during import.
-func engineFromTags(tags []string) string {
-	for _, tag := range tags {
-		if _, ok := knownEngineTags[tag]; ok {
-			return tag
-		}
-	}
-	return ""
 }
 

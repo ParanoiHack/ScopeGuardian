@@ -13,12 +13,11 @@ import (
 )
 
 const (
-	logInfoLoadConfigFile        = "Loading configuration file"
-	logInfoDumpFindings          = "Findings successfully written to output file"
-	logErrOutputFile             = "Failed to create output file"
-	logErrCloseOutputFile        = "Failed to close output file"
-	logErrDumpFindings           = "Failed to write findings to output file"
-	logErrFallbackLocalFindings  = "Failed to retrieve findings from DefectDojo; displaying local findings instead"
+	logInfoLoadConfigFile = "Loading configuration file"
+	logInfoDumpFindings   = "Findings successfully written to output file"
+	logErrOutputFile      = "Failed to create output file"
+	logErrCloseOutputFile = "Failed to close output file"
+	logErrDumpFindings    = "Failed to write findings to output file"
 )
 func main() {
 	logger.SetGlobalLogger(
@@ -56,13 +55,6 @@ func main() {
 
 	if args.Sync {
 		eng.SyncResults(args.ProjectName, args.Branch, config.ProtectedBranches)
-		remoteFindings, err := eng.GetDefectDojoFindings(args.ProjectName, args.Branch, config.ProtectedBranches)
-		if err != nil {
-			logger.Error(err.Error())
-			logger.Error(logErrFallbackLocalFindings)
-		} else {
-			findings = remoteFindings
-		}
 	}
 
 	display.DisplayFindings(os.Stdout, findings)
