@@ -64,6 +64,13 @@ SCAN_DIR=/path/to/repos ./ScopeGuardian \
   --format csv \
   ./config.toml
 
+# Run a scan showing active and duplicate findings
+SCAN_DIR=/path/to/repos ./ScopeGuardian \
+  --projectName my-service \
+  --branch main \
+  --filter ACTIVE,DUPLICATE \
+  ./config.toml
+
 # Run a scan, sync results to DefectDojo, and enforce a security gate
 SCAN_DIR=/path/to/repos \
 DD_URL=http://localhost:8080 \
@@ -90,6 +97,7 @@ ScopeGuardian [flags] <config-file>
 | `--branch` | string | yes | Branch being scanned (e.g. `main`, `feature/my-branch`). |
 | `--sync` | bool | no | Upload scan results to DefectDojo. Requires `DD_URL` and `DD_ACCESS_TOKEN`. Default: `false`. |
 | `--threshold` | string | no | Comma-separated severity thresholds that define the security gate (see [Security Gate](#how-the-security-gate-works)). |
+| `--filter` | string | no | Comma-separated finding statuses to include in display and file output. Accepted values: `ACTIVE`, `INACTIVE`, `DUPLICATE`. Default: `ACTIVE`. Example: `--filter ACTIVE,DUPLICATE`. |
 | `-q` | bool | no | Quiet mode: suppress all log output. Default: `false`. |
 | `-o` | string | no | Write findings to the specified file. Banner and logs are not included; only the scan findings are written. |
 | `--format` | string | no | Output format used when `-o` is set. Accepted values: `json` (default), `csv`, `raw` (plain table). |
@@ -273,7 +281,9 @@ After uploading, ScopeGuardian fetches all findings for the engagement from Defe
 | `DUPLICATE` | `duplicate=true` | DefectDojo's deduplication engine identified an earlier occurrence |
 | `INACTIVE` | `active=false` | Suppressed by a human (false-positive, accepted risk, manually closed) |
 
-`INACTIVE` findings are **filtered out** before findings are displayed or written to a file. They are not visible in the CLI output and do not count toward security-gate thresholds. `DUPLICATE` findings are kept and displayed so that you can see the full scope of an issue.
+The `--filter` flag controls which statuses appear in the CLI output and in any file written with `-o`. By default only `ACTIVE` findings are shown. You can expand this with e.g. `--filter ACTIVE,DUPLICATE`.
+
+The security gate (`--threshold`) always evaluates **only `ACTIVE` findings**, regardless of the `--filter` value.
 
 ### KICS Sync Behaviour
 
@@ -366,10 +376,10 @@ For each threshold rule:
 
 ### Finding Source
 
-| Flags used | Findings evaluated |
-|-----------|-------------------|
-| `--threshold` only | Local scan output from all scanners (`INACTIVE` findings are still filtered out) |
-| `--threshold` + `--sync` | `ACTIVE` findings fetched from DefectDojo (post-deduplication, after INACTIVE suppression) |
+| Flags used | Findings evaluated by gate | Findings displayed / written |
+|-----------|---------------------------|------------------------------|
+| `--threshold` only | `ACTIVE` findings from local scan | controlled by `--filter` (default: `ACTIVE`) |
+| `--threshold` + `--sync` | `ACTIVE` findings fetched from DefectDojo | controlled by `--filter` (default: `ACTIVE`) |
 
 ---
 

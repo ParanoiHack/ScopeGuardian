@@ -8,6 +8,7 @@ const (
 	errInvalidSeverity       = "invalid severity: %s, must be one of: critical, high, medium, low, info"
 	errInvalidThresholdValue = "invalid threshold value: %s, must be a non-negative integer"
 	errInvalidFormat         = "invalid format: %s, must be one of: json, csv, raw"
+	errInvalidFilter         = "invalid filter status: %s, must be one of: ACTIVE, INACTIVE, DUPLICATE"
 )
 
 const (
@@ -25,3 +26,13 @@ const (
 )
 
 var validFormats = []string{FormatJSON, FormatCSV, FormatRaw}
+
+const (
+	FilterActive    = "ACTIVE"
+	FilterInactive  = "INACTIVE"
+	FilterDuplicate = "DUPLICATE"
+)
+
+var validFilterStatuses = []string{FilterActive, FilterInactive, FilterDuplicate}
+
+var defaultFilterStatuses = []string{FilterActive}

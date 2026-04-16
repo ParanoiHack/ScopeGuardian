@@ -75,11 +75,11 @@ func main() {
 		}
 	}
 
-	// Remove INACTIVE findings (suppressed, false-positive, accepted risk in DefectDojo).
-	// ACTIVE and DUPLICATE findings are kept — duplicates are still relevant to show.
-	findings = models.FilterInactiveFindings(findings)
+	// Apply the status filter for display and output. The security gate always
+	// evaluates only ACTIVE findings regardless of this filter.
+	displayFindings := models.FilterFindingsByStatus(findings, args.StatusFilters)
 
-	display.DisplayFindings(os.Stdout, findings)
+	display.DisplayFindings(os.Stdout, displayFindings)
 
 	if args.Output != "" {
 		f, err := os.Create(args.Output)
@@ -92,7 +92,7 @@ func main() {
 				logger.Error(logErrCloseOutputFile, logger.Err(cerr))
 			}
 		}()
-		if err := display.DumpFindings(f, findings, args.Format); err != nil {
+		if err := display.DumpFindings(f, displayFindings, args.Format); err != nil {
 			logger.Error(logErrDumpFindings, logger.Err(err))
 			os.Exit(1)
 		}

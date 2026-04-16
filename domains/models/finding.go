@@ -57,6 +57,26 @@ func FilterInactiveFindings(findings []Finding) []Finding {
 	return result
 }
 
+// FilterFindingsByStatus returns a new slice containing only findings whose
+// Status is present in the allowed set. The comparison is case-insensitive.
+// If statuses is empty, the original slice is returned unchanged.
+func FilterFindingsByStatus(findings []Finding, statuses []string) []Finding {
+	if len(statuses) == 0 {
+		return findings
+	}
+	allowed := make(map[string]bool, len(statuses))
+	for _, s := range statuses {
+		allowed[strings.ToUpper(s)] = true
+	}
+	result := make([]Finding, 0, len(findings))
+	for _, f := range findings {
+		if allowed[strings.ToUpper(f.Status)] {
+			result = append(result, f)
+		}
+	}
+	return result
+}
+
 // ComputeFindingHash returns a deterministic SHA-256 hex hash over the finding
 // fields that are reliably preserved when a scan result is imported into and then
 // read back from DefectDojo. The hash is therefore computable independently from
