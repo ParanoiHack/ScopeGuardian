@@ -10,11 +10,11 @@ import (
 const (
 	// FindingStatusActive indicates a finding that is active in DefectDojo
 	// (not a duplicate, not suppressed). Without --sync all findings default to ACTIVE.
-	FindingStatusActive = "ACTIVE"
+	FindingStatusActive    = "ACTIVE"
 	// FindingStatusInactive indicates a finding that DefectDojo has suppressed,
 	// marked as a false positive, or accepted as a risk. The local scanner still
 	// reports it but it is excluded from security-gate evaluation.
-	FindingStatusInactive = "INACTIVE"
+	FindingStatusInactive  = "INACTIVE"
 	// FindingStatusDuplicate indicates a finding that DefectDojo's deduplication
 	// engine has identified as a duplicate of another finding in the product.
 	// Duplicate findings are excluded from security-gate evaluation.
