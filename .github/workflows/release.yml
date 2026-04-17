@@ -12,6 +12,7 @@ jobs:
     name: CI
     if: startsWith(github.ref, 'refs/tags/') && github.ref_type == 'tag'
     uses: ./.github/workflows/ci.yml
+    secrets: inherit
     permissions:
       contents: read
       packages: read
