@@ -34,5 +34,3 @@ const (
 )
 
 var validFilterStatuses = []string{FilterActive, FilterInactive, FilterDuplicate}
-
-var defaultFilterStatuses = []string{FilterActive}

@@ -53,7 +53,7 @@ const (
 const (
 	errRetrieveProducts        = "cannot retrieve defectdojo products"
 	errRetrieveEngagements     = "cannot retrieve product's engagement"
-	errAuthtorization          = "wrong api key"
+	errAuthorization           = "wrong api key"
 	errDuplicateProduct        = "two products with the same name already exist"
 	errProductNotExist         = "product does not exist"
 	errUnmarshal               = "cannot unmarshal json"

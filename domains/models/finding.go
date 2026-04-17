@@ -44,19 +44,6 @@ type Finding struct {
 	Status string
 }
 
-// FilterInactiveFindings returns a new slice containing only findings whose
-// Status is not FindingStatusInactive. ACTIVE and DUPLICATE findings are kept;
-// INACTIVE findings (suppressed, false-positive, accepted risk) are dropped.
-func FilterInactiveFindings(findings []Finding) []Finding {
-	result := make([]Finding, 0, len(findings))
-	for _, f := range findings {
-		if f.Status != FindingStatusInactive {
-			result = append(result, f)
-		}
-	}
-	return result
-}
-
 // FilterFindingsByStatus returns a new slice containing only findings whose
 // Status is present in the allowed set. The comparison is case-insensitive.
 // If statuses is empty, the original slice is returned unchanged.
