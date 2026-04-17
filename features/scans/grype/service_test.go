@@ -59,17 +59,23 @@ func (m *mockDefectDojoService) GetFindings(_ int, _ int, _ int, _ []defectdojo.
 	return []defectdojo.Finding{}, nil
 }
 
+func (m *mockDefectDojoService) GetAllEngagementFindings(_ int, _ int, _ int, _ []defectdojo.Finding) ([]defectdojo.Finding, error) {
+	return []defectdojo.Finding{}, nil
+}
+
 var _ defectdojo.DefectDojoService = &mockDefectDojoService{}
 
-func TestNewGrypeService(t *testing.T) {
+// TestNewGrypeServiceImplementsInterface verifies that newGrypeService returns a
+// value that satisfies the interfaces.ScanServiceImpl contract, enforcing that
+// all required scanner methods are present at compile and test time.
+func TestNewGrypeServiceImplementsInterface(t *testing.T) {
 	service := newGrypeService(loader.Grype{})
 
 	_, ok := service.(interfaces.ScanServiceImpl)
-	assert.NotNil(t, service)
 	assert.True(t, ok)
 }
 
-func TestGrypeStart(t *testing.T) {
+func TestNewGrypeService(t *testing.T) {
 	t.Run("Should return error when sbom file not found", func(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], ""))
 		environment_variable.ReloadEnv()
@@ -159,6 +165,7 @@ func TestSync(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.EqualValues(t, 3, ddMock.reimportedPayload.TestId)
+		assert.True(t, ddMock.reimportedPayload.DoNotReactivate)
 	})
 
 	t.Run("Should return error when import scan fails", func(t *testing.T) {

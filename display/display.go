@@ -23,6 +23,7 @@ const (
 	rowSinkFile       = "Sink File"
 	rowSinkLine       = "Sink Line"
 	rowRecommendation = "Recommendation"
+	rowStatus         = "Status"
 
 	// CSV column headers use compact names (no spaces) to be machine-readable.
 	csvColSinkFile = "SinkFile"
@@ -110,10 +111,11 @@ func DisplayFindings(w io.Writer, findings []models.Finding) {
 			finding.SinkFile,
 			finding.SinkLine,
 			finding.Recommendation,
+			finding.Status,
 		})
 	}
 
-	t.AppendHeader(table.Row{rowEngine, rowSeverity, rowName, rowCwe, rowDescription, rowSinkFile, rowSinkLine, rowRecommendation})
+	t.AppendHeader(table.Row{rowEngine, rowSeverity, rowName, rowCwe, rowDescription, rowSinkFile, rowSinkLine, rowRecommendation, rowStatus})
 
 	t.SetCaption(fmt.Sprintf(caption, environment_variable.EnvironmentVariable["SCAN_DIR"]))
 	t.SetColumnConfigs([]table.ColumnConfig{
@@ -124,6 +126,7 @@ func DisplayFindings(w io.Writer, findings []models.Finding) {
 		{Name: rowSinkLine, Align: text.AlignCenter, VAlign: text.VAlignMiddle, WidthMax: 10},
 		{Name: rowDescription, Align: text.AlignDefault, VAlign: text.VAlignMiddle, WidthMax: 50},
 		{Name: rowRecommendation, Align: text.AlignDefault, VAlign: text.VAlignMiddle, WidthMax: 50},
+		{Name: rowStatus, Align: text.AlignCenter, VAlign: text.VAlignMiddle, WidthMax: 10},
 	})
 
 	t.SetStyle(table.StyleLight)
@@ -158,7 +161,7 @@ func dumpFindingsJSON(w io.Writer, findings []models.Finding) error {
 
 func dumpFindingsCSV(w io.Writer, findings []models.Finding) error {
 	cw := csv.NewWriter(w)
-	if err := cw.Write([]string{rowEngine, rowSeverity, rowName, rowCwe, rowDescription, csvColSinkFile, csvColSinkLine, rowRecommendation}); err != nil {
+	if err := cw.Write([]string{rowEngine, rowSeverity, rowName, rowCwe, rowDescription, csvColSinkFile, csvColSinkLine, rowRecommendation, rowStatus}); err != nil {
 		return err
 	}
 	for _, f := range findings {
@@ -171,6 +174,7 @@ func dumpFindingsCSV(w io.Writer, findings []models.Finding) error {
 			f.SinkFile,
 			strconv.Itoa(f.SinkLine),
 			f.Recommendation,
+			f.Status,
 		}); err != nil {
 			return err
 		}

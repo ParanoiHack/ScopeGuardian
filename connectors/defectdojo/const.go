@@ -1,15 +1,21 @@
 package defectdojo
 
 const (
-	APIPrefix            = "/api/v2"
-	GetProductsPath      = "/products?name_exact="
-	GetEngagementsPath   = "/engagements?product=%d&offset=%d&limit=%d"
-	CreateEngagementPath = "/engagements/"
-	UpdateEngagementPath = "/engagements/%d/"
-	ImportScanPath       = "/import-scan/"
-	ReimportScanPath     = "/reimport-scan/"
-	GetTestsPath         = "/tests/?engagement=%d&scan_type=%s"
-	GetFindingsPath      = "/findings/?test__engagement=%d&active=true&offset=%d&limit=%d"
+	APIPrefix                    = "/api/v2"
+	GetProductsPath              = "/products?name_exact="
+	GetEngagementsPath           = "/engagements?product=%d&offset=%d&limit=%d"
+	CreateEngagementPath         = "/engagements/"
+	UpdateEngagementPath         = "/engagements/%d/"
+	ImportScanPath               = "/import-scan/"
+	ReimportScanPath             = "/reimport-scan/"
+	GetTestsPath                 = "/tests/?engagement=%d&scan_type=%s"
+	// GetFindingsPath fetches only active (non-duplicate) findings and is used for
+	// polling until the post-import count stabilises.
+	GetFindingsPath              = "/findings/?test__engagement=%d&active=true&offset=%d&limit=%d"
+	// GetAllEngagementFindingsPath fetches all findings for an engagement regardless
+	// of their active/duplicate status so that callers can read the "active" and
+	// "duplicate" fields directly and derive the correct local Status.
+	GetAllEngagementFindingsPath = "/findings/?test__engagement=%d&offset=%d&limit=%d"
 )
 
 const (
@@ -47,7 +53,7 @@ const (
 const (
 	errRetrieveProducts        = "cannot retrieve defectdojo products"
 	errRetrieveEngagements     = "cannot retrieve product's engagement"
-	errAuthtorization          = "wrong api key"
+	errAuthorization           = "wrong api key"
 	errDuplicateProduct        = "two products with the same name already exist"
 	errProductNotExist         = "product does not exist"
 	errUnmarshal               = "cannot unmarshal json"

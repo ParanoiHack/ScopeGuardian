@@ -25,6 +25,9 @@ func PrintUsage(w io.Writer) {
 	fmt.Fprintln(w, "  --threshold string     Enable security gate, e.g. critical=1 or critical=1,high=2 (optional)")
 	fmt.Fprintln(w, "                         Supported severities: critical, high, medium, low, info")
 	fmt.Fprintln(w, "                         Multiple thresholds can be comma-separated (e.g. critical=1,high=2)")
+	fmt.Fprintln(w, "  --filter string        Comma-separated finding statuses to include in display and output (optional)")
+	fmt.Fprintln(w, "                         Supported values: ACTIVE, INACTIVE, DUPLICATE (default: ACTIVE)")
+	fmt.Fprintln(w, "                         Example: --filter ACTIVE,DUPLICATE")
 	fmt.Fprintln(w, "  -q                     Quiet mode: suppress all log output (default: false)")
 	fmt.Fprintln(w, "  -o string              Write findings to the specified file (optional)")
 	fmt.Fprintln(w, "  --format string        Output format for -o: json, csv, or raw (default: json)")
@@ -49,6 +52,7 @@ func Parse(args []string) (Args, error) {
 	quiet       := fs.Bool("q", false, "Quiet mode: suppress all log output")
 	output      := fs.String("o", "", "Write findings to the specified file")
 	format      := fs.String("format", FormatJSON, "Output format for -o: json, csv, or raw")
+	filter      := fs.String("filter", FilterActive, "Comma-separated finding statuses to display: ACTIVE, INACTIVE, DUPLICATE (default: ACTIVE)")
 
 	if err := fs.Parse(args); err != nil {
 		return Args{}, err
@@ -82,15 +86,21 @@ func Parse(args []string) (Args, error) {
 		return Args{}, fmt.Errorf(errInvalidFormat, *format)
 	}
 
+	statusFilters, err := parseStatusFilters(*filter)
+	if err != nil {
+		return Args{}, err
+	}
+
 	return Args{
-		Config:      config,
-		ProjectName: *projectName,
-		Branch:      *branch,
-		Sync:        *sync,
-		Quiet:       *quiet,
-		Output:      *output,
-		Format:      *format,
-		Thresholds:  parsedThresholds,
+		Config:        config,
+		ProjectName:   *projectName,
+		Branch:        *branch,
+		Sync:          *sync,
+		Quiet:         *quiet,
+		Output:        *output,
+		Format:        *format,
+		Thresholds:    parsedThresholds,
+		StatusFilters: statusFilters,
 	}, nil
 }
 
@@ -142,6 +152,34 @@ func isValidSeverity(severity string) bool {
 		}
 	}
 	return false
+}
+
+// isValidFilterStatus reports whether status (case-insensitive) is one of the
+// recognised finding status values: ACTIVE, INACTIVE, DUPLICATE.
+func isValidFilterStatus(status string) bool {
+	upper := strings.ToUpper(status)
+	for _, s := range validFilterStatuses {
+		if s == upper {
+			return true
+		}
+	}
+	return false
+}
+
+// parseStatusFilters parses a comma-separated list of finding status values
+// (e.g. "ACTIVE,DUPLICATE") and returns a normalised (upper-case) slice.
+// Returns an error if any token is not a recognised status.
+func parseStatusFilters(s string) ([]string, error) {
+	tokens := strings.Split(s, ",")
+	result := make([]string, 0, len(tokens))
+	for _, token := range tokens {
+		trimmed := strings.TrimSpace(token)
+		if !isValidFilterStatus(trimmed) {
+			return nil, fmt.Errorf(errInvalidFilter, trimmed)
+		}
+		result = append(result, strings.ToUpper(trimmed))
+	}
+	return result, nil
 }
 
 // isValidFormat reports whether format is one of the recognised output formats.

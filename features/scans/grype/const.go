@@ -16,8 +16,8 @@ const (
 	SCAEngineTag         = "SCA"
 	scanType             = "Anchore Grype"
 	closeOldFinding      = true
+	doNotReactivate      = true
 )
-
 const (
 	sbomScheme             = "sbom:"
 	sbomInputNameParameter = "sbom.syft.json"

@@ -218,6 +218,62 @@ func TestParse(t *testing.T) {
 		assert.NotNil(t, err)
 		assert.EqualValues(t, Args{}, args)
 	})
+
+	t.Run("Should default filter to ACTIVE when not set", func(t *testing.T) {
+		args, err := Parse([]string{"--projectName", "my-project", "--branch", "main", "./config.toml"})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, []string{FilterActive}, args.StatusFilters)
+	})
+
+	t.Run("Should parse single filter value ACTIVE", func(t *testing.T) {
+		args, err := Parse([]string{"--filter", "ACTIVE", "--projectName", "my-project", "--branch", "main", "./config.toml"})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, []string{FilterActive}, args.StatusFilters)
+	})
+
+	t.Run("Should parse single filter value INACTIVE", func(t *testing.T) {
+		args, err := Parse([]string{"--filter", "INACTIVE", "--projectName", "my-project", "--branch", "main", "./config.toml"})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, []string{FilterInactive}, args.StatusFilters)
+	})
+
+	t.Run("Should parse single filter value DUPLICATE", func(t *testing.T) {
+		args, err := Parse([]string{"--filter", "DUPLICATE", "--projectName", "my-project", "--branch", "main", "./config.toml"})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, []string{FilterDuplicate}, args.StatusFilters)
+	})
+
+	t.Run("Should parse comma-separated filter values", func(t *testing.T) {
+		args, err := Parse([]string{"--filter", "ACTIVE,DUPLICATE", "--projectName", "my-project", "--branch", "main", "./config.toml"})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, []string{FilterActive, FilterDuplicate}, args.StatusFilters)
+	})
+
+	t.Run("Should parse all three filter values", func(t *testing.T) {
+		args, err := Parse([]string{"--filter", "ACTIVE,INACTIVE,DUPLICATE", "--projectName", "my-project", "--branch", "main", "./config.toml"})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, []string{FilterActive, FilterInactive, FilterDuplicate}, args.StatusFilters)
+	})
+
+	t.Run("Should parse filter values case-insensitively", func(t *testing.T) {
+		args, err := Parse([]string{"--filter", "active,duplicate", "--projectName", "my-project", "--branch", "main", "./config.toml"})
+
+		assert.Nil(t, err)
+		assert.EqualValues(t, []string{FilterActive, FilterDuplicate}, args.StatusFilters)
+	})
+
+	t.Run("Should not parse when filter status is invalid", func(t *testing.T) {
+		args, err := Parse([]string{"--filter", "UNKNOWN", "--projectName", "my-project", "--branch", "main", "./config.toml"})
+
+		assert.NotNil(t, err)
+		assert.EqualValues(t, Args{}, args)
+	})
 }
 
 func TestPrintUsage(t *testing.T) {
@@ -230,6 +286,7 @@ func TestPrintUsage(t *testing.T) {
 	assert.Contains(t, output, "--branch")
 	assert.Contains(t, output, "--sync")
 	assert.Contains(t, output, "--threshold")
+	assert.Contains(t, output, "--filter")
 	assert.Contains(t, output, "<config-file>")
 	assert.Contains(t, output, "-q")
 	assert.Contains(t, output, "-o")

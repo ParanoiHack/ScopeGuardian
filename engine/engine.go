@@ -168,24 +168,28 @@ func (e *Engine) SyncResults(projectName string, branch string, protectedBranche
 	}
 }
 
-// FilterFindingsByDD fetches the active findings from DefectDojo for the given project and
-// branch and returns the subset of local findings that are still active (i.e. not suppressed)
-// in DefectDojo. This lets DD suppressions (false positive, accepted risk, etc.) propagate back
-// to the local display and security-gate evaluation.
-// If the DD fetch fails the original findings slice is returned unchanged together with the error
-// so the caller can decide whether to proceed or abort.
-func (e *Engine) FilterFindingsByDD(findings []models.Finding, projectName string, branch string, protectedBranches []string) ([]models.Finding, error) {
+// MarkFindingsByDD fetches all findings from DefectDojo for the given project and
+// branch after the scan has been synced and marks each local finding with the
+// appropriate status based on DefectDojo's "active" and "duplicate" fields:
+//   - DUPLICATE — DD deduplication identified a prior occurrence in the product
+//   - INACTIVE  — DD has suppressed the finding (false positive, accepted risk, …)
+//   - ACTIVE    — finding is open and confirmed; newly found findings also get ACTIVE
+//
+// All local findings are returned — nothing is filtered out. If the DD fetch fails
+// (e.g. the engagement does not exist yet) the original findings slice is returned
+// unchanged together with the error so the caller can keep all findings at ACTIVE.
+func (e *Engine) MarkFindingsByDD(findings []models.Finding, projectName string, branch string, protectedBranches []string) ([]models.Finding, error) {
 	ddService := defectdojo.GetDefectDojoService(
 		client.NewClient(&http.Client{}),
 		environment_variable.EnvironmentVariable["DD_URL"],
 		environment_variable.EnvironmentVariable["DD_ACCESS_TOKEN"])
 
-	active, err := featuresync.GetActiveFindings(ddService, projectName, branch, protectedBranches)
+	ddFindings, err := featuresync.GetEngagementFindings(ddService, projectName, branch, protectedBranches)
 	if err != nil {
 		return findings, err
 	}
 
-	return featuresync.FilterByActiveFindings(findings, active), nil
+	return featuresync.MarkFindingsByDDFindings(findings, ddFindings), nil
 }
 
 // registerPrerequisite adds a scanner that must run and finish before any dependent

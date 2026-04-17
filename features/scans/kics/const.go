@@ -15,8 +15,8 @@ const (
 	IACSTEngineTag       = "IACST"
 	scanType             = "KICS Scan"
 	closeOldFinding      = true
+	doNotReactivate      = true
 )
-
 const (
 	scanArgument            = "scan"
 	ciArgument              = "--ci"

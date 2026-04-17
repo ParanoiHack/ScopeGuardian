@@ -141,6 +141,7 @@ func (s *KicsServiceImpl) Sync(engagementId int, branch string, service defectdo
 	payload.ScanType = scanType
 	payload.EngagementId = engagementId
 	payload.CloseOldFinding = closeOldFinding
+	payload.DoNotReactivate = doNotReactivate
 	fileContent, err := os.ReadFile(s.output)
 	if err != nil {
 		logger.Error(fmt.Sprintf(logErrorFileNotFound, s.output))

@@ -131,6 +131,7 @@ func (s *GrypeServiceImpl) Sync(engagementId int, branch string, service defectd
 	payload.ScanType = scanType
 	payload.EngagementId = engagementId
 	payload.CloseOldFinding = closeOldFinding
+	payload.DoNotReactivate = doNotReactivate
 	fileContent, err := os.ReadFile(s.output)
 	if err != nil {
 		logger.Error(fmt.Sprintf(logErrorFileNotFound, s.output))

@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"ScopeGuardian/display"
+	"ScopeGuardian/domains/models"
 	"ScopeGuardian/engine"
 	"ScopeGuardian/loader"
 	"ScopeGuardian/logger"
@@ -18,8 +19,9 @@ const (
 	logErrOutputFile      = "Failed to create output file"
 	logErrCloseOutputFile = "Failed to close output file"
 	logErrDumpFindings    = "Failed to write findings to output file"
-	logErrFilterByDD      = "Failed to filter findings against DefectDojo; displaying all local findings instead"
+	logErrMarkByDD        = "Failed to retrieve finding statuses from DefectDojo; all findings treated as active"
 )
+
 func main() {
 	logger.SetGlobalLogger(
 		logger.NewSlogLogger(
@@ -54,17 +56,30 @@ func main() {
 
 	findings := eng.LoadFindings()
 
+	// Mark all findings ACTIVE by default (no DefectDojo context available).
+	for i := range findings {
+		findings[i].Status = models.FindingStatusActive
+	}
+
 	if args.Sync {
+		// Upload current scan results to DefectDojo first.
 		eng.SyncResults(args.ProjectName, args.Branch, config.ProtectedBranches)
-		filtered, err := eng.FilterFindingsByDD(findings, args.ProjectName, args.Branch, config.ProtectedBranches)
+		// Then fetch all findings from DD (including duplicates and inactive) and
+		// mark each local finding with the status derived from DD's active/duplicate
+		// fields. On error all findings remain ACTIVE (safe default).
+		marked, err := eng.MarkFindingsByDD(findings, args.ProjectName, args.Branch, config.ProtectedBranches)
 		if err != nil {
-			logger.Error(logErrFilterByDD, logger.Err(err))
+			logger.Error(logErrMarkByDD, logger.Err(err))
 		} else {
-			findings = filtered
+			findings = marked
 		}
 	}
 
-	display.DisplayFindings(os.Stdout, findings)
+	// Apply the status filter for display and output. The security gate always
+	// evaluates only ACTIVE findings regardless of this filter.
+	displayFindings := models.FilterFindingsByStatus(findings, args.StatusFilters)
+
+	display.DisplayFindings(os.Stdout, displayFindings)
 
 	if args.Output != "" {
 		f, err := os.Create(args.Output)
@@ -77,7 +92,7 @@ func main() {
 				logger.Error(logErrCloseOutputFile, logger.Err(cerr))
 			}
 		}()
-		if err := display.DumpFindings(f, findings, args.Format); err != nil {
+		if err := display.DumpFindings(f, displayFindings, args.Format); err != nil {
 			logger.Error(logErrDumpFindings, logger.Err(err))
 			os.Exit(1)
 		}

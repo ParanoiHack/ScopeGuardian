@@ -155,43 +155,92 @@ func pollFindings(ddService defectdojo.DefectDojoService, engagementId int) ([]d
 	return lastFindings, nil
 }
 
-// FilterByActiveFindings returns only the local findings that have a matching active finding
-// in DefectDojo, using a uniform content hash as the match key.
-//
-// Two complementary strategies are applied per DefectDojo finding:
-//
-//  1. Hash from API fields — hash(severity|filePath|line|mitigation) — covers all
-//     scanners because these four fields are reliably preserved by every DefectDojo
-//     parser. This is the primary path for Grype and KICS findings.
-//
-//  2. UniqueIdFromTool direct lookup — covers OpenGrep findings. Before upload,
-//     enrichOpenGrepResults injects the pre-computed hash into extra.fingerprint;
-//     DefectDojo's Semgrep parser stores that as unique_id_from_tool, which is
-//     returned by the findings API. A direct match on that field is collision-free
-//     even when multiple findings share the same rule ID (check_id).
-//
-// Because the same hash formula (models.ComputeFindingHash) is used on both sides,
-// a match means the findings are identical. This filtering respects suppressions
-// applied in DefectDojo: any finding marked as false positive or accepted risk will
-// be absent from the active set and therefore dropped locally.
-func FilterByActiveFindings(local []models.Finding, active []defectdojo.Finding) []models.Finding {
-	activeSet := make(map[string]struct{}, len(active)*2)
-	for _, f := range active {
-		// Strategy 1: hash from API fields — covers Grype and KICS.
-		activeSet[models.ComputeFindingHash(f.Severity, f.FilePath, f.Line, f.Mitigation)] = struct{}{}
-		// Strategy 2: UniqueIdFromTool — covers OpenGrep (hash injected into
-		// extra.fingerprint by enrichOpenGrepResults before upload).
-		if f.UniqueIdFromTool != "" {
-			activeSet[f.UniqueIdFromTool] = struct{}{}
+// GetEngagementFindings fetches the complete set of findings for the given project
+// and branch from DefectDojo after a sync operation. It first polls the active
+// finding count until it stabilises (ensuring DD has finished processing the import),
+// then fetches all findings for the engagement — including duplicate and inactive
+// ones — so that callers can read the "active" and "duplicate" fields to derive
+// the correct local Status. If no matching engagement exists for the branch an
+// error is returned so the caller can keep all local findings at ACTIVE status.
+func GetEngagementFindings(ddService defectdojo.DefectDojoService, projectName string, branch string, protectedBranches []string) ([]defectdojo.Finding, error) {
+	product, err := ddService.GetProductByName(projectName)
+	if err != nil {
+		logger.Error(fmt.Sprintf(logErrorGetProduct, projectName))
+		return nil, errors.New(errGetProduct)
+	}
+
+	engagements, err := ddService.GetEngagements(uint(product.Id), 0, 100, []defectdojo.Engagement{})
+	if err != nil {
+		logger.Error(fmt.Sprintf(logErrorGetEngagements, product.Id))
+		return nil, errors.New(errGetEngagements)
+	}
+
+	expectedName := fmt.Sprintf("%s-%s", projectName, branch)
+	for _, engagement := range engagements {
+		if engagement.Name == expectedName {
+			// Poll active findings until count stabilises so we know DD has
+			// finished processing the import asynchronously.
+			if _, err := pollFindings(ddService, engagement.Id); err != nil {
+				return nil, err
+			}
+			// Fetch all findings (active + inactive + duplicate) for marking.
+			return ddService.GetAllEngagementFindings(engagement.Id, 0, 100, []defectdojo.Finding{})
 		}
 	}
 
-	filtered := make([]models.Finding, 0, len(local))
-	for _, f := range local {
-		if _, ok := activeSet[f.Hash]; ok {
-			filtered = append(filtered, f)
+	logger.Info(fmt.Sprintf(logInfoNoEngagementFound, branch))
+	return nil, errors.New(errEngagementNotFound)
+}
+
+// MarkFindingsByDDFindings sets the Status field on every local finding based on
+// the corresponding DefectDojo finding's "active" and "duplicate" fields:
+//
+//   - duplicate=true  → DUPLICATE  (DD deduplication identified a prior occurrence)
+//   - active=false    → INACTIVE   (suppressed, false-positive, or accepted risk)
+//   - active=true     → ACTIVE     (open, confirmed finding)
+//
+// Local findings with no matching DD finding default to ACTIVE (they are brand-new
+// findings just created by the sync import). All local findings are returned —
+// nothing is filtered out.
+//
+// Two complementary hash strategies are used to match a local finding to its DD
+// counterpart:
+//
+//  1. hash(severity|filePath|line|mitigation) — primary path for Grype and KICS.
+//  2. UniqueIdFromTool — covers OpenGrep (hash injected into extra.fingerprint
+//     before upload; DD's Semgrep parser stores it as unique_id_from_tool).
+func MarkFindingsByDDFindings(local []models.Finding, ddFindings []defectdojo.Finding) []models.Finding {
+	type ddStatus struct {
+		active    bool
+		duplicate bool
+	}
+	ddMap := make(map[string]ddStatus, len(ddFindings)*2)
+	for _, f := range ddFindings {
+		s := ddStatus{active: f.Active, duplicate: f.Duplicate}
+		// Strategy 1: hash from API fields — covers Grype and KICS.
+		ddMap[models.ComputeFindingHash(f.Severity, f.FilePath, f.Line, f.Mitigation)] = s
+		// Strategy 2: UniqueIdFromTool — covers OpenGrep.
+		if f.UniqueIdFromTool != "" {
+			ddMap[f.UniqueIdFromTool] = s
 		}
 	}
-	return filtered
+
+	result := make([]models.Finding, len(local))
+	for i, f := range local {
+		result[i] = f
+		if s, ok := ddMap[f.Hash]; ok {
+			switch {
+			case s.duplicate:
+				result[i].Status = models.FindingStatusDuplicate
+			case !s.active:
+				result[i].Status = models.FindingStatusInactive
+			default:
+				result[i].Status = models.FindingStatusActive
+			}
+		} else {
+			result[i].Status = models.FindingStatusActive
+		}
+	}
+	return result
 }
 

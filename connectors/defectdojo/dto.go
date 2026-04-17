@@ -58,6 +58,13 @@ type Finding struct {
 	Mitigation       string            `json:"mitigation"`
 	UniqueIdFromTool string            `json:"unique_id_from_tool"`
 	VulnerabilityIds []VulnerabilityId `json:"vulnerability_ids"`
+	// Active is true when the finding is currently open and not suppressed in
+	// DefectDojo. Corresponds to the "active" field returned by the findings API.
+	Active bool `json:"active"`
+	// Duplicate is true when DefectDojo's deduplication engine has identified this
+	// finding as a duplicate of another finding in the product. Corresponds to the
+	// "duplicate" field returned by the findings API.
+	Duplicate bool `json:"duplicate"`
 }
 
 type GetFindingsResponse struct {
@@ -87,5 +94,6 @@ type ScanPayload struct {
 	ScanType          string   `json:"scan_type" form:"scan_type"`
 	EngagementId      int      `json:"engagement" form:"engagement"`
 	CloseOldFinding   bool     `json:"close_old_findings_product_scope" form:"close_old_findings_product_scope"`
+	DoNotReactivate   bool     `json:"do_not_reactivate" form:"do_not_reactivate"`
 	TestId            int      `json:"test,omitempty" form:"test"`
 }
