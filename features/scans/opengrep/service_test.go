@@ -71,7 +71,7 @@ var _ defectdojo.DefectDojoService = &mockDefectDojoService{}
 // a value that satisfies the interfaces.ScanServiceImpl contract, enforcing that
 // all required scanner methods are present at compile and test time.
 func TestNewOpenGrepServiceImplementsInterface(t *testing.T) {
-	service := newOpenGrepService("./test", loader.Opengrep{})
+	service := newOpenGrepService("./test", loader.Opengrep{}, nil)
 
 	_, ok := service.(interfaces.ScanServiceImpl)
 	assert.True(t, ok)
@@ -96,7 +96,7 @@ func TestOpenGrepStart(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], ""))
 		environment_variable.ReloadEnv()
 
-		service := newOpenGrepService("./nonexistent", loader.Opengrep{})
+		service := newOpenGrepService("./nonexistent", loader.Opengrep{}, nil)
 
 		ok, err := service.Start()
 
@@ -111,7 +111,7 @@ func TestOpenGrepLoadFindings(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
-		service := newOpenGrepService("./test", loader.Opengrep{})
+		service := newOpenGrepService("./test", loader.Opengrep{}, nil)
 
 		findings, err := service.LoadFindings()
 
@@ -137,7 +137,7 @@ func TestOpenGrepLoadFindings(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/string_metadata_results"))
 		environment_variable.ReloadEnv()
 
-		service := newOpenGrepService("./test", loader.Opengrep{})
+		service := newOpenGrepService("./test", loader.Opengrep{}, nil)
 
 		findings, err := service.LoadFindings()
 
@@ -152,7 +152,7 @@ func TestOpenGrepLoadFindings(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], ""))
 		environment_variable.ReloadEnv()
 
-		service := newOpenGrepService("./test", loader.Opengrep{})
+		service := newOpenGrepService("./test", loader.Opengrep{}, nil)
 
 		findings, err := service.LoadFindings()
 
@@ -164,7 +164,7 @@ func TestOpenGrepLoadFindings(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/bad_format_results"))
 		environment_variable.ReloadEnv()
 
-		service := newOpenGrepService("./test", loader.Opengrep{})
+		service := newOpenGrepService("./test", loader.Opengrep{}, nil)
 
 		findings, err := service.LoadFindings()
 
@@ -268,7 +268,7 @@ func TestOpenGrepSync(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
-		service := newOpenGrepService("./test", loader.Opengrep{})
+		service := newOpenGrepService("./test", loader.Opengrep{}, nil)
 		ddMock := &mockDefectDojoService{importScanOk: true, importScanErr: nil}
 
 		err := service.Sync(1, "main", ddMock)
@@ -280,7 +280,7 @@ func TestOpenGrepSync(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
-		service := newOpenGrepService("./test", loader.Opengrep{})
+		service := newOpenGrepService("./test", loader.Opengrep{}, nil)
 		ddMock := &mockDefectDojoService{
 			testsToReturn:  []defectdojo.Test{{Id: 7, ScanType: "Semgrep JSON Report"}},
 			reimportScanOk: true,
@@ -297,7 +297,7 @@ func TestOpenGrepSync(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
-		service := newOpenGrepService("./test", loader.Opengrep{})
+		service := newOpenGrepService("./test", loader.Opengrep{}, nil)
 		ddMock := &mockDefectDojoService{importScanOk: false, importScanErr: fmt.Errorf("import failed")}
 
 		err := service.Sync(1, "main", ddMock)
@@ -309,7 +309,7 @@ func TestOpenGrepSync(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
-		service := newOpenGrepService("./test", loader.Opengrep{})
+		service := newOpenGrepService("./test", loader.Opengrep{}, nil)
 		ddMock := &mockDefectDojoService{
 			testsToReturn:   []defectdojo.Test{{Id: 7, ScanType: "Semgrep JSON Report"}},
 			reimportScanOk:  false,
@@ -325,7 +325,7 @@ func TestOpenGrepSync(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
-		service := newOpenGrepService("./test", loader.Opengrep{})
+		service := newOpenGrepService("./test", loader.Opengrep{}, nil)
 		ddMock := &mockDefectDojoService{getTestsErr: fmt.Errorf("cannot retrieve tests")}
 
 		err := service.Sync(1, "main", ddMock)
@@ -337,7 +337,7 @@ func TestOpenGrepSync(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], ""))
 		environment_variable.ReloadEnv()
 
-		service := newOpenGrepService("./test", loader.Opengrep{})
+		service := newOpenGrepService("./test", loader.Opengrep{}, nil)
 		ddMock := &mockDefectDojoService{}
 
 		err := service.Sync(1, "main", ddMock)

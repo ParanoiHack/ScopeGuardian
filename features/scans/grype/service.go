@@ -24,16 +24,20 @@ type GrypeServiceImpl struct {
 	output       string
 	ignoreStates string
 	exclude      []string
+	proxyEnv     []string
 }
 
 // newGrypeService builds a GrypeServiceImpl from the Grype loader configuration,
 // resolving the SBOM input and result output paths from the SCAN_DIR environment variable.
-func newGrypeService(config loader.Grype) interfaces.ScanServiceImpl {
+// proxyEnv is an optional list of "KEY=VALUE" proxy environment variable entries
+// (see loader.Proxy.ToEnv) forwarded to the Grype process.
+func newGrypeService(config loader.Grype, proxyEnv []string) interfaces.ScanServiceImpl {
 	return &GrypeServiceImpl{
 		sbom:         fmt.Sprintf("%s/%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], outputFolder, sbomInputNameParameter),
 		output:       fmt.Sprintf("%s/%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], outputFolder, outputNameParameter),
 		ignoreStates: config.IgnoreStates,
 		exclude:      config.Exclude,
+		proxyEnv:     proxyEnv,
 	}
 }
 
@@ -69,7 +73,7 @@ func (s *GrypeServiceImpl) Start() (bool, error) {
 
 	logger.Info(fmt.Sprintf(logInfoCommandLine, strings.Join(args, " ")))
 
-	return exec.WrapAllowExitCodes(binaryPath, dirPath, args, os.Stdout, os.Stderr, []int{exitCodeFindings})
+	return exec.WrapAllowExitCodes(binaryPath, dirPath, args, os.Stdout, os.Stderr, []int{exitCodeFindings}, s.proxyEnv...)
 }
 
 // LoadFindings reads the Grype JSON output file and converts each vulnerability

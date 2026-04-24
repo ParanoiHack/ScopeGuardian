@@ -53,6 +53,16 @@ func TestLoad(t *testing.T) {
 		assert.EqualValues(t, []string{"python.lang.correctness"}, config.Opengrep.ExcludeRule)
 	})
 
+	t.Run("Should load configuration file with proxy section", func(t *testing.T) {
+		config, err := Load("./mocks/config_with_proxy.toml")
+
+		assert.Nil(t, err)
+		assert.NotNil(t, config.Proxy)
+		assert.EqualValues(t, "http://proxy.example.com:3128", config.Proxy.HttpProxy)
+		assert.EqualValues(t, "http://proxy.example.com:3128", config.Proxy.HttpsProxy)
+		assert.EqualValues(t, "localhost,127.0.0.1", config.Proxy.NoProxy)
+	})
+
 	t.Run("Should not load configuration file cause wrong pathname", func(t *testing.T) {
 		config, err := Load("./mocks/does_not_exist.toml")
 
