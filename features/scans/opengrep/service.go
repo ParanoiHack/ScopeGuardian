@@ -83,7 +83,7 @@ func (s *OpenGrepServiceImpl) Start() (bool, error) {
 
 	logger.Info(fmt.Sprintf(logInfoCommandLine, strings.Join(args, " ")))
 
-	return exec.WrapAllowExitCodes(binaryPath, dirPath, args, io.Discard, io.Discard, []int{exitCodeFindings}, s.proxyEnv...)
+	return exec.Wrap(binaryPath, dirPath, args, io.Discard, io.Discard, s.proxyEnv...)
 }
 
 // LoadFindings reads the OpenGrep JSON output file and converts each result
