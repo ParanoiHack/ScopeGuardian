@@ -69,7 +69,7 @@ var _ defectdojo.DefectDojoService = &mockDefectDojoService{}
 // value that satisfies the interfaces.ScanServiceImpl contract, enforcing that
 // all required scanner methods are present at compile and test time.
 func TestNewGrypeServiceImplementsInterface(t *testing.T) {
-	service := newGrypeService(loader.Grype{})
+	service := newGrypeService(loader.Grype{}, nil)
 
 	_, ok := service.(interfaces.ScanServiceImpl)
 	assert.True(t, ok)
@@ -80,7 +80,7 @@ func TestNewGrypeService(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], ""))
 		environment_variable.ReloadEnv()
 
-		service := newGrypeService(loader.Grype{})
+		service := newGrypeService(loader.Grype{}, nil)
 
 		ok, err := service.Start()
 
@@ -95,7 +95,7 @@ func TestLoadFindings(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
-		service := newGrypeService(loader.Grype{})
+		service := newGrypeService(loader.Grype{}, nil)
 
 		findings, err := service.LoadFindings()
 
@@ -117,7 +117,7 @@ func TestLoadFindings(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], ""))
 		environment_variable.ReloadEnv()
 
-		service := newGrypeService(loader.Grype{})
+		service := newGrypeService(loader.Grype{}, nil)
 
 		findings, err := service.LoadFindings()
 
@@ -129,7 +129,7 @@ func TestLoadFindings(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/bad_format_results"))
 		environment_variable.ReloadEnv()
 
-		service := newGrypeService(loader.Grype{})
+		service := newGrypeService(loader.Grype{}, nil)
 
 		findings, err := service.LoadFindings()
 
@@ -143,7 +143,7 @@ func TestSync(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
-		service := newGrypeService(loader.Grype{})
+		service := newGrypeService(loader.Grype{}, nil)
 		ddMock := &mockDefectDojoService{importScanOk: true, importScanErr: nil}
 
 		err := service.Sync(1, "main", ddMock)
@@ -155,7 +155,7 @@ func TestSync(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
-		service := newGrypeService(loader.Grype{})
+		service := newGrypeService(loader.Grype{}, nil)
 		ddMock := &mockDefectDojoService{
 			testsToReturn:  []defectdojo.Test{{Id: 3, ScanType: "Anchore Grype"}},
 			reimportScanOk: true,
@@ -172,7 +172,7 @@ func TestSync(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
-		service := newGrypeService(loader.Grype{})
+		service := newGrypeService(loader.Grype{}, nil)
 		ddMock := &mockDefectDojoService{importScanOk: false, importScanErr: fmt.Errorf("import failed")}
 
 		err := service.Sync(1, "main", ddMock)
@@ -184,7 +184,7 @@ func TestSync(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
-		service := newGrypeService(loader.Grype{})
+		service := newGrypeService(loader.Grype{}, nil)
 		ddMock := &mockDefectDojoService{
 			testsToReturn:   []defectdojo.Test{{Id: 3, ScanType: "Anchore Grype"}},
 			reimportScanOk:  false,
@@ -200,7 +200,7 @@ func TestSync(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
-		service := newGrypeService(loader.Grype{})
+		service := newGrypeService(loader.Grype{}, nil)
 		ddMock := &mockDefectDojoService{getTestsErr: fmt.Errorf("cannot retrieve tests")}
 
 		err := service.Sync(1, "main", ddMock)
@@ -212,7 +212,7 @@ func TestSync(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], ""))
 		environment_variable.ReloadEnv()
 
-		service := newGrypeService(loader.Grype{})
+		service := newGrypeService(loader.Grype{}, nil)
 		ddMock := &mockDefectDojoService{}
 
 		err := service.Sync(1, "main", ddMock)

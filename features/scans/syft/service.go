@@ -22,16 +22,20 @@ type execRunner func(binaryPath string, dirPath string, args []string, stdout io
 type SyftServiceImpl struct {
 	path                string
 	transitiveLibraries bool
+	proxyEnv            []string
 	runner              execRunner
 }
 
 // newSyftService builds a SyftServiceImpl from the scan path, resolving it
 // relative to the SCAN_DIR environment variable. transitiveLibraries controls
 // whether Syft resolves transitive Java dependencies from Maven Central.
-func newSyftService(path string, transitiveLibraries bool) interfaces.ScanServiceImpl {
+// proxyEnv is an optional list of "KEY=VALUE" proxy environment variable entries
+// (see loader.Proxy.ToEnv) forwarded to the Syft process.
+func newSyftService(path string, transitiveLibraries bool, proxyEnv []string) interfaces.ScanServiceImpl {
 	return &SyftServiceImpl{
 		path:                fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], path),
 		transitiveLibraries: transitiveLibraries,
+		proxyEnv:            proxyEnv,
 		runner:              exec.Wrap,
 	}
 }
@@ -60,10 +64,12 @@ func (s *SyftServiceImpl) Start() (bool, error) {
 	logger.Info(fmt.Sprintf(logInfoCommandLine, strings.Join(args, " ")))
 
 	transitiveValue := fmt.Sprintf("%v", s.transitiveLibraries)
-	return s.runner(binaryPath, dirPath, args, os.Stdout, os.Stderr,
+	extraEnv := []string{
 		fmt.Sprintf("%s=%s", envJavaUseNetwork, transitiveValue),
 		fmt.Sprintf("%s=%s", envJavaResolveTransitiveDependencies, transitiveValue),
-	)
+	}
+	extraEnv = append(extraEnv, s.proxyEnv...)
+	return s.runner(binaryPath, dirPath, args, os.Stdout, os.Stderr, extraEnv...)
 }
 
 // LoadFindings is intentionally empty: Syft is used only to produce the SBOM
