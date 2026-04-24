@@ -18,7 +18,11 @@
 # ---------------------------------------------------------------------------
 
 default:
-  image: ghcr.io/paranoihack/scopeguardian:latest
+  image:
+    name: ghcr.io/paranoihack/scopeguardian:latest
+    # The image defines an ENTRYPOINT; override it so the GitLab runner can
+    # start a shell and execute the script: commands normally.
+    entrypoint: [""]
 
 variables:
   # Base directory that ScopeGuardian uses to resolve scan paths defined in
