@@ -46,3 +46,9 @@ const (
 const (
 	errDirectoryNotFound = "directory not found"
 )
+
+const (
+	// exitCodeFindings is the exit code returned by OpenGrep (Semgrep convention)
+	// when findings are present. This is a normal termination state, not an error.
+	exitCodeFindings = 2
+)

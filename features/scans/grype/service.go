@@ -69,7 +69,7 @@ func (s *GrypeServiceImpl) Start() (bool, error) {
 
 	logger.Info(fmt.Sprintf(logInfoCommandLine, strings.Join(args, " ")))
 
-	return exec.Wrap(binaryPath, dirPath, args, os.Stdout, os.Stderr)
+	return exec.WrapAllowExitCodes(binaryPath, dirPath, args, os.Stdout, os.Stderr, []int{exitCodeFindings})
 }
 
 // LoadFindings reads the Grype JSON output file and converts each vulnerability

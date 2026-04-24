@@ -52,6 +52,12 @@ const (
 )
 
 const (
+	// exitCodeFindings is the exit code returned by Grype when vulnerabilities
+	// are found. This is a normal termination state, not an error.
+	exitCodeFindings = 1
+)
+
+const (
 	recommendationUpgrade         = "Upgrade to %s"
 	recommendationUpgradeMultiple = "Upgrade to one of: %s"
 )
