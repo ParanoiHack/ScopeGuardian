@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"ScopeGuardian/connectors/defectdojo"
 	"ScopeGuardian/domains/interfaces"
 	"ScopeGuardian/domains/models"
@@ -45,10 +44,6 @@ func newGrypeService(config loader.Grype, proxyEnv []string) interfaces.ScanServ
 // to scan it for known vulnerabilities. It returns true on success or false and an
 // error if the SBOM is missing or the Grype process exits with a non-zero status.
 func (s *GrypeServiceImpl) Start() (bool, error) {
-	if err := os.MkdirAll(filepath.Dir(s.output), 0755); err != nil {
-		return false, err
-	}
-
 	if _, err := os.Stat(s.sbom); err != nil {
 		logger.Error(fmt.Sprintf(logErrorSbomNotFound, s.sbom))
 		return false, errors.New(errSbomNotFound)

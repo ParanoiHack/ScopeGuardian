@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"ScopeGuardian/connectors/defectdojo"
 	"ScopeGuardian/domains/interfaces"
 	"ScopeGuardian/domains/models"
@@ -58,10 +57,6 @@ func verifyConfig(path string) (bool, error) {
 func (s *OpenGrepServiceImpl) Start() (bool, error) {
 	if ok, err := verifyConfig(s.path); !ok && err != nil {
 		return ok, err
-	}
-
-	if err := os.MkdirAll(filepath.Dir(s.output), 0755); err != nil {
-		return false, err
 	}
 
 	args := []string{

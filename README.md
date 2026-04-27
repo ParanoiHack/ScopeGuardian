@@ -160,6 +160,13 @@ path = "./my-service"
 # exclude = ["**/vendor/**", "**/testdata/**"]
 # Optional list of rule IDs to skip.
 # exclude_rule = ["python.lang.security.audit.formatted-sql-query.formatted-sql-query"]
+
+# Proxy – optional HTTP/HTTPS proxy settings forwarded to all scanner sub-processes.
+# All three fields are optional. Omit the entire section or leave fields empty to disable.
+# [proxy]
+# http_proxy  = "http://proxy.company.com:3128"
+# https_proxy = "http://proxy.company.com:3128"
+# no_proxy    = "localhost,127.0.0.1"
 ```
 
 ### Fields Reference
@@ -177,12 +184,19 @@ path = "./my-service"
 | `[opengrep].path` | string | yes* | Path to the directory to scan. Resolved as `$SCAN_DIR/<path>`. |
 | `[opengrep].exclude` | string array | no | Path glob patterns to exclude from OpenGrep scanning (e.g. `["**/vendor/**"]`). |
 | `[opengrep].exclude_rule` | string array | no | OpenGrep rule IDs to skip (e.g. `["python.lang.security.audit.formatted-sql-query.formatted-sql-query"]`). |
+| `[proxy].http_proxy` | string | no | HTTP proxy URL forwarded as `HTTP_PROXY` / `http_proxy` to all scanner sub-processes. |
+| `[proxy].https_proxy` | string | no | HTTPS proxy URL forwarded as `HTTPS_PROXY` / `https_proxy` to all scanner sub-processes. |
+| `[proxy].no_proxy` | string | no | Comma-separated list of hosts that bypass the proxy, forwarded as `NO_PROXY` / `no_proxy`. |
 
 \* Required only if you want KICS scanning to run. Omitting the entire `[kics]` section disables the scanner.
 
 Omitting the entire `[grype]` section disables both Grype and the Syft SBOM generation step.
 
 Omitting the entire `[opengrep]` section disables the SAST scanner.
+
+Omitting the entire `[proxy]` section (or leaving all fields empty) disables proxy forwarding — scanner sub-processes inherit no proxy environment variables from this configuration.
+
+Both the uppercase (`HTTP_PROXY`) and lowercase (`http_proxy`) variants of each variable are set for maximum compatibility across tools.
 
 ---
 
