@@ -12,7 +12,7 @@ import (
 )
 
 func TestNewSyftService(t *testing.T) {
-	service := newSyftService("./test", false)
+	service := newSyftService("./test", false, nil)
 
 	_, ok := service.(interfaces.ScanServiceImpl)
 	assert.NotNil(t, service)
@@ -24,7 +24,7 @@ func TestSyftStart(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], ""))
 		environment_variable.ReloadEnv()
 
-		service := newSyftService("./doesnotexist", false)
+		service := newSyftService("./doesnotexist", false, nil)
 
 		ok, err := service.Start()
 
@@ -37,7 +37,7 @@ func TestSyftStart(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", os.TempDir())
 		environment_variable.ReloadEnv()
 
-		svc := newSyftService(".", false).(*SyftServiceImpl)
+		svc := newSyftService(".", false, nil).(*SyftServiceImpl)
 		svc.runner = func(_ string, _ string, _ []string, _ io.Writer, _ io.Writer, _ ...string) (bool, error) {
 			return false, fmt.Errorf("runner error")
 		}
@@ -52,7 +52,7 @@ func TestSyftStart(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", os.TempDir())
 		environment_variable.ReloadEnv()
 
-		svc := newSyftService(".", true).(*SyftServiceImpl)
+		svc := newSyftService(".", true, nil).(*SyftServiceImpl)
 		svc.runner = func(_ string, _ string, _ []string, _ io.Writer, _ io.Writer, _ ...string) (bool, error) {
 			return true, nil
 		}
@@ -66,7 +66,7 @@ func TestSyftStart(t *testing.T) {
 
 func TestSyftLoadFindings(t *testing.T) {
 	t.Run("Should return nil findings and nil error", func(t *testing.T) {
-		service := newSyftService("./test", false)
+		service := newSyftService("./test", false, nil)
 
 		findings, err := service.LoadFindings()
 
@@ -77,7 +77,7 @@ func TestSyftLoadFindings(t *testing.T) {
 
 func TestSyftSync(t *testing.T) {
 	t.Run("Should return nil error", func(t *testing.T) {
-		service := newSyftService("./test", false)
+		service := newSyftService("./test", false, nil)
 
 		err := service.Sync(1, "main", nil)
 

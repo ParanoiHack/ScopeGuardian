@@ -146,7 +146,8 @@ func TestInitialize(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, config)
 
-		engine.Initialize(config)
+		err = engine.Initialize(config)
+		assert.Nil(t, err)
 
 		assert.EqualValues(t, 1, len(engine.scanners))
 	})
@@ -158,7 +159,8 @@ func TestInitialize(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, config)
 
-		engine.Initialize(config)
+		err = engine.Initialize(config)
+		assert.Nil(t, err)
 
 		assert.EqualValues(t, 1, len(engine.prerequisites))
 		assert.EqualValues(t, 1, len(engine.scanners))
@@ -176,7 +178,8 @@ func TestInitialize(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, config)
 
-		engine.Initialize(config)
+		err = engine.Initialize(config)
+		assert.Nil(t, err)
 
 		assert.EqualValues(t, 0, len(engine.scanners))
 	})
@@ -188,7 +191,8 @@ func TestInitialize(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, config)
 
-		engine.Initialize(config)
+		err = engine.Initialize(config)
+		assert.Nil(t, err)
 
 		assert.EqualValues(t, 1, len(engine.scanners))
 		_, ok := engine.scanners[opengrepScannerName]

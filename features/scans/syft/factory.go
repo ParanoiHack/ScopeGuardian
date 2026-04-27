@@ -14,5 +14,5 @@ func GetSyftService(config loader.Config) interfaces.ScanServiceImpl {
 	if config.Grype != nil {
 		transitiveLibraries = config.Grype.TransitiveLibraries
 	}
-	return newSyftService(config.Path, transitiveLibraries)
+	return newSyftService(config.Path, transitiveLibraries, config.Proxy.ToEnv())
 }

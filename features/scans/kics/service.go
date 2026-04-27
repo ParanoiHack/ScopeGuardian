@@ -23,16 +23,20 @@ type KicsServiceImpl struct {
 	platform       string
 	output         string
 	excludeQueries []string
+	proxyEnv       []string
 }
 
 // newKicsService builds a KicsServiceImpl from the scan path and loader configuration,
 // resolving the scan path and output file path relative to the SCAN_DIR environment variable.
-func newKicsService(path string, config loader.Kics) interfaces.ScanServiceImpl {
+// proxyEnv is an optional list of "KEY=VALUE" proxy environment variable entries
+// (see loader.Proxy.ToEnv) forwarded to the KICS process.
+func newKicsService(path string, config loader.Kics, proxyEnv []string) interfaces.ScanServiceImpl {
 	return &KicsServiceImpl{
 		path:           fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], path),
 		output:         fmt.Sprintf("%s/%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], outputFolder, outputNameParameter),
 		platform:       config.Platform,
 		excludeQueries: config.ExcludeQueries,
+		proxyEnv:       proxyEnv,
 	}
 }
 
@@ -83,7 +87,7 @@ func (s *KicsServiceImpl) Start() (bool, error) {
 
 	logger.Info(fmt.Sprintf(logInfoCommandLine, strings.Join(args, " ")))
 
-	return exec.Wrap(binaryPath, dirPath, args, io.Discard, io.Discard)
+	return exec.Wrap(binaryPath, dirPath, args, io.Discard, io.Discard, s.proxyEnv...)
 }
 
 // LoadFindings reads the KICS JSON output file and converts each query result

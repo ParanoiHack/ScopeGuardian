@@ -23,16 +23,20 @@ type OpenGrepServiceImpl struct {
 	output      string
 	exclude     []string
 	excludeRule []string
+	proxyEnv    []string
 }
 
 // newOpenGrepService builds an OpenGrepServiceImpl from the scan path and loader configuration,
 // resolving the scan path and output file path relative to the SCAN_DIR environment variable.
-func newOpenGrepService(path string, config loader.Opengrep) interfaces.ScanServiceImpl {
+// proxyEnv is an optional list of "KEY=VALUE" proxy environment variable entries
+// (see loader.Proxy.ToEnv) forwarded to the OpenGrep process.
+func newOpenGrepService(path string, config loader.Opengrep, proxyEnv []string) interfaces.ScanServiceImpl {
 	return &OpenGrepServiceImpl{
 		path:        fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], path),
 		output:      fmt.Sprintf("%s/%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], outputFolder, outputNameParameter),
 		exclude:     config.Exclude,
 		excludeRule: config.ExcludeRule,
+		proxyEnv:    proxyEnv,
 	}
 }
 
@@ -74,7 +78,7 @@ func (s *OpenGrepServiceImpl) Start() (bool, error) {
 
 	logger.Info(fmt.Sprintf(logInfoCommandLine, strings.Join(args, " ")))
 
-	return exec.Wrap(binaryPath, dirPath, args, io.Discard, io.Discard)
+	return exec.Wrap(binaryPath, dirPath, args, io.Discard, io.Discard, s.proxyEnv...)
 }
 
 // LoadFindings reads the OpenGrep JSON output file and converts each result

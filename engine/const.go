@@ -5,6 +5,7 @@ const (
 	logInfoSyftRegister      = "Grype enabled. Registering Syft SBOM scanner for execution"
 	logInfoGrypeRegister     = "Grype enabled. Registering Grype vulnerability scanner for execution"
 	logInfoOpenGrepRegister  = "OpenGrep enabled. Registering OpenGrep SAST scanner for execution"
+	logInfoCreateResultsDir  = "Creating results directory"
 	logInfoScannerStarting   = "Starting %s scanning engine"
 	logInfoScannerSuccess    = "%s scanner succeeded"
 	logInfoFindingsLoaded    = "%s findings loaded"
@@ -19,6 +20,7 @@ const (
 	logErrorRetrieveEngagementId = "Cannot retrieve engagement ID for project [%s] branch [%s]"
 	logErrorSkippingScanner      = "Skipping %s scanner because prerequisite %s failed"
 	logErrorSyncResult           = "Failed to sync %s results to DefectDojo"
+	logErrorCreateResultsDir     = "Failed to create results directory"
 )
 
 const (

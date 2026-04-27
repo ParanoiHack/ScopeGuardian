@@ -160,6 +160,13 @@ path = "./my-service"
 # exclude = ["**/vendor/**", "**/testdata/**"]
 # Optional list of rule IDs to skip.
 # exclude_rule = ["python.lang.security.audit.formatted-sql-query.formatted-sql-query"]
+
+# Proxy – optional HTTP/HTTPS proxy settings forwarded to all scanner sub-processes.
+# All three fields are optional. Omit the entire section or leave fields empty to disable.
+# [proxy]
+# http_proxy  = "http://proxy.company.com:3128"
+# https_proxy = "http://proxy.company.com:3128"
+# no_proxy    = "localhost,127.0.0.1"
 ```
 
 ### Fields Reference
@@ -177,12 +184,20 @@ path = "./my-service"
 | `[opengrep].path` | string | yes* | Path to the directory to scan. Resolved as `$SCAN_DIR/<path>`. |
 | `[opengrep].exclude` | string array | no | Path glob patterns to exclude from OpenGrep scanning (e.g. `["**/vendor/**"]`). |
 | `[opengrep].exclude_rule` | string array | no | OpenGrep rule IDs to skip (e.g. `["python.lang.security.audit.formatted-sql-query.formatted-sql-query"]`). |
+| `[proxy].http_proxy` | string | no | HTTP proxy URL forwarded as `HTTP_PROXY` / `http_proxy` to all scanner sub-processes. |
+| `[proxy].https_proxy` | string | no | HTTPS proxy URL forwarded as `HTTPS_PROXY` / `https_proxy` to all scanner sub-processes. |
+| `[proxy].no_proxy` | string | no | Comma-separated list of hosts that bypass the proxy, forwarded as `NO_PROXY` / `no_proxy`. |
+| `[proxy].ssl_cert_file` | string | no | Path to a PEM-encoded CA certificate bundle forwarded as `SSL_CERT_FILE` (Go tools) and `REQUESTS_CA_BUNDLE` (Python tools such as OpenGrep) to all scanner sub-processes. Required when using an intercepting proxy (e.g. Burp Suite). |
 
 \* Required only if you want KICS scanning to run. Omitting the entire `[kics]` section disables the scanner.
 
 Omitting the entire `[grype]` section disables both Grype and the Syft SBOM generation step.
 
 Omitting the entire `[opengrep]` section disables the SAST scanner.
+
+Omitting the entire `[proxy]` section (or leaving all fields empty) disables proxy forwarding — scanner sub-processes inherit no proxy environment variables from this configuration.
+
+Both the uppercase (`HTTP_PROXY`) and lowercase (`http_proxy`) variants of each proxy variable are set for maximum compatibility across tools. The `ssl_cert_file` value is emitted as both `SSL_CERT_FILE` (used by Go-based tools) and `REQUESTS_CA_BUNDLE` (used by Python-based tools such as OpenGrep).
 
 ---
 
@@ -406,6 +421,27 @@ docker run --rm \
 ```
 
 Inside the container `SCAN_DIR` defaults to `/tmp/data`.
+
+> **HTTPS proxy requirement — `--cap-add SYS_PTRACE`**
+>
+> OpenGrep bundles a Python interpreter inside its binary and reads `/proc/1/map_files` at startup to bootstrap it. In a Docker container this path requires the `CAP_SYS_PTRACE` Linux capability, which is dropped by default. If you run ScopeGuardian behind an HTTPS proxy (i.e. `[proxy].https_proxy` is set), you must add this capability so that OpenGrep can start:
+>
+> ```bash
+> docker run --rm --cap-add SYS_PTRACE \
+>   -v /path/to/your/project:/tmp/data/project \
+>   -v /path/to/config.toml:/config.toml \
+>   -e SCAN_DIR=/tmp/data \
+>   -e DD_URL=http://host.docker.internal:8080 \
+>   -e DD_ACCESS_TOKEN=<your-token> \
+>   ScopeGuardian \
+>   --projectName my-service \
+>   --branch main \
+>   --sync \
+>   /config.toml
+> ```
+>
+> With Docker Compose add `cap_add: [SYS_PTRACE]` to the ScopeGuardian service.
+> With GitHub Actions use `options: --cap-add SYS_PTRACE` inside the `container:` block.
 
 ---
 

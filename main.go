@@ -5,10 +5,10 @@ import (
 	"ScopeGuardian/display"
 	"ScopeGuardian/domains/models"
 	"ScopeGuardian/engine"
+	securitygate "ScopeGuardian/features/security-gate"
 	"ScopeGuardian/loader"
 	"ScopeGuardian/logger"
 	"ScopeGuardian/parser"
-	securitygate "ScopeGuardian/features/security-gate"
 
 	"golang.org/x/exp/slog"
 )
@@ -51,7 +51,11 @@ func main() {
 
 	eng := engine.NewEngine()
 
-	eng.Initialize(config)
+	if err := eng.Initialize(config); err != nil {
+		logger.Error(err.Error())
+		os.Exit(-2)
+	}
+
 	eng.Start()
 
 	findings := eng.LoadFindings()
