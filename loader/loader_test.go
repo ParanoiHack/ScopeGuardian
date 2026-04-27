@@ -61,6 +61,7 @@ func TestLoad(t *testing.T) {
 		assert.EqualValues(t, "http://proxy.example.com:3128", config.Proxy.HttpProxy)
 		assert.EqualValues(t, "http://proxy.example.com:3128", config.Proxy.HttpsProxy)
 		assert.EqualValues(t, "localhost,127.0.0.1", config.Proxy.NoProxy)
+		assert.EqualValues(t, "/etc/ssl/certs/burp-ca.pem", config.Proxy.SslCertFile)
 	})
 
 	t.Run("Should not load configuration file cause wrong pathname", func(t *testing.T) {

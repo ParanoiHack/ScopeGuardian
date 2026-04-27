@@ -187,6 +187,7 @@ path = "./my-service"
 | `[proxy].http_proxy` | string | no | HTTP proxy URL forwarded as `HTTP_PROXY` / `http_proxy` to all scanner sub-processes. |
 | `[proxy].https_proxy` | string | no | HTTPS proxy URL forwarded as `HTTPS_PROXY` / `https_proxy` to all scanner sub-processes. |
 | `[proxy].no_proxy` | string | no | Comma-separated list of hosts that bypass the proxy, forwarded as `NO_PROXY` / `no_proxy`. |
+| `[proxy].ssl_cert_file` | string | no | Path to a PEM-encoded CA certificate bundle forwarded as `SSL_CERT_FILE` (Go tools) and `REQUESTS_CA_BUNDLE` (Python tools such as OpenGrep) to all scanner sub-processes. Required when using an intercepting proxy (e.g. Burp Suite). |
 
 \* Required only if you want KICS scanning to run. Omitting the entire `[kics]` section disables the scanner.
 
@@ -196,7 +197,7 @@ Omitting the entire `[opengrep]` section disables the SAST scanner.
 
 Omitting the entire `[proxy]` section (or leaving all fields empty) disables proxy forwarding — scanner sub-processes inherit no proxy environment variables from this configuration.
 
-Both the uppercase (`HTTP_PROXY`) and lowercase (`http_proxy`) variants of each variable are set for maximum compatibility across tools.
+Both the uppercase (`HTTP_PROXY`) and lowercase (`http_proxy`) variants of each proxy variable are set for maximum compatibility across tools. The `ssl_cert_file` value is emitted as both `SSL_CERT_FILE` (used by Go-based tools) and `REQUESTS_CA_BUNDLE` (used by Python-based tools such as OpenGrep).
 
 ---
 

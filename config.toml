@@ -17,6 +17,7 @@ exclude_rule = []
 # Optional proxy configuration forwarded to scanner sub-processes (Grype, OpenGrep, Syft, KICS).
 # Uncomment and set the values below if the scanners must reach the internet through a proxy.
 # [proxy]
-# http_proxy  = "http://proxy.company.com:3128"
-# https_proxy = "http://proxy.company.com:3128"
-# no_proxy    = "localhost,127.0.0.1"
+# http_proxy    = "http://proxy.company.com:3128"
+# https_proxy   = "http://proxy.company.com:3128"
+# no_proxy      = "localhost,127.0.0.1"
+# ssl_cert_file = "/path/to/ca.pem"   # PEM-encoded CA certificate (e.g. Burp Suite CA)

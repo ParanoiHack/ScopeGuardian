@@ -38,13 +38,21 @@ func TestProxyToEnv(t *testing.T) {
 		assert.Contains(t, env, "no_proxy=localhost,127.0.0.1")
 	})
 
-	t.Run("Should return all six entries when all fields are set", func(t *testing.T) {
+	t.Run("Should return SSL_CERT_FILE and REQUESTS_CA_BUNDLE entries when ssl_cert_file is set", func(t *testing.T) {
+		p := &Proxy{SslCertFile: "/etc/ssl/certs/burp-ca.pem"}
+		env := p.ToEnv()
+		assert.Contains(t, env, "SSL_CERT_FILE=/etc/ssl/certs/burp-ca.pem")
+		assert.Contains(t, env, "REQUESTS_CA_BUNDLE=/etc/ssl/certs/burp-ca.pem")
+	})
+
+	t.Run("Should return all eight entries when all fields are set", func(t *testing.T) {
 		p := &Proxy{
-			HttpProxy:  "http://proxy.example.com:3128",
-			HttpsProxy: "https://proxy.example.com:3128",
-			NoProxy:    "localhost",
+			HttpProxy:   "http://proxy.example.com:3128",
+			HttpsProxy:  "https://proxy.example.com:3128",
+			NoProxy:     "localhost",
+			SslCertFile: "/etc/ssl/certs/burp-ca.pem",
 		}
 		env := p.ToEnv()
-		assert.Len(t, env, 6)
+		assert.Len(t, env, 8)
 	})
 }
