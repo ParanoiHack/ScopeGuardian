@@ -422,6 +422,27 @@ docker run --rm \
 
 Inside the container `SCAN_DIR` defaults to `/tmp/data`.
 
+> **HTTPS proxy requirement — `--cap-add SYS_PTRACE`**
+>
+> OpenGrep bundles a Python interpreter inside its binary and reads `/proc/1/map_files` at startup to bootstrap it. In a Docker container this path requires the `CAP_SYS_PTRACE` Linux capability, which is dropped by default. If you run ScopeGuardian behind an HTTPS proxy (i.e. `[proxy].https_proxy` is set), you must add this capability so that OpenGrep can start:
+>
+> ```bash
+> docker run --rm --cap-add SYS_PTRACE \
+>   -v /path/to/your/project:/tmp/data/project \
+>   -v /path/to/config.toml:/config.toml \
+>   -e SCAN_DIR=/tmp/data \
+>   -e DD_URL=http://host.docker.internal:8080 \
+>   -e DD_ACCESS_TOKEN=<your-token> \
+>   ScopeGuardian \
+>   --projectName my-service \
+>   --branch main \
+>   --sync \
+>   /config.toml
+> ```
+>
+> With Docker Compose add `cap_add: [SYS_PTRACE]` to the ScopeGuardian service.
+> With GitHub Actions use `options: --cap-add SYS_PTRACE` inside the `container:` block.
+
 ---
 
 ## Local DefectDojo Setup
