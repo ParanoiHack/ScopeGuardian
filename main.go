@@ -2,11 +2,9 @@ package main
 
 import (
 	"os"
-	"path/filepath"
 	"ScopeGuardian/display"
 	"ScopeGuardian/domains/models"
 	"ScopeGuardian/engine"
-	environment_variable "ScopeGuardian/environnement_variable"
 	securitygate "ScopeGuardian/features/security-gate"
 	"ScopeGuardian/loader"
 	"ScopeGuardian/logger"
@@ -16,14 +14,12 @@ import (
 )
 
 const (
-	logInfoLoadConfigFile   = "Loading configuration file"
-	logInfoDumpFindings     = "Findings successfully written to output file"
-	logInfoCreateResultsDir = "Creating results directory"
-	logErrCreateResultsDir  = "Failed to create results directory"
-	logErrOutputFile        = "Failed to create output file"
-	logErrCloseOutputFile   = "Failed to close output file"
-	logErrDumpFindings      = "Failed to write findings to output file"
-	logErrMarkByDD          = "Failed to retrieve finding statuses from DefectDojo; all findings treated as active"
+	logInfoLoadConfigFile = "Loading configuration file"
+	logInfoDumpFindings   = "Findings successfully written to output file"
+	logErrOutputFile      = "Failed to create output file"
+	logErrCloseOutputFile = "Failed to close output file"
+	logErrDumpFindings    = "Failed to write findings to output file"
+	logErrMarkByDD        = "Failed to retrieve finding statuses from DefectDojo; all findings treated as active"
 )
 
 func main() {
@@ -55,12 +51,8 @@ func main() {
 
 	eng := engine.NewEngine()
 
-	eng.Initialize(config)
-
-	logger.Info(logInfoCreateResultsDir)
-	resultsDir := filepath.Join(environment_variable.EnvironmentVariable["SCAN_DIR"], "results")
-	if err := os.MkdirAll(resultsDir, 0755); err != nil {
-		logger.Error(logErrCreateResultsDir, logger.Err(err))
+	if err := eng.Initialize(config); err != nil {
+		logger.Error(err.Error())
 		os.Exit(1)
 	}
 

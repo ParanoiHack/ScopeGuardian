@@ -3,6 +3,8 @@ package engine
 import (
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"ScopeGuardian/connectors/defectdojo"
 	"ScopeGuardian/connectors/defectdojo/client"
 	"ScopeGuardian/domains/interfaces"
@@ -45,7 +47,10 @@ func NewEngine() *Engine {
 // Initialize reads the provided configuration and registers any scanner whose
 // section is present and non-empty. Syft is registered as a prerequisite for
 // Grype so that it always runs and completes before Grype starts.
-func (e *Engine) Initialize(config loader.Config) {
+// It also creates the results directory under SCAN_DIR so that all scanners
+// can write their output without having to manage the folder themselves.
+// Returns an error if the results directory cannot be created.
+func (e *Engine) Initialize(config loader.Config) error {
 	if config.Kics != nil {
 		logger.Info(logInfoKicsRegister)
 		e.registerScanner(kicsScannerName, kics.GetKicsService(config))
@@ -62,6 +67,15 @@ func (e *Engine) Initialize(config loader.Config) {
 		logger.Info(logInfoOpenGrepRegister)
 		e.registerScanner(opengrepScannerName, opengrep.GetOpenGrepService(config))
 	}
+
+	logger.Info(logInfoCreateResultsDir)
+	resultsDir := filepath.Join(environment_variable.EnvironmentVariable["SCAN_DIR"], "results")
+	if err := os.MkdirAll(resultsDir, 0755); err != nil {
+		logger.Error(logErrorCreateResultsDir, logger.Err(err))
+		return err
+	}
+
+	return nil
 }
 
 // Start runs all registered scanners in two phases:
