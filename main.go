@@ -53,7 +53,7 @@ func main() {
 
 	if err := eng.Initialize(config); err != nil {
 		logger.Error(err.Error())
-		os.Exit(1)
+		os.Exit(-2)
 	}
 
 	eng.Start()
