@@ -335,6 +335,8 @@ The Grype scanner uploads its JSON output file to DefectDojo as a `multipart/for
 | Do not reactivate | `true` | Previously suppressed findings are not reactivated on reimport |
 | Branch tag | `<branch>` | Associates the results with the scanned branch |
 
+The **CWE/CVE** column in the CLI output and in file exports is populated with the CVE identifier (e.g. `CVE-2021-44228`) reported by Grype for each vulnerability match. KICS and OpenGrep findings use a CWE number in the same column.
+
 ### OpenGrep Sync Behaviour
 
 The OpenGrep scanner uploads its JSON output file to DefectDojo as a `multipart/form-data` request. Before uploading, the file is enriched so that each result contains an `extra.severity` field required by DefectDojo's Semgrep JSON Report parser (the value is copied from `extra.metadata.impact`). The endpoint used is `/api/v2/import-scan/` on the first run and `/api/v2/reimport-scan/` on subsequent runs. The following options are set on every upload:

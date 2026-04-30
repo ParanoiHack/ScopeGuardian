@@ -104,11 +104,13 @@ func TestLoadFindings(t *testing.T) {
 
 		assert.EqualValues(t, "test-package 1.0.0", findings[0].Name)
 		assert.EqualValues(t, "CVE-2021-1234", findings[0].VulnId)
+		assert.EqualValues(t, "CVE-2021-1234", findings[0].Cwe)
 		assert.EqualValues(t, "HIGH", findings[0].Severity)
 		assert.EqualValues(t, "Upgrade to 1.2.0", findings[0].Recommendation)
 
 		assert.EqualValues(t, "another-package 2.0.0", findings[1].Name)
 		assert.EqualValues(t, "CVE-2021-5678", findings[1].VulnId)
+		assert.EqualValues(t, "CVE-2021-5678", findings[1].Cwe)
 		assert.EqualValues(t, "MEDIUM", findings[1].Severity)
 		assert.EqualValues(t, "", findings[1].Recommendation)
 	})

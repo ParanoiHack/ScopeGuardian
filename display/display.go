@@ -18,7 +18,7 @@ const (
 	rowEngine         = "Engine"
 	rowSeverity       = "Severity"
 	rowName           = "Name"
-	rowCwe            = "CWE"
+	rowCwe            = "CWE/CVE"
 	rowDescription    = "Description"
 	rowSinkFile       = "Sink File"
 	rowSinkLine       = "Sink Line"
