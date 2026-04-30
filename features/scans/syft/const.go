@@ -7,10 +7,15 @@ const (
 )
 
 const (
-	scanArgument   = "scan"
-	configArgument = "-c"
-	outputArgument = "--output"
-	quietArgument  = "-q"
+	scanArgument    = "scan"
+	configArgument  = "-c"
+	outputArgument  = "--output"
+	quietArgument   = "-q"
+	excludeArgument = "--exclude"
+)
+
+const (
+	testSourcePattern = "**/src/test/**"
 )
 
 const (
@@ -20,9 +25,10 @@ const (
 )
 
 const (
-	logInfoCommandLine          = "Command line invoked [%s]"
-	logInfoTransitiveLibraries  = "Transitive libraries resolution is enabled. This may significantly increase scan time."
-	logErrorDirectoryNotFound   = "Cannot find directory [%s]"
+	logInfoCommandLine           = "Command line invoked [%s]"
+	logInfoTransitiveLibraries   = "Transitive libraries resolution is enabled. This may significantly increase scan time."
+	logInfoExcludeTestLibraries  = "Test source directory exclusion is enabled. Paths matching **/src/test/** will be skipped."
+	logErrorDirectoryNotFound    = "Cannot find directory [%s]"
 )
 
 const (

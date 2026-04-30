@@ -9,6 +9,7 @@ platform = "Dockerfile"
 [grype]
 ignore_states = "not-fixed,unknown,wont-fix"
 transitive_libraries = false
+# exclude_test_libraries = false  # set to true to skip test source directories (e.g. src/test/) from the SBOM scan
 
 [opengrep]
 exclude = ["tests/**"]

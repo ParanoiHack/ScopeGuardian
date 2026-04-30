@@ -20,23 +20,27 @@ type execRunner func(binaryPath string, dirPath string, args []string, stdout io
 
 // SyftServiceImpl implements ScanServiceImpl for the Syft SBOM generator.
 type SyftServiceImpl struct {
-	path                string
-	transitiveLibraries bool
-	proxyEnv            []string
-	runner              execRunner
+	path                 string
+	transitiveLibraries  bool
+	excludeTestLibraries bool
+	proxyEnv             []string
+	runner               execRunner
 }
 
 // newSyftService builds a SyftServiceImpl from the scan path, resolving it
 // relative to the SCAN_DIR environment variable. transitiveLibraries controls
 // whether Syft resolves transitive Java dependencies from Maven Central.
+// excludeTestLibraries controls whether test source directories are excluded
+// from the Syft filesystem scan (e.g. **/src/test/**).
 // proxyEnv is an optional list of "KEY=VALUE" proxy environment variable entries
 // (see loader.Proxy.ToEnv) forwarded to the Syft process.
-func newSyftService(path string, transitiveLibraries bool, proxyEnv []string) interfaces.ScanServiceImpl {
+func newSyftService(path string, transitiveLibraries bool, excludeTestLibraries bool, proxyEnv []string) interfaces.ScanServiceImpl {
 	return &SyftServiceImpl{
-		path:                fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], path),
-		transitiveLibraries: transitiveLibraries,
-		proxyEnv:            proxyEnv,
-		runner:              exec.Wrap,
+		path:                 fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], path),
+		transitiveLibraries:  transitiveLibraries,
+		excludeTestLibraries: excludeTestLibraries,
+		proxyEnv:             proxyEnv,
+		runner:               exec.Wrap,
 	}
 }
 
@@ -59,6 +63,11 @@ func (s *SyftServiceImpl) Start() (bool, error) {
 
 	if s.transitiveLibraries {
 		logger.Info(logInfoTransitiveLibraries)
+	}
+
+	if s.excludeTestLibraries {
+		args = append(args, excludeArgument, testSourcePattern)
+		logger.Info(logInfoExcludeTestLibraries)
 	}
 
 	logger.Info(fmt.Sprintf(logInfoCommandLine, strings.Join(args, " ")))
