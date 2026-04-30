@@ -12,7 +12,7 @@ import (
 )
 
 func TestNewSyftService(t *testing.T) {
-	service := newSyftService("./test", false, nil, nil)
+	service := newSyftService("./test", false, nil, 0, nil)
 
 	_, ok := service.(interfaces.ScanServiceImpl)
 	assert.NotNil(t, service)
@@ -24,7 +24,7 @@ func TestSyftStart(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], ""))
 		environment_variable.ReloadEnv()
 
-		service := newSyftService("./doesnotexist", false, nil, nil)
+		service := newSyftService("./doesnotexist", false, nil, 0, nil)
 
 		ok, err := service.Start()
 
@@ -37,7 +37,7 @@ func TestSyftStart(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", os.TempDir())
 		environment_variable.ReloadEnv()
 
-		svc := newSyftService(".", false, nil, nil).(*SyftServiceImpl)
+		svc := newSyftService(".", false, nil, 0, nil).(*SyftServiceImpl)
 		svc.runner = func(_ string, _ string, _ []string, _ io.Writer, _ io.Writer, _ ...string) (bool, error) {
 			return false, fmt.Errorf("runner error")
 		}
@@ -52,7 +52,7 @@ func TestSyftStart(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", os.TempDir())
 		environment_variable.ReloadEnv()
 
-		svc := newSyftService(".", true, nil, nil).(*SyftServiceImpl)
+		svc := newSyftService(".", true, nil, 0, nil).(*SyftServiceImpl)
 		svc.runner = func(_ string, _ string, _ []string, _ io.Writer, _ io.Writer, _ ...string) (bool, error) {
 			return true, nil
 		}
@@ -69,7 +69,7 @@ func TestSyftStart(t *testing.T) {
 
 		patterns := []string{"**/src/test/**", "**/testdata/**"}
 		var capturedArgs []string
-		svc := newSyftService(".", false, patterns, nil).(*SyftServiceImpl)
+		svc := newSyftService(".", false, patterns, 0, nil).(*SyftServiceImpl)
 		svc.runner = func(_ string, _ string, args []string, _ io.Writer, _ io.Writer, _ ...string) (bool, error) {
 			capturedArgs = args
 			return true, nil
@@ -90,7 +90,7 @@ func TestSyftStart(t *testing.T) {
 		environment_variable.ReloadEnv()
 
 		var capturedArgs []string
-		svc := newSyftService(".", false, nil, nil).(*SyftServiceImpl)
+		svc := newSyftService(".", false, nil, 0, nil).(*SyftServiceImpl)
 		svc.runner = func(_ string, _ string, args []string, _ io.Writer, _ io.Writer, _ ...string) (bool, error) {
 			capturedArgs = args
 			return true, nil
@@ -102,11 +102,47 @@ func TestSyftStart(t *testing.T) {
 		assert.True(t, ok)
 		assert.NotContains(t, capturedArgs, excludeArgument)
 	})
+
+	t.Run("Should pass SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH env var with configured value", func(t *testing.T) {
+		_ = os.Setenv("SCAN_DIR", os.TempDir())
+		environment_variable.ReloadEnv()
+
+		var capturedEnv []string
+		svc := newSyftService(".", false, nil, 3, nil).(*SyftServiceImpl)
+		svc.runner = func(_ string, _ string, _ []string, _ io.Writer, _ io.Writer, extraEnv ...string) (bool, error) {
+			capturedEnv = extraEnv
+			return true, nil
+		}
+
+		ok, err := svc.Start()
+
+		assert.Nil(t, err)
+		assert.True(t, ok)
+		assert.Contains(t, capturedEnv, "SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH=3")
+	})
+
+	t.Run("Should pass SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH=0 when default value is used", func(t *testing.T) {
+		_ = os.Setenv("SCAN_DIR", os.TempDir())
+		environment_variable.ReloadEnv()
+
+		var capturedEnv []string
+		svc := newSyftService(".", false, nil, 0, nil).(*SyftServiceImpl)
+		svc.runner = func(_ string, _ string, _ []string, _ io.Writer, _ io.Writer, extraEnv ...string) (bool, error) {
+			capturedEnv = extraEnv
+			return true, nil
+		}
+
+		ok, err := svc.Start()
+
+		assert.Nil(t, err)
+		assert.True(t, ok)
+		assert.Contains(t, capturedEnv, "SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH=0")
+	})
 }
 
 func TestSyftLoadFindings(t *testing.T) {
 	t.Run("Should return nil findings and nil error", func(t *testing.T) {
-		service := newSyftService("./test", false, nil, nil)
+		service := newSyftService("./test", false, nil, 0, nil)
 
 		findings, err := service.LoadFindings()
 
@@ -117,7 +153,7 @@ func TestSyftLoadFindings(t *testing.T) {
 
 func TestSyftSync(t *testing.T) {
 	t.Run("Should return nil error", func(t *testing.T) {
-		service := newSyftService("./test", false, nil, nil)
+		service := newSyftService("./test", false, nil, 0, nil)
 
 		err := service.Sync(1, "main", nil)
 

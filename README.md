@@ -157,6 +157,9 @@ transitive_libraries = false
 # Use this to skip paths such as test sources from the SBOM (e.g. src/test/).
 # Note: test-scoped pom.xml dependencies are not affected (Syft has no Maven scope filter).
 # syft_exclude = ["**/src/test/**"]
+# Depth to recursively resolve parent POMs (env: SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH).
+# 0 means no limit (the default).
+# syft_max_parent_recursive_depth = 0
 
 # OpenGrep – static application security testing (SAST) scanner.
 [opengrep]
@@ -187,6 +190,7 @@ transitive_libraries = false
 | `[grype].transitive_libraries` | bool | no | When `true`, Syft resolves transitive Java dependencies via Maven Central. Default: `false`. |
 | `[grype].exclude` | string array | no | Path glob patterns to exclude from Grype scanning (e.g. `["**/vendor/**"]`). |
 | `[grype].syft_exclude` | string array | no | Path glob patterns passed to Syft via `--exclude` during SBOM generation (e.g. `["**/src/test/**"]`). Excludes filesystem paths only; test-scoped `pom.xml` dependencies are unaffected. |
+| `[grype].syft_max_parent_recursive_depth` | int | no | Maximum number of parent POM levels Syft will recursively resolve during Java/Maven analysis. `0` (default) means no limit. Forwarded as `SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH`. |
 | `[opengrep].exclude` | string array | no | Path glob patterns to exclude from OpenGrep scanning (e.g. `["**/vendor/**"]`). |
 | `[opengrep].exclude_rule` | string array | no | OpenGrep rule IDs to skip (e.g. `["python.lang.security.audit.formatted-sql-query.formatted-sql-query"]`). |
 | `[proxy].http_proxy` | string | no | HTTP proxy URL forwarded as `HTTP_PROXY` / `http_proxy` to all scanner sub-processes. |
