@@ -130,10 +130,12 @@ title = "Scope-guardian configuration file"   # Optional human-readable label
 # All other branches receive a one-week end date.
 protected_branches = ["main", "master"]
 
+# Directory to scan, relative to the SCAN_DIR environment variable.
+# Used by both KICS and OpenGrep as the root of their scan targets.
+path = "./my-service"
+
 # KICS – infrastructure-as-code scanner
 [kics]
-# Directory to scan, relative to the SCAN_DIR environment variable.
-path = "./my-service"
 # Infrastructure platform type. Passed as --type to KICS.
 # Examples: "Dockerfile", "Terraform", "CloudFormation", "Kubernetes", "Ansible"
 platform = "Dockerfile"
@@ -154,19 +156,18 @@ transitive_libraries = false
 
 # OpenGrep – static application security testing (SAST) scanner.
 [opengrep]
-# Directory to scan, relative to the SCAN_DIR environment variable.
-path = "./my-service"
 # Optional list of path patterns to exclude from scanning.
 # exclude = ["**/vendor/**", "**/testdata/**"]
 # Optional list of rule IDs to skip.
 # exclude_rule = ["python.lang.security.audit.formatted-sql-query.formatted-sql-query"]
 
 # Proxy – optional HTTP/HTTPS proxy settings forwarded to all scanner sub-processes.
-# All three fields are optional. Omit the entire section or leave fields empty to disable.
+# All fields are optional. Omit the entire section or leave fields empty to disable.
 # [proxy]
-# http_proxy  = "http://proxy.company.com:3128"
-# https_proxy = "http://proxy.company.com:3128"
-# no_proxy    = "localhost,127.0.0.1"
+# http_proxy    = "http://proxy.company.com:3128"
+# https_proxy   = "http://proxy.company.com:3128"
+# no_proxy      = "localhost,127.0.0.1"
+# ssl_cert_file = "/path/to/ca.pem"   # PEM-encoded CA certificate (e.g. Burp Suite CA)
 ```
 
 ### Fields Reference
@@ -175,13 +176,12 @@ path = "./my-service"
 |-------|------|----------|-------------|
 | `title` | string | no | Human-readable label; not used programmatically. |
 | `protected_branches` | string array | no | Branches whose engagements get a 1-year end date. Defaults to empty (all branches get 1 week). |
-| `[kics].path` | string | yes* | Path to the directory to scan. Resolved as `$SCAN_DIR/<path>`. |
+| `path` | string | yes* | Path to the directory to scan. Resolved as `$SCAN_DIR/<path>`. Used by both KICS and OpenGrep. |
 | `[kics].platform` | string | no | KICS platform filter (e.g. `Dockerfile`). When omitted KICS scans all supported types. |
 | `[kics].exclude_queries` | string array | no | KICS query IDs to skip (e.g. `["a227ec01-f97a-4084-91a4-47b350c1db54"]`). |
 | `[grype].ignore_states` | string | no | Comma-separated Grype vulnerability states to suppress (e.g. `not-fixed,unknown,wont-fix`). |
 | `[grype].transitive_libraries` | bool | no | When `true`, Syft resolves transitive Java dependencies via Maven Central. Default: `false`. |
 | `[grype].exclude` | string array | no | Path glob patterns to exclude from Grype scanning (e.g. `["**/vendor/**"]`). |
-| `[opengrep].path` | string | yes* | Path to the directory to scan. Resolved as `$SCAN_DIR/<path>`. |
 | `[opengrep].exclude` | string array | no | Path glob patterns to exclude from OpenGrep scanning (e.g. `["**/vendor/**"]`). |
 | `[opengrep].exclude_rule` | string array | no | OpenGrep rule IDs to skip (e.g. `["python.lang.security.audit.formatted-sql-query.formatted-sql-query"]`). |
 | `[proxy].http_proxy` | string | no | HTTP proxy URL forwarded as `HTTP_PROXY` / `http_proxy` to all scanner sub-processes. |
@@ -189,7 +189,7 @@ path = "./my-service"
 | `[proxy].no_proxy` | string | no | Comma-separated list of hosts that bypass the proxy, forwarded as `NO_PROXY` / `no_proxy`. |
 | `[proxy].ssl_cert_file` | string | no | Path to a PEM-encoded CA certificate bundle forwarded as `SSL_CERT_FILE` (Go tools) and `REQUESTS_CA_BUNDLE` (Python tools such as OpenGrep) to all scanner sub-processes. Required when using an intercepting proxy (e.g. Burp Suite). |
 
-\* Required only if you want KICS scanning to run. Omitting the entire `[kics]` section disables the scanner.
+\* Required only if you want KICS or OpenGrep scanning to run. Omitting `path` while either `[kics]` or `[opengrep]` is configured will cause those scanners to use an empty path.
 
 Omitting the entire `[grype]` section disables both Grype and the Syft SBOM generation step.
 
