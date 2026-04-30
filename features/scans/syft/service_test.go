@@ -12,7 +12,7 @@ import (
 )
 
 func TestNewSyftService(t *testing.T) {
-	service := newSyftService("./test", false, false, nil)
+	service := newSyftService("./test", false, nil, nil)
 
 	_, ok := service.(interfaces.ScanServiceImpl)
 	assert.NotNil(t, service)
@@ -24,7 +24,7 @@ func TestSyftStart(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], ""))
 		environment_variable.ReloadEnv()
 
-		service := newSyftService("./doesnotexist", false, false, nil)
+		service := newSyftService("./doesnotexist", false, nil, nil)
 
 		ok, err := service.Start()
 
@@ -37,7 +37,7 @@ func TestSyftStart(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", os.TempDir())
 		environment_variable.ReloadEnv()
 
-		svc := newSyftService(".", false, false, nil).(*SyftServiceImpl)
+		svc := newSyftService(".", false, nil, nil).(*SyftServiceImpl)
 		svc.runner = func(_ string, _ string, _ []string, _ io.Writer, _ io.Writer, _ ...string) (bool, error) {
 			return false, fmt.Errorf("runner error")
 		}
@@ -52,7 +52,7 @@ func TestSyftStart(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", os.TempDir())
 		environment_variable.ReloadEnv()
 
-		svc := newSyftService(".", true, false, nil).(*SyftServiceImpl)
+		svc := newSyftService(".", true, nil, nil).(*SyftServiceImpl)
 		svc.runner = func(_ string, _ string, _ []string, _ io.Writer, _ io.Writer, _ ...string) (bool, error) {
 			return true, nil
 		}
@@ -63,12 +63,13 @@ func TestSyftStart(t *testing.T) {
 		assert.True(t, ok)
 	})
 
-	t.Run("Should pass exclude test libraries arg when excludeTestLibraries is true", func(t *testing.T) {
+	t.Run("Should pass each exclude pattern as a separate --exclude arg", func(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", os.TempDir())
 		environment_variable.ReloadEnv()
 
+		patterns := []string{"**/src/test/**", "**/testdata/**"}
 		var capturedArgs []string
-		svc := newSyftService(".", false, true, nil).(*SyftServiceImpl)
+		svc := newSyftService(".", false, patterns, nil).(*SyftServiceImpl)
 		svc.runner = func(_ string, _ string, args []string, _ io.Writer, _ io.Writer, _ ...string) (bool, error) {
 			capturedArgs = args
 			return true, nil
@@ -79,15 +80,17 @@ func TestSyftStart(t *testing.T) {
 		assert.Nil(t, err)
 		assert.True(t, ok)
 		assert.Contains(t, capturedArgs, excludeArgument)
-		assert.Contains(t, capturedArgs, testSourcePattern)
+		for _, p := range patterns {
+			assert.Contains(t, capturedArgs, p)
+		}
 	})
 
-	t.Run("Should not pass exclude test libraries arg when excludeTestLibraries is false", func(t *testing.T) {
+	t.Run("Should not pass --exclude arg when exclude list is empty", func(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", os.TempDir())
 		environment_variable.ReloadEnv()
 
 		var capturedArgs []string
-		svc := newSyftService(".", false, false, nil).(*SyftServiceImpl)
+		svc := newSyftService(".", false, nil, nil).(*SyftServiceImpl)
 		svc.runner = func(_ string, _ string, args []string, _ io.Writer, _ io.Writer, _ ...string) (bool, error) {
 			capturedArgs = args
 			return true, nil
@@ -98,13 +101,12 @@ func TestSyftStart(t *testing.T) {
 		assert.Nil(t, err)
 		assert.True(t, ok)
 		assert.NotContains(t, capturedArgs, excludeArgument)
-		assert.NotContains(t, capturedArgs, testSourcePattern)
 	})
 }
 
 func TestSyftLoadFindings(t *testing.T) {
 	t.Run("Should return nil findings and nil error", func(t *testing.T) {
-		service := newSyftService("./test", false, false, nil)
+		service := newSyftService("./test", false, nil, nil)
 
 		findings, err := service.LoadFindings()
 
@@ -115,7 +117,7 @@ func TestSyftLoadFindings(t *testing.T) {
 
 func TestSyftSync(t *testing.T) {
 	t.Run("Should return nil error", func(t *testing.T) {
-		service := newSyftService("./test", false, false, nil)
+		service := newSyftService("./test", false, nil, nil)
 
 		err := service.Sync(1, "main", nil)
 

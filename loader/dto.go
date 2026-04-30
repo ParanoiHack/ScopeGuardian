@@ -27,14 +27,15 @@ type (
 		// dependencies from Maven Central during SBOM generation. Disabled by
 		// default because network resolution significantly increases scan time.
 		TransitiveLibraries bool `toml:"transitive_libraries"`
-		// ExcludeTestLibraries controls whether Syft skips test source directories
-		// (e.g. **/src/test/**) during SBOM generation. Enabling this reduces noise
-		// from test-only code paths. Note: test-scoped Maven dependencies declared
-		// in pom.xml are not affected because Syft has no native scope filter for
-		// Java; this option only excludes paths from the file-system scan. For
-		// JavaScript projects, dev dependencies are already excluded unconditionally
-		// via the include-dev-dependencies: false setting in syft.yaml.
-		ExcludeTestLibraries bool `toml:"exclude_test_libraries"`
+		// SyftExclude is a list of glob patterns passed to Syft via --exclude to
+		// skip matching paths during SBOM generation. Use this to reduce noise from
+		// test source directories or other paths that should not appear in the SBOM
+		// (e.g. ["**/src/test/**"]). Note: test-scoped Maven dependencies declared
+		// in pom.xml are not affected because Syft has no native Maven scope filter;
+		// this option only excludes paths from the filesystem scan. For JavaScript
+		// projects, dev dependencies are already excluded unconditionally via the
+		// include-dev-dependencies: false setting in syft.yaml.
+		SyftExclude []string `toml:"syft_exclude"`
 	}
 
 	// Opengrep contains the configuration for the OpenGrep SAST scanner.

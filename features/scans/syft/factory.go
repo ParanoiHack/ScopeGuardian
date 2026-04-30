@@ -7,15 +7,15 @@ import (
 
 // GetSyftService constructs and returns a ScanServiceImpl for the Syft SBOM generator
 // using the provided loader configuration. When a Grype configuration is present,
-// its TransitiveLibraries and ExcludeTestLibraries flags are forwarded to the Syft
+// its TransitiveLibraries flag and SyftExclude patterns are forwarded to the Syft
 // service to control whether transitive Java dependencies are resolved from Maven
-// Central and whether test source directories are excluded during SBOM generation.
+// Central and which filesystem paths are excluded during SBOM generation.
 func GetSyftService(config loader.Config) interfaces.ScanServiceImpl {
 	transitiveLibraries := false
-	excludeTestLibraries := false
+	var exclude []string
 	if config.Grype != nil {
 		transitiveLibraries = config.Grype.TransitiveLibraries
-		excludeTestLibraries = config.Grype.ExcludeTestLibraries
+		exclude = config.Grype.SyftExclude
 	}
-	return newSyftService(config.Path, transitiveLibraries, excludeTestLibraries, config.Proxy.ToEnv())
+	return newSyftService(config.Path, transitiveLibraries, exclude, config.Proxy.ToEnv())
 }

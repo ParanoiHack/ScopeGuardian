@@ -33,21 +33,22 @@ func TestGetSyftService(t *testing.T) {
 		assert.True(t, ok)
 	})
 
-	t.Run("Should use excludeTestLibraries from grype config when false", func(t *testing.T) {
-		service := GetSyftService(loader.Config{Grype: &loader.Grype{ExcludeTestLibraries: false}})
+	t.Run("Should use syft_exclude from grype config when empty", func(t *testing.T) {
+		service := GetSyftService(loader.Config{Grype: &loader.Grype{SyftExclude: nil}})
 		svc, ok := service.(*SyftServiceImpl)
 
 		assert.NotNil(t, service)
 		assert.True(t, ok)
-		assert.False(t, svc.excludeTestLibraries)
+		assert.Empty(t, svc.exclude)
 	})
 
-	t.Run("Should use excludeTestLibraries from grype config when true", func(t *testing.T) {
-		service := GetSyftService(loader.Config{Grype: &loader.Grype{ExcludeTestLibraries: true}})
+	t.Run("Should use syft_exclude from grype config when set", func(t *testing.T) {
+		patterns := []string{"**/src/test/**", "**/testdata/**"}
+		service := GetSyftService(loader.Config{Grype: &loader.Grype{SyftExclude: patterns}})
 		svc, ok := service.(*SyftServiceImpl)
 
 		assert.NotNil(t, service)
 		assert.True(t, ok)
-		assert.True(t, svc.excludeTestLibraries)
+		assert.Equal(t, patterns, svc.exclude)
 	})
 }

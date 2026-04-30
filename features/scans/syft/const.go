@@ -15,20 +15,15 @@ const (
 )
 
 const (
-	testSourcePattern = "**/src/test/**"
-)
-
-const (
 	outputFolder                     = "results"
 	syftJsonOutputNameParameter      = "sbom.syft.json"
 	cyclonedxJsonOutputNameParameter = "sbom.cyclonedx.json"
 )
 
 const (
-	logInfoCommandLine           = "Command line invoked [%s]"
-	logInfoTransitiveLibraries   = "Transitive libraries resolution is enabled. This may significantly increase scan time."
-	logInfoExcludeTestLibraries  = "Test source directory exclusion is enabled. Paths matching **/src/test/** will be skipped."
-	logErrorDirectoryNotFound    = "Cannot find directory [%s]"
+	logInfoCommandLine         = "Command line invoked [%s]"
+	logInfoTransitiveLibraries = "Transitive libraries resolution is enabled. This may significantly increase scan time."
+	logErrorDirectoryNotFound  = "Cannot find directory [%s]"
 )
 
 const (
