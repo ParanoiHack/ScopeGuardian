@@ -1,35 +1,50 @@
-# Copilot Agent Instructions
+---
+name: update-readme
+description: >
+  Reviews recent code changes and updates README.md to keep it accurate.
+  Invoke this skill after completing code changes that touch CLI flags,
+  environment variables, configuration schema, scanner integrations,
+  security-gate logic, DefectDojo sync behaviour, Docker image, or build
+  requirements.
+---
 
-## README.md Synchronisation
+# Update README Skill
 
-Whenever you make code changes that affect any of the following areas, you **must** review and update `README.md` before considering the task complete:
+## When to invoke
 
-### Triggers — update README.md when changing:
+Run this skill after any code change that touches one of the following areas:
 
-| Area | Examples |
-|------|---------|
-| **CLI flags** | Adding, removing, or renaming flags in `parser/` |
-| **Environment variables** | Adding, removing, or renaming vars in `environnement_variable/` |
-| **Configuration file schema** | New or changed keys in `config.toml` / loader |
-| **Scanner integration** | Adding a new scanner, changing binary paths or output formats |
-| **Security gate logic** | Threshold evaluation rules, exit code behaviour |
-| **DefectDojo sync behaviour** | Import/reimport flow, engagement naming, end-date logic |
-| **Docker image** | New tools bundled, changed base image, multi-stage changes |
-| **External tool paths** | Binary locations for KICS, Grype, Syft, OpenGrep |
-| **Go module / build requirements** | Minimum Go version, new mandatory build steps |
+| Area | Key files / packages |
+|------|----------------------|
+| CLI flags | `parser/` |
+| Environment variables | `environnement_variable/` |
+| Configuration file schema | `loader/`, `config.toml` |
+| Scanner integration | `features/scans/*/`, `engine/` |
+| Security gate logic | `features/security-gate/` |
+| DefectDojo sync behaviour | `features/sync/`, `connectors/defectdojo/` |
+| Docker image / binary paths | `Dockerfile` |
+| Go module / build requirements | `go.mod`, `main.go` |
 
-### What to update in README.md
+## Steps
 
-- **CLI Usage** table — keep flags, types, and descriptions accurate.
-- **Environment Variables** table — keep variable names and descriptions accurate.
-- **Configuration File** section — reflect any new/changed `config.toml` keys with examples.
-- **Prerequisites** list — add or remove tool dependencies as needed.
-- **Quick Start** examples — update commands if invocation syntax changes.
-- **How-it-works sections** — update architecture prose if behaviour changes.
+1. **Read the changed files** — use the Read tool on every file you modified to recall exactly what changed.
 
-### How to apply this rule
+2. **Check each README section** — open `README.md` and evaluate the sections below against your changes:
 
-1. After completing your code changes, re-read the sections of `README.md` listed above.
-2. If any section is now inaccurate or incomplete, edit it to match the new behaviour.
-3. Commit the `README.md` update in the same PR as the code change.
-4. If none of the trigger areas were touched, README.md does not need to change — but note this explicitly in your PR description.
+   | README section | What to verify |
+   |----------------|----------------|
+   | **Prerequisites** | Tool names, binary paths, and minimum Go version are accurate |
+   | **Quick Start** | Example commands still work with the current flag names and env vars |
+   | **CLI Usage** | Flag table is complete; names, types, and descriptions match `parser/` |
+   | **Configuration File (`config.toml`)** | Every documented key exists; new keys are documented with examples |
+   | **Environment Variables** | Table matches the vars loaded in `environnement_variable/` |
+   | **How Engagements Are Handled** | Engagement naming and end-date rules are correct |
+   | **How the Sync Feature Works** | Import vs reimport logic, flow description |
+   | **How the Security Gate Works** | Threshold evaluation, severity ordering, exit code behaviour |
+   | **Running with Docker** | Image name, tool paths, and `docker run` examples are current |
+
+3. **Edit README.md** — for each section that is now inaccurate or missing information, apply the minimum edit needed to make it accurate. Do not rewrite sections that are still correct.
+
+4. **Report what changed** — after editing, briefly summarise which README sections were updated and why (one line per section is enough).
+
+5. **No-op case** — if none of the trigger areas were touched, state explicitly: "README.md does not require updates for this change."
