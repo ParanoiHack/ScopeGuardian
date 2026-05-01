@@ -162,4 +162,5 @@ exclude_rule = []
 - Unit tests live alongside source files (`*_test.go`).
 - Run `go test ./...` from the repo root.
 - Mocks are generated with `github.com/golang/mock`.
+- New code must be covered by unit tests with significant coverage; aim for full branch and error-path coverage on all non-trivial logic.
 - No integration test suite is bundled; integration testing requires a live DefectDojo instance.
