@@ -74,8 +74,6 @@ docker build -t ScopeGuardian .
 | `DD_URL` | with `--sync` | Base URL of the DefectDojo instance (e.g. `http://localhost:8080`) |
 | `DD_ACCESS_TOKEN` | with `--sync` | DefectDojo API v2 token |
 
-Copy `.env.example` → `.env` for local development.
-
 ## Key CLI Flags
 
 | Flag | Description |
