@@ -4,3 +4,4 @@ path = "./"
 [grype]
 ignore_states = "not-fixed,unknown,wont-fix"
 exclude = ["/etc/**"]
+syft_depth = 5

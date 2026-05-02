@@ -1,16 +1,16 @@
 package grype
 
 const (
-	binaryPath  = "/opt/grype/bin/grype"
-	dirPath     = "/opt/grype"
-	configPath  = "/opt/grype/config/grype.yaml"
+	binaryPath   = "/opt/grype/bin/grype"
+	dirPath      = "/opt/grype"
+	configPath   = "/opt/grype/config/grype.yaml"
 	outputFolder = "results"
 	scannerType  = "SCA"
 )
 
 const (
 	severityThreshold    = "Info"
-	groupByProperty      = "finding_title"
+	groupByProperty      = "component_name+component_version"
 	findingGroupProperty = true
 	findingTagProperty   = true
 	SCAEngineTag         = "SCA"

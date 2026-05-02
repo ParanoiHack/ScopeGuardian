@@ -1,6 +1,8 @@
 package defectdojo
 
 import (
+	"ScopeGuardian/connectors/defectdojo/client"
+	"ScopeGuardian/logger"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -9,8 +11,6 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-	"ScopeGuardian/connectors/defectdojo/client"
-	"ScopeGuardian/logger"
 	"strconv"
 	"time"
 )

@@ -27,6 +27,20 @@ type (
 		// dependencies from Maven Central during SBOM generation. Disabled by
 		// default because network resolution significantly increases scan time.
 		TransitiveLibraries bool `toml:"transitive_libraries"`
+		// SyftExclude is a list of glob patterns passed to Syft via --exclude to
+		// skip matching paths during SBOM generation. Use this to reduce noise from
+		// test source directories or other paths that should not appear in the SBOM
+		// (e.g. ["**/src/test/**"]). Note: test-scoped Maven dependencies declared
+		// in pom.xml are not affected because Syft has no native Maven scope filter;
+		// this option only excludes paths from the filesystem scan. For JavaScript
+		// projects, dev dependencies are already excluded unconditionally via the
+		// include-dev-dependencies: false setting in syft.yaml.
+		SyftExclude []string `toml:"syft_exclude"`
+		// SyftDepth controls how many levels of parent POMs Syft will recursively
+		// resolve during Java/Maven analysis. Defaults to 1 when unset (0).
+		// Passed to Syft as the SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH environment
+		// variable.
+		SyftDepth int `toml:"syft_depth"`
 	}
 
 	// Opengrep contains the configuration for the OpenGrep SAST scanner.

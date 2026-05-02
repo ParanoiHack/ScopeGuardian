@@ -24,8 +24,8 @@ const (
 )
 
 const (
-	kicsScannerName      = "Kics (IACST)"
-	syftScannerName      = "Syft (SBOM)"
-	grypeScannerName     = "Grype (SCA)"
-	opengrepScannerName  = "OpenGrep (SAST)"
+	kicsScannerName     = "Kics (IACST)"
+	syftScannerName     = "Syft (SBOM)"
+	grypeScannerName    = "Grype (SCA)"
+	opengrepScannerName = "OpenGrep (SAST)"
 )

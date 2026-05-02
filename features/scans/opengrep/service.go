@@ -1,11 +1,6 @@
 package opengrep
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
-	"io"
-	"os"
 	"ScopeGuardian/connectors/defectdojo"
 	"ScopeGuardian/domains/interfaces"
 	"ScopeGuardian/domains/models"
@@ -13,6 +8,11 @@ import (
 	"ScopeGuardian/exec"
 	"ScopeGuardian/loader"
 	"ScopeGuardian/logger"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"os"
 	"strings"
 	"time"
 )
@@ -109,12 +109,12 @@ func (s *OpenGrepServiceImpl) LoadFindings() ([]models.Finding, error) {
 		description := strings.Join(item.Extra.Metadata.Owasp, ", ")
 
 		f := models.Finding{
-			Engine:         scannerType,
-			Severity:       severity,
-			Name:           item.CheckId,
-			VulnId:         item.CheckId,
-			Cwe:            cwe,
-			Description:    description,
+			Engine:      scannerType,
+			Severity:    severity,
+			Name:        item.CheckId,
+			VulnId:      item.CheckId,
+			Cwe:         cwe,
+			Description: description,
 			// Message is kept for display but intentionally excluded from the hash:
 			// DefectDojo's Semgrep parser stores extra.message in description, not
 			// mitigation, so f.Mitigation from the DD API will be empty for these findings.

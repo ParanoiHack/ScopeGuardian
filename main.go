@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"ScopeGuardian/display"
 	"ScopeGuardian/domains/models"
 	"ScopeGuardian/engine"
@@ -9,6 +8,7 @@ import (
 	"ScopeGuardian/loader"
 	"ScopeGuardian/logger"
 	"ScopeGuardian/parser"
+	"os"
 
 	"golang.org/x/exp/slog"
 )

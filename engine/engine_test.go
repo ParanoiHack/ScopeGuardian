@@ -1,11 +1,11 @@
 package engine
 
 import (
-	"errors"
 	"ScopeGuardian/connectors/defectdojo"
 	"ScopeGuardian/domains/interfaces"
 	"ScopeGuardian/domains/models"
 	"ScopeGuardian/loader"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

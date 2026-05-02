@@ -28,6 +28,7 @@ func TestLoad(t *testing.T) {
 		assert.Nil(t, config.Kics)
 		assert.EqualValues(t, "not-fixed,unknown,wont-fix", config.Grype.IgnoreStates)
 		assert.EqualValues(t, []string{"/etc/**"}, config.Grype.Exclude)
+		assert.EqualValues(t, 5, config.Grype.SyftDepth)
 	})
 
 	t.Run("Should load configuration file without engine", func(t *testing.T) {

@@ -1,15 +1,15 @@
 package kics
 
 type KicsFinding struct {
-	QueryName   string      `json:"query_name"`
-	QueryId     string      `json:"query_id"`
-	QueryUrl    string      `json:"query_url"`
-	Severity    string      `json:"severity"`
-	Platform    string      `json:"platforme"`
-	Cwe         string      `json:"cwe"`
-	RiskScore   string      `json:"risk_score"`
-	Description string      `json:"description"`
-	Files       []KicsFile  `json:"files"`
+	QueryName   string     `json:"query_name"`
+	QueryId     string     `json:"query_id"`
+	QueryUrl    string     `json:"query_url"`
+	Severity    string     `json:"severity"`
+	Platform    string     `json:"platforme"`
+	Cwe         string     `json:"cwe"`
+	RiskScore   string     `json:"risk_score"`
+	Description string     `json:"description"`
+	Files       []KicsFile `json:"files"`
 }
 
 type KicsFile struct {

@@ -1,12 +1,12 @@
 package kics
 
 import (
-	"fmt"
-	"os"
 	"ScopeGuardian/connectors/defectdojo"
 	"ScopeGuardian/domains/interfaces"
 	environment_variable "ScopeGuardian/environnement_variable"
 	"ScopeGuardian/loader"
+	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

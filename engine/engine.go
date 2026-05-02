@@ -1,22 +1,22 @@
 package engine
 
 import (
-	"fmt"
-	"net/http"
-	"os"
-	"path/filepath"
 	"ScopeGuardian/connectors/defectdojo"
 	"ScopeGuardian/connectors/defectdojo/client"
 	"ScopeGuardian/domains/interfaces"
 	"ScopeGuardian/domains/models"
 	environment_variable "ScopeGuardian/environnement_variable"
-	featuresync "ScopeGuardian/features/sync"
 	"ScopeGuardian/features/scans/grype"
 	"ScopeGuardian/features/scans/kics"
 	"ScopeGuardian/features/scans/opengrep"
 	"ScopeGuardian/features/scans/syft"
+	featuresync "ScopeGuardian/features/sync"
 	"ScopeGuardian/loader"
 	"ScopeGuardian/logger"
+	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
 	"sync"
 )
 

@@ -32,4 +32,50 @@ func TestGetSyftService(t *testing.T) {
 		assert.NotNil(t, service)
 		assert.True(t, ok)
 	})
+
+	t.Run("Should use syft_exclude from grype config when empty", func(t *testing.T) {
+		service := GetSyftService(loader.Config{Grype: &loader.Grype{SyftExclude: nil}})
+		svc, ok := service.(*SyftServiceImpl)
+
+		assert.NotNil(t, service)
+		assert.True(t, ok)
+		assert.Empty(t, svc.exclude)
+	})
+
+	t.Run("Should use syft_exclude from grype config when set", func(t *testing.T) {
+		patterns := []string{"**/src/test/**", "**/testdata/**"}
+		service := GetSyftService(loader.Config{Grype: &loader.Grype{SyftExclude: patterns}})
+		svc, ok := service.(*SyftServiceImpl)
+
+		assert.NotNil(t, service)
+		assert.True(t, ok)
+		assert.Equal(t, patterns, svc.exclude)
+	})
+
+	t.Run("Should use default syft_depth of 1 when grype config has depth zero (not configured)", func(t *testing.T) {
+		service := GetSyftService(loader.Config{Grype: &loader.Grype{SyftDepth: 0}})
+		svc, ok := service.(*SyftServiceImpl)
+
+		assert.NotNil(t, service)
+		assert.True(t, ok)
+		assert.Equal(t, 1, svc.depth)
+	})
+
+	t.Run("Should use syft_depth from grype config when set", func(t *testing.T) {
+		service := GetSyftService(loader.Config{Grype: &loader.Grype{SyftDepth: 5}})
+		svc, ok := service.(*SyftServiceImpl)
+
+		assert.NotNil(t, service)
+		assert.True(t, ok)
+		assert.Equal(t, 5, svc.depth)
+	})
+
+	t.Run("Should default syft_depth to 1 when grype config is nil", func(t *testing.T) {
+		service := GetSyftService(loader.Config{})
+		svc, ok := service.(*SyftServiceImpl)
+
+		assert.NotNil(t, service)
+		assert.True(t, ok)
+		assert.Equal(t, 1, svc.depth)
+	})
 }
