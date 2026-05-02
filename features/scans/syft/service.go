@@ -72,7 +72,7 @@ func (s *SyftServiceImpl) Start() (bool, error) {
 	}
 
 	for _, pattern := range s.exclude {
-		args = append(args, excludeArgument, fmt.Sprintf(`"%s"`, pattern))
+		args = append(args, excludeArgument, fmt.Sprintf(`'%s'`, pattern))
 	}
 
 	logger.Info(fmt.Sprintf(logInfoCommandLine, strings.Join(args, " ")))

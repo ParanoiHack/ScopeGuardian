@@ -81,7 +81,7 @@ func TestSyftStart(t *testing.T) {
 		assert.True(t, ok)
 		assert.Contains(t, capturedArgs, excludeArgument)
 		for _, p := range patterns {
-			assert.Contains(t, capturedArgs, fmt.Sprintf(`"%s"`, p))
+			assert.Contains(t, capturedArgs, fmt.Sprintf(`'%s'`, p))
 		}
 	})
 
