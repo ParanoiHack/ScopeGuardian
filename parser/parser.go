@@ -45,14 +45,14 @@ func PrintUsage(w io.Writer) {
 func Parse(args []string) (Args, error) {
 	fs := flag.NewFlagSet("ScopeGuardian", flag.ContinueOnError)
 
-	sync        := fs.Bool("sync", false, "Enable sync result with DefectDojo")
-	threshold   := fs.String("threshold", "", "Enable security gate (e.g., critical=1,high=2)")
+	sync := fs.Bool("sync", false, "Enable sync result with DefectDojo")
+	threshold := fs.String("threshold", "", "Enable security gate (e.g., critical=1,high=2)")
 	projectName := fs.String("projectName", "", "Name of the project to scan")
-	branch      := fs.String("branch", "", "Project branch to scan")
-	quiet       := fs.Bool("q", false, "Quiet mode: suppress all log output")
-	output      := fs.String("o", "", "Write findings to the specified file")
-	format      := fs.String("format", FormatJSON, "Output format for -o: json, csv, or raw")
-	filter      := fs.String("filter", FilterActive, "Comma-separated finding statuses to display: ACTIVE, INACTIVE, DUPLICATE (default: ACTIVE)")
+	branch := fs.String("branch", "", "Project branch to scan")
+	quiet := fs.Bool("q", false, "Quiet mode: suppress all log output")
+	output := fs.String("o", "", "Write findings to the specified file")
+	format := fs.String("format", FormatJSON, "Output format for -o: json, csv, or raw")
+	filter := fs.String("filter", FilterActive, "Comma-separated finding statuses to display: ACTIVE, INACTIVE, DUPLICATE (default: ACTIVE)")
 
 	if err := fs.Parse(args); err != nil {
 		return Args{}, err

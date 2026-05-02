@@ -4,4 +4,4 @@ path = "./"
 [grype]
 ignore_states = "not-fixed,unknown,wont-fix"
 exclude = ["/etc/**"]
-syft_max_parent_recursive_depth = 5
+syft_depth = 5

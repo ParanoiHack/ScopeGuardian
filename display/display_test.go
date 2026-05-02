@@ -1,10 +1,10 @@
 package display
 
 import (
+	"ScopeGuardian/domains/models"
 	"bytes"
 	"encoding/json"
 	"strings"
-	"ScopeGuardian/domains/models"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

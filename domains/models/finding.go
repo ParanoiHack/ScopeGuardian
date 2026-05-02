@@ -10,11 +10,11 @@ import (
 const (
 	// FindingStatusActive indicates a finding that is active in DefectDojo
 	// (not a duplicate, not suppressed). Without --sync all findings default to ACTIVE.
-	FindingStatusActive    = "ACTIVE"
+	FindingStatusActive = "ACTIVE"
 	// FindingStatusInactive indicates a finding that DefectDojo has suppressed,
 	// marked as a false positive, or accepted as a risk. The local scanner still
 	// reports it but it is excluded from security-gate evaluation.
-	FindingStatusInactive  = "INACTIVE"
+	FindingStatusInactive = "INACTIVE"
 	// FindingStatusDuplicate indicates a finding that DefectDojo's deduplication
 	// engine has identified as a duplicate of another finding in the product.
 	// Duplicate findings are excluded from security-gate evaluation.
@@ -23,10 +23,14 @@ const (
 
 // Finding represents a single security finding produced by a scanner.
 type Finding struct {
-	Engine         string
-	Severity       string
-	Name           string
-	VulnId         string
+	Engine   string
+	Severity string
+	Name     string
+	VulnId   string
+	// Cwe holds the CWE identifier for most scanners (e.g. "CWE-79"). For Grype
+	// findings it holds the CVE identifier (extracted from vulnerability.epss.cve
+	// when present, falling back to vulnerability.id). The display layer renders
+	// this column as "CWE/CVE".
 	Cwe            string
 	Description    string
 	SinkFile       string
@@ -77,9 +81,9 @@ func FilterFindingsByStatus(findings []Finding, statuses []string) []Finding {
 // Scanner-specific notes:
 //   - Grype:    recommendation is the "Upgrade to X" string derived from fix.versions.
 //   - OpenGrep: recommendation is always "" because DefectDojo's Semgrep parser stores
-//               extra.message in description, not mitigation. The hash is additionally
-//               injected into extra.fingerprint before upload so that DefectDojo stores
-//               it as unique_id_from_tool, enabling a direct lookup without recomputation.
+//     extra.message in description, not mitigation. The hash is additionally
+//     injected into extra.fingerprint before upload so that DefectDojo stores
+//     it as unique_id_from_tool, enabling a direct lookup without recomputation.
 //   - KICS:     recommendation is the expected_value from each file entry.
 func ComputeFindingHash(severity, sinkFile string, sinkLine int, recommendation string) string {
 	input := strings.ToLower(strings.TrimSpace(severity)) + "|" +

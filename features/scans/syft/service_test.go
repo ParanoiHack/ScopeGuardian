@@ -1,11 +1,11 @@
 package syft
 
 import (
+	"ScopeGuardian/domains/interfaces"
+	environment_variable "ScopeGuardian/environnement_variable"
 	"fmt"
 	"io"
 	"os"
-	"ScopeGuardian/domains/interfaces"
-	environment_variable "ScopeGuardian/environnement_variable"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -63,13 +63,13 @@ func TestSyftStart(t *testing.T) {
 		assert.True(t, ok)
 	})
 
-	t.Run("Should pass each exclude pattern as a separate --exclude arg", func(t *testing.T) {
+	t.Run("Should pass each exclude pattern as a separate --exclude arg (quoted)", func(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", os.TempDir())
 		environment_variable.ReloadEnv()
 
 		patterns := []string{"**/src/test/**", "**/testdata/**"}
 		var capturedArgs []string
-		svc := newSyftService(".", false, patterns, 0, nil).(*SyftServiceImpl)
+		svc := newSyftService(".", false, patterns, 1, nil).(*SyftServiceImpl)
 		svc.runner = func(_ string, _ string, args []string, _ io.Writer, _ io.Writer, _ ...string) (bool, error) {
 			capturedArgs = args
 			return true, nil
@@ -81,7 +81,7 @@ func TestSyftStart(t *testing.T) {
 		assert.True(t, ok)
 		assert.Contains(t, capturedArgs, excludeArgument)
 		for _, p := range patterns {
-			assert.Contains(t, capturedArgs, p)
+			assert.Contains(t, capturedArgs, fmt.Sprintf(`"%s"`, p))
 		}
 	})
 
@@ -103,7 +103,7 @@ func TestSyftStart(t *testing.T) {
 		assert.NotContains(t, capturedArgs, excludeArgument)
 	})
 
-	t.Run("Should pass SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH env var with configured value", func(t *testing.T) {
+	t.Run("Should pass SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH env var with configured depth", func(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", os.TempDir())
 		environment_variable.ReloadEnv()
 
@@ -121,12 +121,12 @@ func TestSyftStart(t *testing.T) {
 		assert.Contains(t, capturedEnv, "SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH=3")
 	})
 
-	t.Run("Should pass SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH=0 when default value is used", func(t *testing.T) {
+	t.Run("Should pass SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH=1 when default depth is used", func(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", os.TempDir())
 		environment_variable.ReloadEnv()
 
 		var capturedEnv []string
-		svc := newSyftService(".", false, nil, 0, nil).(*SyftServiceImpl)
+		svc := newSyftService(".", false, nil, 1, nil).(*SyftServiceImpl)
 		svc.runner = func(_ string, _ string, _ []string, _ io.Writer, _ io.Writer, extraEnv ...string) (bool, error) {
 			capturedEnv = extraEnv
 			return true, nil
@@ -136,7 +136,7 @@ func TestSyftStart(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.True(t, ok)
-		assert.Contains(t, capturedEnv, "SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH=0")
+		assert.Contains(t, capturedEnv, "SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH=1")
 	})
 }
 

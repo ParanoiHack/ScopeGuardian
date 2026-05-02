@@ -1,13 +1,13 @@
 package display
 
 import (
+	"ScopeGuardian/domains/models"
+	environment_variable "ScopeGuardian/environnement_variable"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
 	"strconv"
-	"ScopeGuardian/domains/models"
-	environment_variable "ScopeGuardian/environnement_variable"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"

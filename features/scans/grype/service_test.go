@@ -1,12 +1,12 @@
 package grype
 
 import (
-	"fmt"
-	"os"
 	"ScopeGuardian/connectors/defectdojo"
 	"ScopeGuardian/domains/interfaces"
 	environment_variable "ScopeGuardian/environnement_variable"
 	"ScopeGuardian/loader"
+	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -91,7 +91,7 @@ func TestNewGrypeService(t *testing.T) {
 }
 
 func TestLoadFindings(t *testing.T) {
-	t.Run("Should load findings", func(t *testing.T) {
+	t.Run("Should load findings and use epss.cve when present, fallback to vulnerability id otherwise", func(t *testing.T) {
 		_ = os.Setenv("SCAN_DIR", fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["PWD"], "./mocks/working_results"))
 		environment_variable.ReloadEnv()
 
@@ -102,12 +102,14 @@ func TestLoadFindings(t *testing.T) {
 		assert.Nil(t, err)
 		assert.EqualValues(t, 2, len(findings))
 
+		// finding[0]: vulnerability.id is a GHSA id; epss.cve holds the CVE
 		assert.EqualValues(t, "test-package 1.0.0", findings[0].Name)
 		assert.EqualValues(t, "CVE-2021-1234", findings[0].VulnId)
 		assert.EqualValues(t, "CVE-2021-1234", findings[0].Cwe)
 		assert.EqualValues(t, "HIGH", findings[0].Severity)
 		assert.EqualValues(t, "Upgrade to 1.2.0", findings[0].Recommendation)
 
+		// finding[1]: no epss object; falls back to vulnerability.id
 		assert.EqualValues(t, "another-package 2.0.0", findings[1].Name)
 		assert.EqualValues(t, "CVE-2021-5678", findings[1].VulnId)
 		assert.EqualValues(t, "CVE-2021-5678", findings[1].Cwe)

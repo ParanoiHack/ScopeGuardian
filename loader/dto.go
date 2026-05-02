@@ -36,11 +36,11 @@ type (
 		// projects, dev dependencies are already excluded unconditionally via the
 		// include-dev-dependencies: false setting in syft.yaml.
 		SyftExclude []string `toml:"syft_exclude"`
-		// SyftMaxParentRecursiveDepth controls how many levels of parent POMs Syft
-		// will recursively resolve during Java/Maven analysis. A value of 0 (the
-		// default) means no limit. Passed to Syft as the
-		// SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH environment variable.
-		SyftMaxParentRecursiveDepth int `toml:"syft_max_parent_recursive_depth"`
+		// SyftDepth controls how many levels of parent POMs Syft will recursively
+		// resolve during Java/Maven analysis. Defaults to 1 when unset (0).
+		// Passed to Syft as the SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH environment
+		// variable.
+		SyftDepth int `toml:"syft_depth"`
 	}
 
 	// Opengrep contains the configuration for the OpenGrep SAST scanner.

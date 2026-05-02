@@ -2,12 +2,15 @@
 	"matches": [
 		{
 			"vulnerability": {
-				"id": "CVE-2021-1234",
+				"id": "GHSA-xxxx-1234",
 				"severity": "High",
 				"description": "A test high severity vulnerability in test-package",
 				"fix": {
 					"versions": ["1.2.0"],
 					"state": "fixed"
+				},
+				"epss": {
+					"cve": "CVE-2021-1234"
 				}
 			},
 			"artifact": {

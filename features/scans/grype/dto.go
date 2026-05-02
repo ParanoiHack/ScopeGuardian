@@ -5,11 +5,16 @@ type GrypeFix struct {
 	State    string   `json:"state"`
 }
 
+type GrypeEpss struct {
+	Cve string `json:"cve"`
+}
+
 type GrypeVulnerability struct {
-	ID          string    `json:"id"`
-	Severity    string    `json:"severity"`
-	Description string    `json:"description"`
-	Fix         GrypeFix  `json:"fix"`
+	ID          string     `json:"id"`
+	Severity    string     `json:"severity"`
+	Description string     `json:"description"`
+	Fix         GrypeFix   `json:"fix"`
+	Epss        *GrypeEpss `json:"epss"`
 }
 
 type GrypeArtifactLocation struct {

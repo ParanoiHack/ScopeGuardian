@@ -22,12 +22,12 @@ const (
 )
 
 const (
-	jsonOutputArgument          = "--json-output="
-	ossOnlyArgument             = "--oss-only"
-	quietArgument               = "-q"
-	skipUnknownExtArgument      = "--skip-unknown-extensions"
-	excludeArgument             = "--exclude"
-	excludeRuleArgument         = "--exclude-rule"
+	jsonOutputArgument     = "--json-output="
+	ossOnlyArgument        = "--oss-only"
+	quietArgument          = "-q"
+	skipUnknownExtArgument = "--skip-unknown-extensions"
+	excludeArgument        = "--exclude"
+	excludeRuleArgument    = "--exclude-rule"
 )
 
 const (

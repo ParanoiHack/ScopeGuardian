@@ -1,16 +1,16 @@
 package syft
 
 import (
-	"errors"
-	"fmt"
-	"io"
-	"os"
 	"ScopeGuardian/connectors/defectdojo"
 	"ScopeGuardian/domains/interfaces"
 	"ScopeGuardian/domains/models"
 	environment_variable "ScopeGuardian/environnement_variable"
 	"ScopeGuardian/exec"
 	"ScopeGuardian/logger"
+	"errors"
+	"fmt"
+	"io"
+	"os"
 	"strings"
 )
 
@@ -20,32 +20,33 @@ type execRunner func(binaryPath string, dirPath string, args []string, stdout io
 
 // SyftServiceImpl implements ScanServiceImpl for the Syft SBOM generator.
 type SyftServiceImpl struct {
-	path                        string
-	transitiveLibraries         bool
-	exclude                     []string
-	maxParentRecursiveDepth     int
-	proxyEnv                    []string
-	runner                      execRunner
+	path                string
+	transitiveLibraries bool
+	exclude             []string
+	depth               int
+	proxyEnv            []string
+	runner              execRunner
 }
 
 // newSyftService builds a SyftServiceImpl from the scan path, resolving it
 // relative to the SCAN_DIR environment variable. transitiveLibraries controls
 // whether Syft resolves transitive Java dependencies from Maven Central.
 // exclude is a list of glob patterns passed to Syft via --exclude to skip
-// matching paths during SBOM generation (e.g. ["**/src/test/**"]).
-// maxParentRecursiveDepth sets how many parent POM levels Syft will resolve;
-// 0 means no limit (the default). It is forwarded as the
+// matching paths during SBOM generation (e.g. ["**/src/test/**"]); each
+// pattern is quoted in the CLI invocation.
+// depth sets how many parent POM levels Syft will resolve; 0 means no limit,
+// 1 is the default. It is forwarded as the
 // SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH environment variable.
 // proxyEnv is an optional list of "KEY=VALUE" proxy environment variable entries
 // (see loader.Proxy.ToEnv) forwarded to the Syft process.
-func newSyftService(path string, transitiveLibraries bool, exclude []string, maxParentRecursiveDepth int, proxyEnv []string) interfaces.ScanServiceImpl {
+func newSyftService(path string, transitiveLibraries bool, exclude []string, depth int, proxyEnv []string) interfaces.ScanServiceImpl {
 	return &SyftServiceImpl{
-		path:                    fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], path),
-		transitiveLibraries:     transitiveLibraries,
-		exclude:                 exclude,
-		maxParentRecursiveDepth: maxParentRecursiveDepth,
-		proxyEnv:                proxyEnv,
-		runner:                  exec.Wrap,
+		path:                fmt.Sprintf("%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], path),
+		transitiveLibraries: transitiveLibraries,
+		exclude:             exclude,
+		depth:               depth,
+		proxyEnv:            proxyEnv,
+		runner:              exec.Wrap,
 	}
 }
 
@@ -71,7 +72,7 @@ func (s *SyftServiceImpl) Start() (bool, error) {
 	}
 
 	for _, pattern := range s.exclude {
-		args = append(args, excludeArgument, pattern)
+		args = append(args, excludeArgument, fmt.Sprintf(`"%s"`, pattern))
 	}
 
 	logger.Info(fmt.Sprintf(logInfoCommandLine, strings.Join(args, " ")))
@@ -80,7 +81,7 @@ func (s *SyftServiceImpl) Start() (bool, error) {
 	extraEnv := []string{
 		fmt.Sprintf("%s=%s", envJavaUseNetwork, transitiveValue),
 		fmt.Sprintf("%s=%s", envJavaResolveTransitiveDependencies, transitiveValue),
-		fmt.Sprintf("%s=%d", envJavaMaxParentRecursiveDepth, s.maxParentRecursiveDepth),
+		fmt.Sprintf("%s=%d", envJavaMaxParentRecursiveDepth, s.depth),
 	}
 	extraEnv = append(extraEnv, s.proxyEnv...)
 	return s.runner(binaryPath, dirPath, args, os.Stdout, os.Stderr, extraEnv...)

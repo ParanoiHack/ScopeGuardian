@@ -52,30 +52,30 @@ func TestGetSyftService(t *testing.T) {
 		assert.Equal(t, patterns, svc.exclude)
 	})
 
-	t.Run("Should use syft_max_parent_recursive_depth from grype config when zero", func(t *testing.T) {
-		service := GetSyftService(loader.Config{Grype: &loader.Grype{SyftMaxParentRecursiveDepth: 0}})
+	t.Run("Should use default syft_depth of 1 when grype config has depth zero (not configured)", func(t *testing.T) {
+		service := GetSyftService(loader.Config{Grype: &loader.Grype{SyftDepth: 0}})
 		svc, ok := service.(*SyftServiceImpl)
 
 		assert.NotNil(t, service)
 		assert.True(t, ok)
-		assert.Equal(t, 0, svc.maxParentRecursiveDepth)
+		assert.Equal(t, 1, svc.depth)
 	})
 
-	t.Run("Should use syft_max_parent_recursive_depth from grype config when set", func(t *testing.T) {
-		service := GetSyftService(loader.Config{Grype: &loader.Grype{SyftMaxParentRecursiveDepth: 5}})
+	t.Run("Should use syft_depth from grype config when set", func(t *testing.T) {
+		service := GetSyftService(loader.Config{Grype: &loader.Grype{SyftDepth: 5}})
 		svc, ok := service.(*SyftServiceImpl)
 
 		assert.NotNil(t, service)
 		assert.True(t, ok)
-		assert.Equal(t, 5, svc.maxParentRecursiveDepth)
+		assert.Equal(t, 5, svc.depth)
 	})
 
-	t.Run("Should default syft_max_parent_recursive_depth to 0 when grype config is nil", func(t *testing.T) {
+	t.Run("Should default syft_depth to 1 when grype config is nil", func(t *testing.T) {
 		service := GetSyftService(loader.Config{})
 		svc, ok := service.(*SyftServiceImpl)
 
 		assert.NotNil(t, service)
 		assert.True(t, ok)
-		assert.Equal(t, 0, svc.maxParentRecursiveDepth)
+		assert.Equal(t, 1, svc.depth)
 	})
 }
