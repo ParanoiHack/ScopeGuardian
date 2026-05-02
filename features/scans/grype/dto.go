@@ -10,11 +10,11 @@ type GrypeEpss struct {
 }
 
 type GrypeVulnerability struct {
-	ID          string     `json:"id"`
-	Severity    string     `json:"severity"`
-	Description string     `json:"description"`
-	Fix         GrypeFix   `json:"fix"`
-	Epss        *GrypeEpss `json:"epss"`
+	ID          string      `json:"id"`
+	Severity    string      `json:"severity"`
+	Description string      `json:"description"`
+	Fix         GrypeFix    `json:"fix"`
+	Epss        []GrypeEpss `json:"epss"`
 }
 
 type GrypeArtifactLocation struct {

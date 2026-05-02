@@ -102,8 +102,8 @@ func (s *GrypeServiceImpl) LoadFindings() ([]models.Finding, error) {
 		}
 
 		cveId := match.Vulnerability.ID
-		if match.Vulnerability.Epss != nil && match.Vulnerability.Epss.Cve != "" {
-			cveId = match.Vulnerability.Epss.Cve
+		if len(match.Vulnerability.Epss) > 0 && match.Vulnerability.Epss[0].Cve != "" {
+			cveId = match.Vulnerability.Epss[0].Cve
 		}
 
 		severity := strings.ToUpper(match.Vulnerability.Severity)
