@@ -1,10 +1,10 @@
 package loader
 
 import (
+	"ScopeGuardian/logger"
 	"errors"
 	"fmt"
 	"os"
-	"ScopeGuardian/logger"
 
 	"github.com/pelletier/go-toml/v2"
 )

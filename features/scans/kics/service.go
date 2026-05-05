@@ -1,11 +1,6 @@
 package kics
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
-	"io"
-	"os"
 	"ScopeGuardian/connectors/defectdojo"
 	"ScopeGuardian/domains/interfaces"
 	"ScopeGuardian/domains/models"
@@ -13,6 +8,11 @@ import (
 	"ScopeGuardian/exec"
 	"ScopeGuardian/loader"
 	"ScopeGuardian/logger"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"os"
 	"strings"
 	"time"
 )

@@ -1,10 +1,10 @@
 package display
 
 import (
+	"ScopeGuardian/domains/models"
 	"bytes"
 	"encoding/json"
 	"strings"
-	"ScopeGuardian/domains/models"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -138,7 +138,7 @@ func TestDumpFindings_CSV_ContainsHeaders(t *testing.T) {
 
 	assert.Nil(t, err)
 	output := buf.String()
-	assert.True(t, strings.HasPrefix(output, "Engine,Severity,Name,CWE,Description,SinkFile,SinkLine,Recommendation,Status"))
+	assert.True(t, strings.HasPrefix(output, "Engine,Severity,Name,CWE/CVE,Description,SinkFile,SinkLine,Recommendation,Status"))
 }
 
 func TestDumpFindings_CSV_ContainsStatus(t *testing.T) {

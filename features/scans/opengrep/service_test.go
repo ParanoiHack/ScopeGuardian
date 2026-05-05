@@ -1,14 +1,14 @@
 package opengrep
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
 	"ScopeGuardian/connectors/defectdojo"
 	"ScopeGuardian/domains/interfaces"
 	"ScopeGuardian/domains/models"
 	environment_variable "ScopeGuardian/environnement_variable"
 	"ScopeGuardian/loader"
+	"encoding/json"
+	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

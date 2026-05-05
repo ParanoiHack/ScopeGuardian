@@ -153,6 +153,13 @@ ignore_states = "not-fixed,unknown,wont-fix"
 transitive_libraries = false
 # Optional list of path patterns to exclude from Grype scanning.
 # exclude = ["**/vendor/**", "**/testdata/**"]
+# Optional list of glob patterns passed to Syft via --exclude during SBOM generation.
+# Use this to skip paths such as test sources from the SBOM (e.g. src/test/).
+# Note: test-scoped pom.xml dependencies are not affected (Syft has no Maven scope filter).
+# syft_exclude = ["**/src/test/**"]
+# Depth to recursively resolve parent POMs (env: SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH).
+# Default is 1; set to 0 for no limit.
+# syft_depth = 1
 
 # OpenGrep – static application security testing (SAST) scanner.
 [opengrep]
@@ -182,6 +189,8 @@ transitive_libraries = false
 | `[grype].ignore_states` | string | no | Comma-separated Grype vulnerability states to suppress (e.g. `not-fixed,unknown,wont-fix`). |
 | `[grype].transitive_libraries` | bool | no | When `true`, Syft resolves transitive Java dependencies via Maven Central. Default: `false`. |
 | `[grype].exclude` | string array | no | Path glob patterns to exclude from Grype scanning (e.g. `["**/vendor/**"]`). |
+| `[grype].syft_exclude` | string array | no | Path glob patterns passed to Syft via `--exclude` during SBOM generation (e.g. `["**/src/test/**"]`). Excludes filesystem paths only; test-scoped `pom.xml` dependencies are unaffected. |
+| `[grype].syft_depth` | int | no | Maximum number of parent POM levels Syft will recursively resolve during Java/Maven analysis. Default is `1`; `0` means no limit. Forwarded as `SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH`. |
 | `[opengrep].exclude` | string array | no | Path glob patterns to exclude from OpenGrep scanning (e.g. `["**/vendor/**"]`). |
 | `[opengrep].exclude_rule` | string array | no | OpenGrep rule IDs to skip (e.g. `["python.lang.security.audit.formatted-sql-query.formatted-sql-query"]`). |
 | `[proxy].http_proxy` | string | no | HTTP proxy URL forwarded as `HTTP_PROXY` / `http_proxy` to all scanner sub-processes. |
@@ -329,6 +338,8 @@ The Grype scanner uploads its JSON output file to DefectDojo as a `multipart/for
 | Close old findings | `true` | Findings absent from the new scan are closed automatically |
 | Do not reactivate | `true` | Previously suppressed findings are not reactivated on reimport |
 | Branch tag | `<branch>` | Associates the results with the scanned branch |
+
+The **CWE/CVE** column in the CLI output and in file exports is populated with the CVE identifier (e.g. `CVE-2021-44228`) reported by Grype for each vulnerability match. KICS and OpenGrep findings use a CWE number in the same column.
 
 ### OpenGrep Sync Behaviour
 

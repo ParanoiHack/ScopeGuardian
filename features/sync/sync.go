@@ -1,11 +1,11 @@
 package sync
 
 import (
-	"errors"
-	"fmt"
 	"ScopeGuardian/connectors/defectdojo"
 	"ScopeGuardian/domains/models"
 	"ScopeGuardian/logger"
+	"errors"
+	"fmt"
 	"time"
 )
 
@@ -243,4 +243,3 @@ func MarkFindingsByDDFindings(local []models.Finding, ddFindings []defectdojo.Fi
 	}
 	return result
 }
-

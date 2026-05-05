@@ -5,10 +5,10 @@
 package securitygate
 
 import (
-	"fmt"
 	"ScopeGuardian/domains/models"
 	"ScopeGuardian/logger"
 	"ScopeGuardian/parser"
+	"fmt"
 	"strings"
 )
 

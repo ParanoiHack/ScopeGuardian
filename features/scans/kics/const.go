@@ -18,16 +18,16 @@ const (
 	doNotReactivate      = true
 )
 const (
-	scanArgument            = "scan"
-	ciArgument              = "--ci"
-	librariesPathArgument   = "--libraries-path"
-	queriesPathArgument     = "--queries-path"
-	outputPathArgument      = "--output-path"
-	outputNameArgument      = "--output-name"
-	pathArgument            = "--path"
-	typeArgument            = "--type"
-	ignoreOnExitArgument    = "--ignore-on-exit"
-	excludeQueriesArgument  = "--exclude-queries"
+	scanArgument           = "scan"
+	ciArgument             = "--ci"
+	librariesPathArgument  = "--libraries-path"
+	queriesPathArgument    = "--queries-path"
+	outputPathArgument     = "--output-path"
+	outputNameArgument     = "--output-name"
+	pathArgument           = "--path"
+	typeArgument           = "--type"
+	ignoreOnExitArgument   = "--ignore-on-exit"
+	excludeQueriesArgument = "--exclude-queries"
 )
 
 const (

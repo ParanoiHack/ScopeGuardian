@@ -1,10 +1,6 @@
 package grype
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
-	"os"
 	"ScopeGuardian/connectors/defectdojo"
 	"ScopeGuardian/domains/interfaces"
 	"ScopeGuardian/domains/models"
@@ -12,6 +8,10 @@ import (
 	"ScopeGuardian/exec"
 	"ScopeGuardian/loader"
 	"ScopeGuardian/logger"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
 	"strings"
 	"time"
 )
@@ -101,12 +101,18 @@ func (s *GrypeServiceImpl) LoadFindings() ([]models.Finding, error) {
 			recommendation = fmt.Sprintf(recommendationUpgradeMultiple, strings.Join(match.Vulnerability.Fix.Versions, ", "))
 		}
 
+		cveId := match.Vulnerability.ID
+		if len(match.Vulnerability.Epss) > 0 && match.Vulnerability.Epss[0].Cve != "" {
+			cveId = match.Vulnerability.Epss[0].Cve
+		}
+
 		severity := strings.ToUpper(match.Vulnerability.Severity)
 		f := models.Finding{
 			Engine:         scannerType,
 			Severity:       severity,
 			Name:           fmt.Sprintf("%s %s", match.Artifact.Name, match.Artifact.Version),
-			VulnId:         match.Vulnerability.ID,
+			VulnId:         cveId,
+			Cwe:            cveId,
 			Description:    match.Vulnerability.Description,
 			SinkFile:       sinkFile,
 			Recommendation: recommendation,

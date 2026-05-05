@@ -7,10 +7,11 @@ const (
 )
 
 const (
-	scanArgument   = "scan"
-	configArgument = "-c"
-	outputArgument = "--output"
-	quietArgument  = "-q"
+	scanArgument    = "scan"
+	configArgument  = "-c"
+	outputArgument  = "--output"
+	quietArgument   = "-q"
+	excludeArgument = "--exclude"
 )
 
 const (
@@ -20,9 +21,9 @@ const (
 )
 
 const (
-	logInfoCommandLine          = "Command line invoked [%s]"
-	logInfoTransitiveLibraries  = "Transitive libraries resolution is enabled. This may significantly increase scan time."
-	logErrorDirectoryNotFound   = "Cannot find directory [%s]"
+	logInfoCommandLine         = "Command line invoked [%s]"
+	logInfoTransitiveLibraries = "Transitive libraries resolution is enabled. This may significantly increase scan time."
+	logErrorDirectoryNotFound  = "Cannot find directory [%s]"
 )
 
 const (
@@ -32,4 +33,5 @@ const (
 const (
 	envJavaUseNetwork                    = "SYFT_JAVA_USE_NETWORK"
 	envJavaResolveTransitiveDependencies = "SYFT_JAVA_RESOLVE_TRANSITIVE_DEPENDENCIES"
+	envJavaMaxParentRecursiveDepth       = "SYFT_JAVA_MAX_PARENT_RECURSIVE_DEPTH"
 )

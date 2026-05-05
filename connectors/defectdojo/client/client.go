@@ -1,11 +1,11 @@
 package client
 
 import (
+	"ScopeGuardian/logger"
 	"bytes"
 	"fmt"
 	"io"
 	"net/http"
-	"ScopeGuardian/logger"
 )
 
 // Client is the interface for making HTTP requests to the DefectDojo API.
