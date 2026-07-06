@@ -370,6 +370,81 @@ func TestMarkFindingsByDDFindings(t *testing.T) {
 		assert.Equal(t, models.FindingStatusDuplicate, result[0].Status)
 	})
 
+	t.Run("Should mark finding as INACTIVE when DD finding has out_of_scope=true", func(t *testing.T) {
+		local := []models.Finding{
+			localFinding("LOW", "Info leak", "src/leak.go", 3, "Redact output"),
+		}
+		ddFindings := []defectdojo.Finding{
+			{Title: "Info leak", Severity: "Low", FilePath: "src/leak.go", Line: 3,
+				Mitigation: "Redact output", Active: false, Duplicate: false, OutOfScope: true},
+		}
+
+		result := MarkFindingsByDDFindings(local, ddFindings)
+
+		assert.Len(t, result, 1)
+		assert.Equal(t, models.FindingStatusInactive, result[0].Status)
+	})
+
+	t.Run("Should mark finding as INACTIVE when DD finding has risk_accepted=true", func(t *testing.T) {
+		local := []models.Finding{
+			localFinding("HIGH", "Weak Cipher", "src/crypto.go", 8, "Use AES-256"),
+		}
+		ddFindings := []defectdojo.Finding{
+			{Title: "Weak Cipher", Severity: "High", FilePath: "src/crypto.go", Line: 8,
+				Mitigation: "Use AES-256", Active: false, Duplicate: false, RiskAccepted: true},
+		}
+
+		result := MarkFindingsByDDFindings(local, ddFindings)
+
+		assert.Len(t, result, 1)
+		assert.Equal(t, models.FindingStatusInactive, result[0].Status)
+	})
+
+	t.Run("Should mark finding as INACTIVE when DD finding has false_p=true", func(t *testing.T) {
+		local := []models.Finding{
+			localFinding("MEDIUM", "Path Traversal", "src/files.go", 21, "Validate path"),
+		}
+		ddFindings := []defectdojo.Finding{
+			{Title: "Path Traversal", Severity: "Medium", FilePath: "src/files.go", Line: 21,
+				Mitigation: "Validate path", Active: false, Duplicate: false, FalseP: true},
+		}
+
+		result := MarkFindingsByDDFindings(local, ddFindings)
+
+		assert.Len(t, result, 1)
+		assert.Equal(t, models.FindingStatusInactive, result[0].Status)
+	})
+
+	t.Run("Should mark finding as INACTIVE when risk_accepted=true even if active=true", func(t *testing.T) {
+		local := []models.Finding{
+			localFinding("CRITICAL", "Insecure Deserialization", "src/serde.go", 55, "Use safe parser"),
+		}
+		ddFindings := []defectdojo.Finding{
+			{Title: "Insecure Deserialization", Severity: "Critical", FilePath: "src/serde.go", Line: 55,
+				Mitigation: "Use safe parser", Active: true, Duplicate: false, RiskAccepted: true},
+		}
+
+		result := MarkFindingsByDDFindings(local, ddFindings)
+
+		assert.Len(t, result, 1)
+		assert.Equal(t, models.FindingStatusInactive, result[0].Status)
+	})
+
+	t.Run("Should prioritise duplicate=true over risk_accepted=true", func(t *testing.T) {
+		local := []models.Finding{
+			localFinding("HIGH", "Vuln2", "src/main2.go", 6, "Fix it"),
+		}
+		ddFindings := []defectdojo.Finding{
+			{Title: "Vuln2", Severity: "High", FilePath: "src/main2.go", Line: 6,
+				Mitigation: "Fix it", Active: false, Duplicate: true, RiskAccepted: true},
+		}
+
+		result := MarkFindingsByDDFindings(local, ddFindings)
+
+		assert.Len(t, result, 1)
+		assert.Equal(t, models.FindingStatusDuplicate, result[0].Status)
+	})
+
 	t.Run("Should default to ACTIVE when local finding has no DD counterpart", func(t *testing.T) {
 		local := []models.Finding{
 			localFinding("HIGH", "New Finding", "src/new.go", 1, "Fix it"),
