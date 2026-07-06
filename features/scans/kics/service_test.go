@@ -76,11 +76,12 @@ func TestNewKicsServiceImplementsInterface(t *testing.T) {
 }
 
 func TestNewKicsService(t *testing.T) {
-	service := newKicsService("./test", loader.Kics{ExcludeQueries: []string{"a227ec01-f97a-4084-91a4-47b350c1db54"}}, nil)
+	service := newKicsService("./test", loader.Kics{ExcludeQueries: []string{"a227ec01-f97a-4084-91a4-47b350c1db54"}, Exclude: []string{"/etc/**"}}, nil)
 
 	impl, ok := service.(*KicsServiceImpl)
 	assert.True(t, ok)
 	assert.EqualValues(t, []string{"a227ec01-f97a-4084-91a4-47b350c1db54"}, impl.excludeQueries)
+	assert.EqualValues(t, []string{"/etc/**"}, impl.excludePaths)
 }
 
 func TestVerifyConfig(t *testing.T) {

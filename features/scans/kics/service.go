@@ -23,6 +23,7 @@ type KicsServiceImpl struct {
 	platform       string
 	output         string
 	excludeQueries []string
+	excludePaths   []string
 	proxyEnv       []string
 }
 
@@ -36,6 +37,7 @@ func newKicsService(path string, config loader.Kics, proxyEnv []string) interfac
 		output:         fmt.Sprintf("%s/%s/%s", environment_variable.EnvironmentVariable["SCAN_DIR"], outputFolder, outputNameParameter),
 		platform:       config.Platform,
 		excludeQueries: config.ExcludeQueries,
+		excludePaths:   config.Exclude,
 		proxyEnv:       proxyEnv,
 	}
 }
@@ -83,6 +85,10 @@ func (s *KicsServiceImpl) Start() (bool, error) {
 
 	for _, q := range s.excludeQueries {
 		args = append(args, excludeQueriesArgument, q)
+	}
+
+	for _, p := range s.excludePaths {
+		args = append(args, excludePathsArgument, p)
 	}
 
 	logger.Info(fmt.Sprintf(logInfoCommandLine, strings.Join(args, " ")))
