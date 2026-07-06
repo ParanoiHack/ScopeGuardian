@@ -540,6 +540,41 @@ func TestMarkFindingsByDDFindings(t *testing.T) {
 		assert.Equal(t, "Missing User Instruction", result[0].Name)
 	})
 
+	t.Run("Should match Grype finding via vulnerability id despite mismatched DD mitigation wording", func(t *testing.T) {
+		// Grype's LoadFindings hashes on VulnId (CVE/GHSA), not Recommendation —
+		// see features/scans/grype/service.go.
+		local := []models.Finding{
+			{
+				Severity:       "HIGH",
+				Name:           "github.com/docker/docker v28.5.2",
+				VulnId:         "CVE-2026-34040",
+				SinkFile:       "/LAMA/go.mod",
+				SinkLine:       0,
+				Recommendation: "Upgrade to 29.3.1",
+				Hash:           models.ComputeFindingHash("HIGH", "/LAMA/go.mod", 0, "CVE-2026-34040"),
+			},
+		}
+		ddFindings := []defectdojo.Finding{
+			{
+				Title:      "github.com/docker/docker v28.5.2",
+				Severity:   "High",
+				FilePath:   "/LAMA/go.mod",
+				Line:       0,
+				Mitigation: "Upgrade to version: 29.3.1",
+				VulnerabilityIds: []defectdojo.VulnerabilityId{
+					{VulnerabilityId: "CVE-2026-34040"},
+				},
+				Active:    true,
+				Duplicate: false,
+			},
+		}
+
+		result := MarkFindingsByDDFindings(local, ddFindings)
+
+		assert.Len(t, result, 1)
+		assert.Equal(t, models.FindingStatusActive, result[0].Status)
+	})
+
 	t.Run("Should return empty slice when local findings list is empty", func(t *testing.T) {
 		ddFindings := []defectdojo.Finding{
 			{Title: "SQL Injection", Severity: "High", FilePath: "src/db.go", Line: 42,

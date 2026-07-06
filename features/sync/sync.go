@@ -205,11 +205,18 @@ func GetEngagementFindings(ddService defectdojo.DefectDojoService, projectName s
 // findings just created by the sync import). All local findings are returned —
 // nothing is filtered out.
 //
-// Two complementary hash strategies are used to match a local finding to its DD
+// Three complementary hash strategies are used to match a local finding to its DD
 // counterpart:
 //
-//  1. hash(severity|filePath|line|mitigation) — primary path for Grype and KICS.
-//  2. UniqueIdFromTool — covers OpenGrep (hash injected into extra.fingerprint
+//  1. hash(severity|filePath|line|mitigation) — primary path for KICS, whose
+//     Recommendation is a raw field (expected_value) that DD's parser passes
+//     through verbatim into Mitigation.
+//  2. hash(severity|filePath|line|vulnerability_id) — primary path for Grype.
+//     DefectDojo's Anchore Grype parser synthesizes its own Mitigation wording
+//     (e.g. "Upgrade to version: X" instead of ScopeGuardian's "Upgrade to X"),
+//     so matching on that text is unreliable. The CVE/GHSA id, however, is
+//     copied through verbatim and returned in vulnerability_ids.
+//  3. UniqueIdFromTool — covers OpenGrep (hash injected into extra.fingerprint
 //     before upload; DD's Semgrep parser stores it as unique_id_from_tool).
 func MarkFindingsByDDFindings(local []models.Finding, ddFindings []defectdojo.Finding) []models.Finding {
 	type ddStatus struct {
@@ -228,9 +235,13 @@ func MarkFindingsByDDFindings(local []models.Finding, ddFindings []defectdojo.Fi
 			riskAccepted: f.RiskAccepted,
 			falseP:       f.FalseP,
 		}
-		// Strategy 1: hash from API fields — covers Grype and KICS.
+		// Strategy 1: hash from API fields — covers KICS.
 		ddMap[models.ComputeFindingHash(f.Severity, f.FilePath, f.Line, f.Mitigation)] = s
-		// Strategy 2: UniqueIdFromTool — covers OpenGrep.
+		// Strategy 2: hash from vulnerability id — covers Grype.
+		for _, v := range f.VulnerabilityIds {
+			ddMap[models.ComputeFindingHash(f.Severity, f.FilePath, f.Line, v.VulnerabilityId)] = s
+		}
+		// Strategy 3: UniqueIdFromTool — covers OpenGrep.
 		if f.UniqueIdFromTool != "" {
 			ddMap[f.UniqueIdFromTool] = s
 		}
