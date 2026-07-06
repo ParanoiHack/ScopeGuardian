@@ -193,11 +193,13 @@ func GetEngagementFindings(ddService defectdojo.DefectDojoService, projectName s
 }
 
 // MarkFindingsByDDFindings sets the Status field on every local finding based on
-// the corresponding DefectDojo finding's "active" and "duplicate" fields:
+// the corresponding DefectDojo finding's "active", "duplicate", "out_of_scope",
+// "risk_accepted", and "false_p" fields:
 //
-//   - duplicate=true  → DUPLICATE  (DD deduplication identified a prior occurrence)
-//   - active=false    → INACTIVE   (suppressed, false-positive, or accepted risk)
-//   - active=true     → ACTIVE     (open, confirmed finding)
+//   - duplicate=true                                     → DUPLICATE (DD deduplication identified a prior occurrence)
+//   - active=false, out_of_scope=true, risk_accepted=true,
+//     or false_p=true                                    → INACTIVE  (suppressed, out of scope, accepted risk, or false-positive)
+//   - none of the above                                  → ACTIVE    (open, confirmed finding)
 //
 // Local findings with no matching DD finding default to ACTIVE (they are brand-new
 // findings just created by the sync import). All local findings are returned —
@@ -211,12 +213,21 @@ func GetEngagementFindings(ddService defectdojo.DefectDojoService, projectName s
 //     before upload; DD's Semgrep parser stores it as unique_id_from_tool).
 func MarkFindingsByDDFindings(local []models.Finding, ddFindings []defectdojo.Finding) []models.Finding {
 	type ddStatus struct {
-		active    bool
-		duplicate bool
+		active       bool
+		duplicate    bool
+		outOfScope   bool
+		riskAccepted bool
+		falseP       bool
 	}
 	ddMap := make(map[string]ddStatus, len(ddFindings)*2)
 	for _, f := range ddFindings {
-		s := ddStatus{active: f.Active, duplicate: f.Duplicate}
+		s := ddStatus{
+			active:       f.Active,
+			duplicate:    f.Duplicate,
+			outOfScope:   f.OutOfScope,
+			riskAccepted: f.RiskAccepted,
+			falseP:       f.FalseP,
+		}
 		// Strategy 1: hash from API fields — covers Grype and KICS.
 		ddMap[models.ComputeFindingHash(f.Severity, f.FilePath, f.Line, f.Mitigation)] = s
 		// Strategy 2: UniqueIdFromTool — covers OpenGrep.
@@ -232,7 +243,7 @@ func MarkFindingsByDDFindings(local []models.Finding, ddFindings []defectdojo.Fi
 			switch {
 			case s.duplicate:
 				result[i].Status = models.FindingStatusDuplicate
-			case !s.active:
+			case !s.active || s.outOfScope || s.riskAccepted || s.falseP:
 				result[i].Status = models.FindingStatusInactive
 			default:
 				result[i].Status = models.FindingStatusActive

@@ -65,6 +65,13 @@ type Finding struct {
 	// finding as a duplicate of another finding in the product. Corresponds to the
 	// "duplicate" field returned by the findings API.
 	Duplicate bool `json:"duplicate"`
+	// OutOfScope is true when a triager has marked this finding as out of scope.
+	OutOfScope bool `json:"out_of_scope"`
+	// RiskAccepted is true when a triager has accepted the risk for this finding.
+	RiskAccepted bool `json:"risk_accepted"`
+	// FalseP is true when a triager has marked this finding as a false positive.
+	// Corresponds to the "false_p" field returned by the findings API.
+	FalseP bool `json:"false_p"`
 }
 
 type GetFindingsResponse struct {
