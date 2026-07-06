@@ -31,7 +31,7 @@ ARG OPENGREP_VERSION=v1.13.1
 
 WORKDIR /tmp
 
-RUN apk add --no-cache git=2.52.0-r0 bash=5.3.3-r1 curl=8.17.0-r1
+RUN apk add --no-cache git=2.52.0-r0 bash=5.3.3-r1 curl=8.19.0-r0
 
 RUN git clone --depth 1 --branch ${OPENGREP_VERSION} https://github.com/opengrep/opengrep.git
 
