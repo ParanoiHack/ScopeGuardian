@@ -5,6 +5,7 @@ path = "./WebGoat"
 
 [kics]
 platform = "Dockerfile"
+# exclude = ["**/vendor/**", "**/node_modules/**"]
 
 [grype]
 ignore_states = "not-fixed,unknown,wont-fix"

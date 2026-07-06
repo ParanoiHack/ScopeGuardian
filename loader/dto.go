@@ -16,6 +16,9 @@ type (
 	Kics struct {
 		Platform       string
 		ExcludeQueries []string `toml:"exclude_queries"`
+		// Exclude is a list of path glob patterns passed to KICS via --exclude-paths
+		// to skip matching folders/files during scanning.
+		Exclude []string `toml:"exclude"`
 	}
 
 	// Grype contains the configuration for the Grype vulnerability scanner.

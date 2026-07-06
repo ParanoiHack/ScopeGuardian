@@ -28,6 +28,7 @@ const (
 	typeArgument           = "--type"
 	ignoreOnExitArgument   = "--ignore-on-exit"
 	excludeQueriesArgument = "--exclude-queries"
+	excludePathsArgument   = "--exclude-paths"
 )
 
 const (
