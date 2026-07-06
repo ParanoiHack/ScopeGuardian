@@ -79,7 +79,11 @@ func FilterFindingsByStatus(findings []Finding, statuses []string) []Finding {
 //	hash(lower(severity) | lower(sinkFile) | sinkLine | lower(recommendation))
 //
 // Scanner-specific notes:
-//   - Grype:    recommendation is the "Upgrade to X" string derived from fix.versions.
+//   - Grype:    the fourth field passed is the CVE/GHSA id (VulnId), not
+//     Recommendation. DefectDojo's Anchore Grype parser synthesizes its own
+//     Mitigation wording (e.g. "Upgrade to version: X"), so matching on that
+//     free text is unreliable; the vulnerability id is copied through
+//     verbatim and returned via vulnerability_ids.
 //   - OpenGrep: recommendation is always "" because DefectDojo's Semgrep parser stores
 //     extra.message in description, not mitigation. The hash is additionally
 //     injected into extra.fingerprint before upload so that DefectDojo stores

@@ -1,7 +1,7 @@
-title = "Scope-guardian configuration file"
+title = "ScopeGuardian configuration file"
 
-protected_branches = ["main", "master"]
-path = "./WebGoat"
+protected_branches = ["main"]
+path = "."
 
 [kics]
 platform = "Dockerfile"
@@ -9,6 +9,7 @@ platform = "Dockerfile"
 
 [grype]
 ignore_states = "not-fixed,unknown,wont-fix"
+syft_exclude = ["**/*_test.go"]
 transitive_libraries = false
 # syft_exclude = ["**/src/test/**"]  # glob patterns passed to Syft --exclude to skip paths during SBOM generation
 

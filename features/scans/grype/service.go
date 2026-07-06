@@ -117,7 +117,12 @@ func (s *GrypeServiceImpl) LoadFindings() ([]models.Finding, error) {
 			SinkFile:       sinkFile,
 			Recommendation: recommendation,
 		}
-		f.Hash = models.ComputeFindingHash(f.Severity, f.SinkFile, f.SinkLine, f.Recommendation)
+		// Hashed on the CVE/GHSA id rather than Recommendation: DefectDojo's Anchore
+		// Grype parser synthesizes its own mitigation wording (e.g. "Upgrade to
+		// version: X" instead of "Upgrade to X"), so matching on that text is
+		// unreliable. The vulnerability id is copied through verbatim by DD's
+		// parser and returned in vulnerability_ids, giving a stable matching key.
+		f.Hash = models.ComputeFindingHash(f.Severity, f.SinkFile, f.SinkLine, cveId)
 		findings = append(findings, f)
 	}
 
